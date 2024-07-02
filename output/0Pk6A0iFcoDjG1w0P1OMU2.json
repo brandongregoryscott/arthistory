@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Pk6A0iFcoDjG1w0P1OMU2",
   "followers": {
     "href": null,
-    "total": 7070
+    "total": 7077
   },
   "genres": [
     "argentine heavy metal",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 17,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Pk6A0iFcoDjG1w0P1OMU2"
   }

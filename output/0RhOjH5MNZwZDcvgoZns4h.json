@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0RhOjH5MNZwZDcvgoZns4h",
   "followers": {
     "href": null,
-    "total": 1046
+    "total": 1049
   },
   "genres": [
     "war metal"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 4,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0RhOjH5MNZwZDcvgoZns4h"
   }

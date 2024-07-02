@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0cvgnvsB7VZQJGU4RUQ1sA",
   "followers": {
     "href": null,
-    "total": 10211
+    "total": 10215
   },
   "genres": [
     "experimental rock",
@@ -28,7 +28,7 @@
       "width": 64
     }
   ],
-  "popularity": 21,
+  "popularity": 20,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0cvgnvsB7VZQJGU4RUQ1sA"
   }

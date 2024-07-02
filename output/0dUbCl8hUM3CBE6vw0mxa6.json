@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0dUbCl8hUM3CBE6vw0mxa6",
   "followers": {
     "href": null,
-    "total": 1328
+    "total": 1329
   },
   "genres": [
     "chain punk"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 13,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0dUbCl8hUM3CBE6vw0mxa6"
   }

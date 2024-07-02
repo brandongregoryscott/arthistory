@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Wic5QDtRuDohOkux4v7Wk",
   "followers": {
     "href": null,
-    "total": 5694
+    "total": 5706
   },
   "genres": [
     "neo-shibuya-kei"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 22,
+  "popularity": 21,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Wic5QDtRuDohOkux4v7Wk"
   }

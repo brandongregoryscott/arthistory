@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0MoOhUmF9fy3fyAY9fcYVU",
   "followers": {
     "href": null,
-    "total": 1522
+    "total": 1524
   },
   "genres": [
     "lo-fi indie",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 8,
+  "popularity": 7,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0MoOhUmF9fy3fyAY9fcYVU"
   }

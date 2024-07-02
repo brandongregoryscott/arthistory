@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Od2brltKfcyVsFOLmJqGA",
   "followers": {
     "href": null,
-    "total": 11562
+    "total": 11567
   },
   "genres": [
     "finnish indie",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 32,
+  "popularity": 33,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Od2brltKfcyVsFOLmJqGA"
   }

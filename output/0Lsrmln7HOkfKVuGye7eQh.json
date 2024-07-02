@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Lsrmln7HOkfKVuGye7eQh",
   "followers": {
     "href": null,
-    "total": 2629
+    "total": 2628
   },
   "genres": [
     "aggro chileno"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 7,
+  "popularity": 8,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Lsrmln7HOkfKVuGye7eQh"
   }

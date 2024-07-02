@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0OYbuHcASN71fUHKHqRsxT",
   "followers": {
     "href": null,
-    "total": 1118
+    "total": 1121
   },
   "genres": [
     "latvian indie",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 11,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0OYbuHcASN71fUHKHqRsxT"
   }

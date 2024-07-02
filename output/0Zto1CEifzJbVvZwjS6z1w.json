@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Zto1CEifzJbVvZwjS6z1w",
   "followers": {
     "href": null,
-    "total": 1874
+    "total": 1902
   },
   "genres": [
     "cavernous death metal"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 12,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Zto1CEifzJbVvZwjS6z1w"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0N0yeo1vDiEMVDWPFXGWrG",
   "followers": {
     "href": null,
-    "total": 494
+    "total": 495
   },
   "genres": [
     "maidcore"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 8,
+  "popularity": 9,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0N0yeo1vDiEMVDWPFXGWrG"
   }

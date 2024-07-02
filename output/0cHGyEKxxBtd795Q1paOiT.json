@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0cHGyEKxxBtd795Q1paOiT",
   "followers": {
     "href": null,
-    "total": 15102
+    "total": 15103
   },
   "genres": [
     "cantautor",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 15,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0cHGyEKxxBtd795Q1paOiT"
   }

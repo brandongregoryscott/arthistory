@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0ctLTKGS1coZsfRHZw48tC",
   "followers": {
     "href": null,
-    "total": 16911
+    "total": 16915
   },
   "genres": [
     "krautrock"
@@ -31,7 +31,7 @@
       "width": 64
     }
   ],
-  "popularity": 24,
+  "popularity": 25,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0ctLTKGS1coZsfRHZw48tC"
   }

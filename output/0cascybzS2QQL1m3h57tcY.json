@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0cascybzS2QQL1m3h57tcY",
   "followers": {
     "href": null,
-    "total": 2132
+    "total": 2136
   },
   "genres": [
     "japanese shoegaze"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 13,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0cascybzS2QQL1m3h57tcY"
   }

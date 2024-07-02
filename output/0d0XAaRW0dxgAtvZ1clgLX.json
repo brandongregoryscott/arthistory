@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0d0XAaRW0dxgAtvZ1clgLX",
   "followers": {
     "href": null,
-    "total": 10958
+    "total": 10959
   },
   "genres": [
     "hypnagogic pop"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 32,
+  "popularity": 31,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0d0XAaRW0dxgAtvZ1clgLX"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0OkZz4LJUAsrllGydJAcZs",
   "followers": {
     "href": null,
-    "total": 606
+    "total": 608
   },
   "genres": [
     "punk chileno"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 8,
+  "popularity": 9,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0OkZz4LJUAsrllGydJAcZs"
   }

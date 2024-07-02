@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0bxtJGTaXfnmliU3lOBKGv",
   "followers": {
     "href": null,
-    "total": 16188
+    "total": 16192
   },
   "genres": [
     "drift phonk",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 24,
+  "popularity": 25,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0bxtJGTaXfnmliU3lOBKGv"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Jjf1JZMQZeXyrZAfKEMcg",
   "followers": {
     "href": null,
-    "total": 17904
+    "total": 17914
   },
   "genres": [
     "gothic symphonic metal",
@@ -30,7 +30,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Jjf1JZMQZeXyrZAfKEMcg"
   }

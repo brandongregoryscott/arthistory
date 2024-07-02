@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0SbYhjfJTmuDE1ltoEUv67",
   "followers": {
     "href": null,
-    "total": 3255
+    "total": 3259
   },
   "genres": [
     "indie rock italiano",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 23,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0SbYhjfJTmuDE1ltoEUv67"
   }

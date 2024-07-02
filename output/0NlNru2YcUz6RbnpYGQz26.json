@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0NlNru2YcUz6RbnpYGQz26",
   "followers": {
     "href": null,
-    "total": 155731
+    "total": 157361
   },
   "genres": [
     "corrido"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 67,
+  "popularity": 68,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0NlNru2YcUz6RbnpYGQz26"
   }

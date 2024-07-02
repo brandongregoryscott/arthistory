@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0ZUvK7zGdXLd78mQr3t1Tw",
   "followers": {
     "href": null,
-    "total": 1873987
+    "total": 1875176
   },
   "genres": [
     "la indie",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 67,
+  "popularity": 68,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0ZUvK7zGdXLd78mQr3t1Tw"
   }

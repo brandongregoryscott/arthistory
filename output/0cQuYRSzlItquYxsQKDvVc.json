@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0cQuYRSzlItquYxsQKDvVc",
   "followers": {
     "href": null,
-    "total": 726464
+    "total": 726755
   },
   "genres": [
     "album rock",
@@ -35,7 +35,7 @@
       "width": 160
     }
   ],
-  "popularity": 53,
+  "popularity": 54,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0cQuYRSzlItquYxsQKDvVc"
   }

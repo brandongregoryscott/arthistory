@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0dZUiHIO2BUomz0xwglFiW",
   "followers": {
     "href": null,
-    "total": 10068
+    "total": 10081
   },
   "genres": [
     "5th wave emo",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 27,
+  "popularity": 28,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0dZUiHIO2BUomz0xwglFiW"
   }

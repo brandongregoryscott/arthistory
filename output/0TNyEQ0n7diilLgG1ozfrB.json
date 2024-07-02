@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0TNyEQ0n7diilLgG1ozfrB",
   "followers": {
     "href": null,
-    "total": 50265
+    "total": 50270
   },
   "genres": [
     "electro-pop francais",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 41,
+  "popularity": 42,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0TNyEQ0n7diilLgG1ozfrB"
   }

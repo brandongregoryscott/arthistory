@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0dA4PhxQgs0e6BzPnxmOo6",
   "followers": {
     "href": null,
-    "total": 3338
+    "total": 3340
   },
   "genres": [
     "jazz trumpet"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 13,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0dA4PhxQgs0e6BzPnxmOo6"
   }

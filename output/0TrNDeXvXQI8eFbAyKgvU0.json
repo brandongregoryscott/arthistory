@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0TrNDeXvXQI8eFbAyKgvU0",
   "followers": {
     "href": null,
-    "total": 1458
+    "total": 1459
   },
   "genres": [
     "lo-fi indie"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 13,
+  "popularity": 12,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0TrNDeXvXQI8eFbAyKgvU0"
   }

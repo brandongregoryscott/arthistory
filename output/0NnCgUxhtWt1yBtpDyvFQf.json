@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0NnCgUxhtWt1yBtpDyvFQf",
   "followers": {
     "href": null,
-    "total": 231362
+    "total": 231416
   },
   "genres": [
     "east coast hip hop",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 41,
+  "popularity": 42,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0NnCgUxhtWt1yBtpDyvFQf"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0TZtniWtlAQG3FE4h8qJ7M",
   "followers": {
     "href": null,
-    "total": 3411
+    "total": 3410
   },
   "genres": [
     "belo horizonte indie"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 6,
+  "popularity": 7,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0TZtniWtlAQG3FE4h8qJ7M"
   }

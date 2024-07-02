@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0UAAJKwQZz8jVDoVtly8NA",
   "followers": {
     "href": null,
-    "total": 70858
+    "total": 70878
   },
   "genres": [
     "argentine indie",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 43,
+  "popularity": 44,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0UAAJKwQZz8jVDoVtly8NA"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0dPpBOzonBzIhl7EoLnj3D",
   "followers": {
     "href": null,
-    "total": 17234
+    "total": 17251
   },
   "genres": [
     "nz hardcore"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 34,
+  "popularity": 35,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0dPpBOzonBzIhl7EoLnj3D"
   }

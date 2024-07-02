@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0aZu9zUfF2EgTHyBbZlW1C",
   "followers": {
     "href": null,
-    "total": 61898
+    "total": 61895
   },
   "genres": [
     "cologne hip hop",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 39,
+  "popularity": 38,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0aZu9zUfF2EgTHyBbZlW1C"
   }

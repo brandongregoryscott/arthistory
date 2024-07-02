@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0YMeriqrS3zgsX24nfY0F0",
   "followers": {
     "href": null,
-    "total": 958326
+    "total": 958557
   },
   "genres": [
     "canadian rock",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 58,
+  "popularity": 59,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0YMeriqrS3zgsX24nfY0F0"
   }

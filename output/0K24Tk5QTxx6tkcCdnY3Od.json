@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0K24Tk5QTxx6tkcCdnY3Od",
   "followers": {
     "href": null,
-    "total": 23498
+    "total": 23505
   },
   "genres": [
     "detroit rock",
@@ -29,7 +29,7 @@
       "width": 64
     }
   ],
-  "popularity": 30,
+  "popularity": 31,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0K24Tk5QTxx6tkcCdnY3Od"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Q7OLfPOuVVzXTMl3AIeUN",
   "followers": {
     "href": null,
-    "total": 4721
+    "total": 4720
   },
   "genres": [
     "furry"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 12,
+  "popularity": 13,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Q7OLfPOuVVzXTMl3AIeUN"
   }

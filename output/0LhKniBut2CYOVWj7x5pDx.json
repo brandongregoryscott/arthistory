@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0LhKniBut2CYOVWj7x5pDx",
   "followers": {
     "href": null,
-    "total": 67437
+    "total": 67472
   },
   "genres": [
     "new jersey hardcore",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 30,
+  "popularity": 31,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0LhKniBut2CYOVWj7x5pDx"
   }

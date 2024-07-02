@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Zoe6ljAJo85rggnN6OaOF",
   "followers": {
     "href": null,
-    "total": 237300
+    "total": 237359
   },
   "genres": [
     "chill pop",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 45,
+  "popularity": 46,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Zoe6ljAJo85rggnN6OaOF"
   }

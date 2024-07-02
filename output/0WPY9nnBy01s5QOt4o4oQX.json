@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0WPY9nnBy01s5QOt4o4oQX",
   "followers": {
     "href": null,
-    "total": 232715
+    "total": 232794
   },
   "genres": [
     "alternative rock",
@@ -30,7 +30,7 @@
       "width": 160
     }
   ],
-  "popularity": 44,
+  "popularity": 43,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0WPY9nnBy01s5QOt4o4oQX"
   }

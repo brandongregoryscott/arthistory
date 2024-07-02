@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0dCyj1089aIPRXjyi6iwhh",
   "followers": {
     "href": null,
-    "total": 7150
+    "total": 7155
   },
   "genres": [
     "spanish new wave"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 19,
+  "popularity": 20,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0dCyj1089aIPRXjyi6iwhh"
   }

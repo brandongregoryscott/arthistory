@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0ZL948orsY5yM2hlESNF6O",
   "followers": {
     "href": null,
-    "total": 8650
+    "total": 8655
   },
   "genres": [
     "wu fam"
@@ -12,17 +12,17 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b273afb43da23554c8360d3d52a0",
+      "url": "https://i.scdn.co/image/ab67616d0000b273f99bffd1d4023b1dc8981602",
       "width": 640
     },
     {
       "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e02afb43da23554c8360d3d52a0",
+      "url": "https://i.scdn.co/image/ab67616d00001e02f99bffd1d4023b1dc8981602",
       "width": 300
     },
     {
       "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d00004851afb43da23554c8360d3d52a0",
+      "url": "https://i.scdn.co/image/ab67616d00004851f99bffd1d4023b1dc8981602",
       "width": 64
     }
   ],

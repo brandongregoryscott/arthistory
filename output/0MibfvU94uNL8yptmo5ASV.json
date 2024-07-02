@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0MibfvU94uNL8yptmo5ASV",
   "followers": {
     "href": null,
-    "total": 430
+    "total": 431
   },
   "genres": [
     "atmospheric sludge",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 3,
+  "popularity": 2,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0MibfvU94uNL8yptmo5ASV"
   }

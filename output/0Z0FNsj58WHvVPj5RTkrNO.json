@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Z0FNsj58WHvVPj5RTkrNO",
   "followers": {
     "href": null,
-    "total": 790
+    "total": 793
   },
   "genres": [
     "j-ambient"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 15,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Z0FNsj58WHvVPj5RTkrNO"
   }

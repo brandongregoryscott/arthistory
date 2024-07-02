@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0QfmYM6lfruxznlDbrobtF",
   "followers": {
     "href": null,
-    "total": 2904
+    "total": 2903
   },
   "genres": [
     "atmospheric dnb",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 6,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0QfmYM6lfruxznlDbrobtF"
   }

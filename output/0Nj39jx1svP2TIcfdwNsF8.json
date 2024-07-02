@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Nj39jx1svP2TIcfdwNsF8",
   "followers": {
     "href": null,
-    "total": 2042
+    "total": 2044
   },
   "genres": [
     "chilean hardcore",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 8,
+  "popularity": 7,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Nj39jx1svP2TIcfdwNsF8"
   }

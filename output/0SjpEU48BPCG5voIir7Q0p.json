@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0SjpEU48BPCG5voIir7Q0p",
   "followers": {
     "href": null,
-    "total": 482
+    "total": 483
   },
   "genres": [
     "screamocore"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 2,
+  "popularity": 3,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0SjpEU48BPCG5voIir7Q0p"
   }

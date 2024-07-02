@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0V51Pdfe4X0iFTINAcZDDd",
   "followers": {
     "href": null,
-    "total": 459
+    "total": 460
   },
   "genres": [
     "canadian punk"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 0,
+  "popularity": 1,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0V51Pdfe4X0iFTINAcZDDd"
   }

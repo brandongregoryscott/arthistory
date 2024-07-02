@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0SKdBq9EZepvIeO76zPP4r",
   "followers": {
     "href": null,
-    "total": 121
+    "total": 122
   },
   "genres": [
     "japanese dub"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 1,
+  "popularity": 0,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0SKdBq9EZepvIeO76zPP4r"
   }

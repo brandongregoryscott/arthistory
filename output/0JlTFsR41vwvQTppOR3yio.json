@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0JlTFsR41vwvQTppOR3yio",
   "followers": {
     "href": null,
-    "total": 40564
+    "total": 40567
   },
   "genres": [
     "chillwave",
@@ -30,7 +30,7 @@
       "width": 160
     }
   ],
-  "popularity": 37,
+  "popularity": 38,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0JlTFsR41vwvQTppOR3yio"
   }

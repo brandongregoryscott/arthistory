@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0T7JQxpy1Li93vLNirbv0Z",
   "followers": {
     "href": null,
-    "total": 612941
+    "total": 613120
   },
   "genres": [
     "alternative metal",
@@ -25,7 +25,7 @@
       "width": 64
     }
   ],
-  "popularity": 47,
+  "popularity": 48,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0T7JQxpy1Li93vLNirbv0Z"
   }

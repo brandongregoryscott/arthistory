@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0OI3TA5tBUBXawAJmPSAkG",
   "followers": {
     "href": null,
-    "total": 2499
+    "total": 2498
   },
   "genres": [
     "german thrash metal",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 1,
+  "popularity": 0,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0OI3TA5tBUBXawAJmPSAkG"
   }

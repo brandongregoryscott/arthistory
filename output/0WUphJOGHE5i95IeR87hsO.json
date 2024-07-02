@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0WUphJOGHE5i95IeR87hsO",
   "followers": {
     "href": null,
-    "total": 136220
+    "total": 136247
   },
   "genres": [
     "new romantic",
@@ -34,7 +34,7 @@
       "width": 63
     }
   ],
-  "popularity": 42,
+  "popularity": 43,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0WUphJOGHE5i95IeR87hsO"
   }

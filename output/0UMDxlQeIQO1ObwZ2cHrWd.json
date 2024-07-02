@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0UMDxlQeIQO1ObwZ2cHrWd",
   "followers": {
     "href": null,
-    "total": 4497
+    "total": 4498
   },
   "genres": [
     "finnish folk",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 21,
+  "popularity": 22,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0UMDxlQeIQO1ObwZ2cHrWd"
   }

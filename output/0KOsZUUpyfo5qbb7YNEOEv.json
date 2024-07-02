@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0KOsZUUpyfo5qbb7YNEOEv",
   "followers": {
     "href": null,
-    "total": 676
+    "total": 677
   },
   "genres": [
     "laulaja-lauluntekija"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 15,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0KOsZUUpyfo5qbb7YNEOEv"
   }
