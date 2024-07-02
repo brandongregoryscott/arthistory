@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0p0bJVJ56ozF6Ejhkdymcf",
   "followers": {
     "href": null,
-    "total": 11959
+    "total": 11967
   },
   "genres": [
     "norwegian doom metal",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0p0bJVJ56ozF6Ejhkdymcf"
   }

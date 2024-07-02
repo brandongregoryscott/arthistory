@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0jveTQoUhhYD72xp3iGoQT",
   "followers": {
     "href": null,
-    "total": 8228
+    "total": 8232
   },
   "genres": [
     "bass music",
@@ -28,7 +28,7 @@
       "width": 64
     }
   ],
-  "popularity": 23,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0jveTQoUhhYD72xp3iGoQT"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0iui2Be5CP8EWxvHYsVspL",
   "followers": {
     "href": null,
-    "total": 453956
+    "total": 454002
   },
   "genres": [
     "filter house",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 53,
+  "popularity": 54,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0iui2Be5CP8EWxvHYsVspL"
   }

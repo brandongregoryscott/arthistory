@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0eFfjtAqPnvoBvfikjo28R",
   "followers": {
     "href": null,
-    "total": 453
+    "total": 454
   },
   "genres": [
     "brazilian death metal",
@@ -13,17 +13,17 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b2730d56f69828b779e119fea3ac",
+      "url": "https://i.scdn.co/image/ab67616d0000b273067dc3547a302f021c688407",
       "width": 640
     },
     {
       "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e020d56f69828b779e119fea3ac",
+      "url": "https://i.scdn.co/image/ab67616d00001e02067dc3547a302f021c688407",
       "width": 300
     },
     {
       "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d000048510d56f69828b779e119fea3ac",
+      "url": "https://i.scdn.co/image/ab67616d00004851067dc3547a302f021c688407",
       "width": 64
     }
   ],

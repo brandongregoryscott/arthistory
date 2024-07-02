@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0wmguM6RhXVAX7jqWWCQlK",
   "followers": {
     "href": null,
-    "total": 6575
+    "total": 6581
   },
   "genres": [
     "atmospheric black metal",
@@ -30,7 +30,7 @@
       "width": 160
     }
   ],
-  "popularity": 10,
+  "popularity": 9,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0wmguM6RhXVAX7jqWWCQlK"
   }

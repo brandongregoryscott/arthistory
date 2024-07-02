@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0enGLMpnw3qflhGPNB3B2r",
   "followers": {
     "href": null,
-    "total": 7169
+    "total": 7170
   },
   "genres": [
     "deathgrind",
@@ -28,7 +28,7 @@
       "width": 64
     }
   ],
-  "popularity": 4,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0enGLMpnw3qflhGPNB3B2r"
   }

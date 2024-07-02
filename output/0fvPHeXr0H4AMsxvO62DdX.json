@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0fvPHeXr0H4AMsxvO62DdX",
   "followers": {
     "href": null,
-    "total": 23534
+    "total": 23555
   },
   "genres": [
     "detroit hip hop",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 43,
+  "popularity": 44,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0fvPHeXr0H4AMsxvO62DdX"
   }

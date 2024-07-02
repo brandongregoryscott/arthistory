@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0ipqXPb76qxXI12ZqigCz6",
   "followers": {
     "href": null,
-    "total": 817
+    "total": 819
   },
   "genres": [
     "russian plugg"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 11,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0ipqXPb76qxXI12ZqigCz6"
   }

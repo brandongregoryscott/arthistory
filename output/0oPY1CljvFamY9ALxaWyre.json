@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0oPY1CljvFamY9ALxaWyre",
   "followers": {
     "href": null,
-    "total": 3203
+    "total": 3205
   },
   "genres": [
     "ebm",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 11,
+  "popularity": 12,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0oPY1CljvFamY9ALxaWyre"
   }

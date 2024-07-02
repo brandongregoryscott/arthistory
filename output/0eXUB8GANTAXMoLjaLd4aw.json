@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0eXUB8GANTAXMoLjaLd4aw",
   "followers": {
     "href": null,
-    "total": 603
+    "total": 604
   },
   "genres": [
     "vocaloid rock"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 4,
+  "popularity": 3,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0eXUB8GANTAXMoLjaLd4aw"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0vixd8XQDm7Xzdj8lJQc34",
   "followers": {
     "href": null,
-    "total": 448
+    "total": 450
   },
   "genres": [
     "grimewave",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 4,
+  "popularity": 3,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0vixd8XQDm7Xzdj8lJQc34"
   }

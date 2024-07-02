@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0r5LxNZiRy5s6to6o2Uy5A",
   "followers": {
     "href": null,
-    "total": 4155
+    "total": 4158
   },
   "genres": [
     "british post-rock"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0r5LxNZiRy5s6to6o2Uy5A"
   }

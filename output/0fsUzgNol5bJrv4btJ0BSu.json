@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0fsUzgNol5bJrv4btJ0BSu",
   "followers": {
     "href": null,
-    "total": 686
+    "total": 687
   },
   "genres": [
     "latincore"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 1,
+  "popularity": 2,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0fsUzgNol5bJrv4btJ0BSu"
   }

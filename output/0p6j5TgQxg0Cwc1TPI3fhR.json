@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0p6j5TgQxg0Cwc1TPI3fhR",
   "followers": {
     "href": null,
-    "total": 2367
+    "total": 2371
   },
   "genres": [
     "new york shoegaze",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 17,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0p6j5TgQxg0Cwc1TPI3fhR"
   }

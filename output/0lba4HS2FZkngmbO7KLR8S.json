@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0lba4HS2FZkngmbO7KLR8S",
   "followers": {
     "href": null,
-    "total": 2649
+    "total": 2650
   },
   "genres": [
     "vegan straight edge"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 6,
+  "popularity": 7,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0lba4HS2FZkngmbO7KLR8S"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0hE3uA2w3guHeKvuc7BpRr",
   "followers": {
     "href": null,
-    "total": 73494
+    "total": 73505
   },
   "genres": [
     "bossa nova jazz",
@@ -28,7 +28,7 @@
       "width": 64
     }
   ],
-  "popularity": 39,
+  "popularity": 40,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0hE3uA2w3guHeKvuc7BpRr"
   }

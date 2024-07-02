@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0mFX3iiZ8QzpLTKRJ34LZr",
   "followers": {
     "href": null,
-    "total": 515
+    "total": 516
   },
   "genres": [
     "latin tek"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 4,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0mFX3iiZ8QzpLTKRJ34LZr"
   }

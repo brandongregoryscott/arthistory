@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0ifCMWK5i03zLZL2N5hmWy",
   "followers": {
     "href": null,
-    "total": 52732
+    "total": 52750
   },
   "genres": [
     "electronica peruana",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 32,
+  "popularity": 33,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0ifCMWK5i03zLZL2N5hmWy"
   }

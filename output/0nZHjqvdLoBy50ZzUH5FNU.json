@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0nZHjqvdLoBy50ZzUH5FNU",
   "followers": {
     "href": null,
-    "total": 32212
+    "total": 32248
   },
   "genres": [
     "escape room",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 34,
+  "popularity": 35,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0nZHjqvdLoBy50ZzUH5FNU"
   }

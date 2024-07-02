@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0wKRws4cmydv070MEENn0k",
   "followers": {
     "href": null,
-    "total": 42476
+    "total": 42505
   },
   "genres": [
     "brazilian indie",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 29,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0wKRws4cmydv070MEENn0k"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0sK7HL5empQGW9mQFTFzz7",
   "followers": {
     "href": null,
-    "total": 3726
+    "total": 3727
   },
   "genres": [
     "folk metal",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 6,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0sK7HL5empQGW9mQFTFzz7"
   }

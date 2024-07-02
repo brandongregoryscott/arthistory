@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0vX16aPLB5IGeyzFDHBm6T",
   "followers": {
     "href": null,
-    "total": 21880
+    "total": 21904
   },
   "genres": [
     "gym phonk"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 56,
+  "popularity": 57,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0vX16aPLB5IGeyzFDHBm6T"
   }

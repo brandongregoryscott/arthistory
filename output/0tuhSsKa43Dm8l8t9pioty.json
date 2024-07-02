@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0tuhSsKa43Dm8l8t9pioty",
   "followers": {
     "href": null,
-    "total": 67
+    "total": 68
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 0,
+  "popularity": 1,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0tuhSsKa43Dm8l8t9pioty"
   }

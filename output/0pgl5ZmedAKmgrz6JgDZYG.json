@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0pgl5ZmedAKmgrz6JgDZYG",
   "followers": {
     "href": null,
-    "total": 987
+    "total": 988
   },
   "genres": [
     "chilean indie",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 3,
+  "popularity": 4,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0pgl5ZmedAKmgrz6JgDZYG"
   }

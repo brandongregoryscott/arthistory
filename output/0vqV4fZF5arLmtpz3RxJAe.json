@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0vqV4fZF5arLmtpz3RxJAe",
   "followers": {
     "href": null,
-    "total": 18551
+    "total": 18554
   },
   "genres": [
     "dark trap",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0vqV4fZF5arLmtpz3RxJAe"
   }

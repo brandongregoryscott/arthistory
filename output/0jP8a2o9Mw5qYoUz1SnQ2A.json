@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0jP8a2o9Mw5qYoUz1SnQ2A",
   "followers": {
     "href": null,
-    "total": 81462
+    "total": 81471
   },
   "genres": [
     "kawaii future bass"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 37,
+  "popularity": 38,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0jP8a2o9Mw5qYoUz1SnQ2A"
   }

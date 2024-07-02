@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0iC2pDY0l8KCHq0F9cce7b",
   "followers": {
     "href": null,
-    "total": 2476
+    "total": 2477
   },
   "genres": [
     "boston hardcore",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 6,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0iC2pDY0l8KCHq0F9cce7b"
   }

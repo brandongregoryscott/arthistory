@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0lOvZVXyNadkBHAW3IPZ16",
   "followers": {
     "href": null,
-    "total": 1531
+    "total": 1532
   },
   "genres": [
     "sigilkore"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 20,
+  "popularity": 19,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0lOvZVXyNadkBHAW3IPZ16"
   }

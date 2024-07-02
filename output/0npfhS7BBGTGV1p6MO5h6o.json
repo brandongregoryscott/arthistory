@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0npfhS7BBGTGV1p6MO5h6o",
   "followers": {
     "href": null,
-    "total": 492
+    "total": 494
   },
   "genres": [
     "modern psychedelic folk"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 6,
+  "popularity": 7,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0npfhS7BBGTGV1p6MO5h6o"
   }

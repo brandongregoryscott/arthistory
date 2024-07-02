@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0mDQRT588YAchokPCIHtll",
   "followers": {
     "href": null,
-    "total": 864
+    "total": 865
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 4,
+  "popularity": 3,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0mDQRT588YAchokPCIHtll"
   }

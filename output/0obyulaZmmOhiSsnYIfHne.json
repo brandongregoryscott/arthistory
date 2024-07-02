@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0obyulaZmmOhiSsnYIfHne",
   "followers": {
     "href": null,
-    "total": 2909
+    "total": 2910
   },
   "genres": [
     "nashville indie"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 23,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0obyulaZmmOhiSsnYIfHne"
   }

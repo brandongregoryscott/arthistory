@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0xK5OqvQKGC1nNtl2pIbwX",
   "followers": {
     "href": null,
-    "total": 18078
+    "total": 18080
   },
   "genres": [
     "garage punk blues",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 21,
+  "popularity": 22,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0xK5OqvQKGC1nNtl2pIbwX"
   }

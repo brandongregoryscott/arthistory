@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0thhlsgt6Joo4sXIFxPmvc",
   "followers": {
     "href": null,
-    "total": 2413
+    "total": 2417
   },
   "genres": [
     "hyperpop francais"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 28,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0thhlsgt6Joo4sXIFxPmvc"
   }

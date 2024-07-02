@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0v5eYP5LR5ulwJktkiKE3j",
   "followers": {
     "href": null,
-    "total": 7846
+    "total": 7855
   },
   "genres": [
     "german underground rap"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 32,
+  "popularity": 33,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0v5eYP5LR5ulwJktkiKE3j"
   }

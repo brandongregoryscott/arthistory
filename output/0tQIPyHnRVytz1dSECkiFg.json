@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0tQIPyHnRVytz1dSECkiFg",
   "followers": {
     "href": null,
-    "total": 3594
+    "total": 3599
   },
   "genres": [
     "french stoner rock"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 19,
+  "popularity": 18,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0tQIPyHnRVytz1dSECkiFg"
   }

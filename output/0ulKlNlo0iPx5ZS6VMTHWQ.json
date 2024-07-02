@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0ulKlNlo0iPx5ZS6VMTHWQ",
   "followers": {
     "href": null,
-    "total": 142447
+    "total": 142482
   },
   "genres": [
     "doom metal",
@@ -17,17 +17,17 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab6761610000e5eb75921585d70c511cc69cd963",
+      "url": "https://i.scdn.co/image/ab6761610000e5ebb419635be69e96f6538520a9",
       "width": 640
     },
     {
       "height": 320,
-      "url": "https://i.scdn.co/image/ab6761610000517475921585d70c511cc69cd963",
+      "url": "https://i.scdn.co/image/ab67616100005174b419635be69e96f6538520a9",
       "width": 320
     },
     {
       "height": 160,
-      "url": "https://i.scdn.co/image/ab6761610000f17875921585d70c511cc69cd963",
+      "url": "https://i.scdn.co/image/ab6761610000f178b419635be69e96f6538520a9",
       "width": 160
     }
   ],

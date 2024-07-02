@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0hS6BAggi7bO0BrnJLg8Ad",
   "followers": {
     "href": null,
-    "total": 14813
+    "total": 14818
   },
   "genres": [
     "j-metal",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 23,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0hS6BAggi7bO0BrnJLg8Ad"
   }

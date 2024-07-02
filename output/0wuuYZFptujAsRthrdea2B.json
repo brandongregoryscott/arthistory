@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0wuuYZFptujAsRthrdea2B",
   "followers": {
     "href": null,
-    "total": 273567
+    "total": 273719
   },
   "genres": [
     "french indie pop",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 52,
+  "popularity": 53,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0wuuYZFptujAsRthrdea2B"
   }

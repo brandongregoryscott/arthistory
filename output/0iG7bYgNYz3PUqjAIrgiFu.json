@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0iG7bYgNYz3PUqjAIrgiFu",
   "followers": {
     "href": null,
-    "total": 3305
+    "total": 3306
   },
   "genres": [
     "australian hardcore",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 15,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0iG7bYgNYz3PUqjAIrgiFu"
   }

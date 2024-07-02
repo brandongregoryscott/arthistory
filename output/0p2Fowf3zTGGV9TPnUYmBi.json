@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0p2Fowf3zTGGV9TPnUYmBi",
   "followers": {
     "href": null,
-    "total": 875
+    "total": 877
   },
   "genres": [
     "metal ecuatoriano",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 0,
+  "popularity": 1,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0p2Fowf3zTGGV9TPnUYmBi"
   }
