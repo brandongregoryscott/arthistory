@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0xxOFRCAFPCA8ePZcuIb0G",
   "followers": {
     "href": null,
-    "total": 6761
+    "total": 6765
   },
   "genres": [
     "ecuadorian alternative rock",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 19,
+  "popularity": 20,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0xxOFRCAFPCA8ePZcuIb0G"
   }

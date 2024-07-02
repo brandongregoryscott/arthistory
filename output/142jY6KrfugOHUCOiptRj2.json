@@ -4,7 +4,7 @@
   "uri": "spotify:artist:142jY6KrfugOHUCOiptRj2",
   "followers": {
     "href": null,
-    "total": 2232
+    "total": 2234
   },
   "genres": [
     "chicago rap"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 8,
+  "popularity": 9,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/142jY6KrfugOHUCOiptRj2"
   }

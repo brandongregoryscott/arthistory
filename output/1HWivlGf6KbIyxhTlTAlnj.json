@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1HWivlGf6KbIyxhTlTAlnj",
   "followers": {
     "href": null,
-    "total": 19696
+    "total": 19700
   },
   "genres": [
     "japanese soul"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 29,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1HWivlGf6KbIyxhTlTAlnj"
   }

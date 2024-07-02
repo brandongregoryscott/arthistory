@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1Bma7GS3Si9l7IZEc3S5L8",
   "followers": {
     "href": null,
-    "total": 3566
+    "total": 3568
   },
   "genres": [
     "r&b italiano"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 33,
+  "popularity": 32,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1Bma7GS3Si9l7IZEc3S5L8"
   }

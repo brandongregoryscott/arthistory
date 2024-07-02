@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0y02sFdM9EFPNhK0LisTZu",
   "followers": {
     "href": null,
-    "total": 1487
+    "total": 1488
   },
   "genres": [
     "emo punk"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 4,
+  "popularity": 3,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0y02sFdM9EFPNhK0LisTZu"
   }

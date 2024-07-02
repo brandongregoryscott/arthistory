@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1HTnNmldrSruFvjSz4zhFy",
   "followers": {
     "href": null,
-    "total": 11098
+    "total": 11099
   },
   "genres": [
     "orebro indie"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 31,
+  "popularity": 30,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1HTnNmldrSruFvjSz4zhFy"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:17RsbUhjNq6WdID2oC90c1",
   "followers": {
     "href": null,
-    "total": 41558
+    "total": 41572
   },
   "genres": [
     "funk metal"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 26,
+  "popularity": 25,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/17RsbUhjNq6WdID2oC90c1"
   }

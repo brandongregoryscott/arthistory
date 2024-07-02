@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1BydOOxI2QltpphEOkKHgl",
   "followers": {
     "href": null,
-    "total": 21951
+    "total": 21983
   },
   "genres": [
     "j-rock",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 34,
+  "popularity": 33,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1BydOOxI2QltpphEOkKHgl"
   }

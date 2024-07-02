@@ -4,7 +4,7 @@
   "uri": "spotify:artist:18CPEToK1OfjJ5B5vDBDKa",
   "followers": {
     "href": null,
-    "total": 133485
+    "total": 133522
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 50,
+  "popularity": 51,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/18CPEToK1OfjJ5B5vDBDKa"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:19W7Iq71CaCJpLRiYp55rr",
   "followers": {
     "href": null,
-    "total": 1589
+    "total": 1591
   },
   "genres": [
     "japanese experimental"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 13,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/19W7Iq71CaCJpLRiYp55rr"
   }

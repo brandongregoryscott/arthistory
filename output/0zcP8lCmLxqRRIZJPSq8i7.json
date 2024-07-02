@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0zcP8lCmLxqRRIZJPSq8i7",
   "followers": {
     "href": null,
-    "total": 47869
+    "total": 47912
   },
   "genres": [
     "trap boricua",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 48,
+  "popularity": 49,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0zcP8lCmLxqRRIZJPSq8i7"
   }

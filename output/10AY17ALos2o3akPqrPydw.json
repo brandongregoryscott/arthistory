@@ -4,7 +4,7 @@
   "uri": "spotify:artist:10AY17ALos2o3akPqrPydw",
   "followers": {
     "href": null,
-    "total": 117606
+    "total": 117617
   },
   "genres": [
     "underground hip hop"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 41,
+  "popularity": 42,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/10AY17ALos2o3akPqrPydw"
   }

@@ -4,12 +4,13 @@
   "uri": "spotify:artist:17wDxPR2GcU3r1dpCoCiUi",
   "followers": {
     "href": null,
-    "total": 83405
+    "total": 83445
   },
   "genres": [
     "bossa nova",
     "brazilian jazz",
-    "piano mpb"
+    "piano mpb",
+    "velha guarda"
   ],
   "images": [
     {

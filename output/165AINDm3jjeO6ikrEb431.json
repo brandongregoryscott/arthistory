@@ -4,25 +4,25 @@
   "uri": "spotify:artist:165AINDm3jjeO6ikrEb431",
   "followers": {
     "href": null,
-    "total": 834
+    "total": 836
   },
   "genres": [
-
+    "latincore"
   ],
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab6761610000e5eb68ac2ee2586d059be8ae1c9a",
+      "url": "https://i.scdn.co/image/ab6761610000e5ebe88ddbaa6c8a263138f17867",
       "width": 640
     },
     {
       "height": 320,
-      "url": "https://i.scdn.co/image/ab6761610000517468ac2ee2586d059be8ae1c9a",
+      "url": "https://i.scdn.co/image/ab67616100005174e88ddbaa6c8a263138f17867",
       "width": 320
     },
     {
       "height": 160,
-      "url": "https://i.scdn.co/image/ab6761610000f17868ac2ee2586d059be8ae1c9a",
+      "url": "https://i.scdn.co/image/ab6761610000f178e88ddbaa6c8a263138f17867",
       "width": 160
     }
   ],

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1FF7wG3PnqUXBsLBIY3fVt",
   "followers": {
     "href": null,
-    "total": 22434
+    "total": 22438
   },
   "genres": [
     "gauze pop",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 21,
+  "popularity": 22,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1FF7wG3PnqUXBsLBIY3fVt"
   }

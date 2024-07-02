@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1ArSucFv3GjsqMHBtt4w5u",
   "followers": {
     "href": null,
-    "total": 299
+    "total": 303
   },
   "genres": [
     "north carolina hip hop"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 12,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1ArSucFv3GjsqMHBtt4w5u"
   }

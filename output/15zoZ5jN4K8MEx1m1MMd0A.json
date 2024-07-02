@@ -4,7 +4,7 @@
   "uri": "spotify:artist:15zoZ5jN4K8MEx1m1MMd0A",
   "followers": {
     "href": null,
-    "total": 1157
+    "total": 1162
   },
   "genres": [
     "indie emo"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 12,
+  "popularity": 13,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/15zoZ5jN4K8MEx1m1MMd0A"
   }

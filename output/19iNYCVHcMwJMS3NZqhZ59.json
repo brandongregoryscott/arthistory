@@ -4,7 +4,7 @@
   "uri": "spotify:artist:19iNYCVHcMwJMS3NZqhZ59",
   "followers": {
     "href": null,
-    "total": 47511
+    "total": 47566
   },
   "genres": [
     "instrumental post-rock",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 35,
+  "popularity": 36,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/19iNYCVHcMwJMS3NZqhZ59"
   }

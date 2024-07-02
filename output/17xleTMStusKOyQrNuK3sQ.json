@@ -4,7 +4,7 @@
   "uri": "spotify:artist:17xleTMStusKOyQrNuK3sQ",
   "followers": {
     "href": null,
-    "total": 51079
+    "total": 51095
   },
   "genres": [
     "new romantic",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 26,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/17xleTMStusKOyQrNuK3sQ"
   }

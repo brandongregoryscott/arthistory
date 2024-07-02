@@ -4,7 +4,7 @@
   "uri": "spotify:artist:181bsRPaVXVlUKXrxwZfHK",
   "followers": {
     "href": null,
-    "total": 9224486
+    "total": 9240018
   },
   "genres": [
     "houston rap",
@@ -30,7 +30,7 @@
       "width": 160
     }
   ],
-  "popularity": 79,
+  "popularity": 80,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/181bsRPaVXVlUKXrxwZfHK"
   }

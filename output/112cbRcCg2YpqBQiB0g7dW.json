@@ -4,7 +4,7 @@
   "uri": "spotify:artist:112cbRcCg2YpqBQiB0g7dW",
   "followers": {
     "href": null,
-    "total": 16221
+    "total": 16238
   },
   "genres": [
     "cloud rap"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 36,
+  "popularity": 37,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/112cbRcCg2YpqBQiB0g7dW"
   }

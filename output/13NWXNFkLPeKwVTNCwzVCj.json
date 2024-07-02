@@ -4,7 +4,7 @@
   "uri": "spotify:artist:13NWXNFkLPeKwVTNCwzVCj",
   "followers": {
     "href": null,
-    "total": 2940
+    "total": 2942
   },
   "genres": [
     "pinoy indie rock",
@@ -28,7 +28,7 @@
       "width": 64
     }
   ],
-  "popularity": 4,
+  "popularity": 3,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/13NWXNFkLPeKwVTNCwzVCj"
   }

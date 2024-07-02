@@ -4,7 +4,7 @@
   "uri": "spotify:artist:11d0Ru1rFEenTY97PfN3VK",
   "followers": {
     "href": null,
-    "total": 7378
+    "total": 7379
   },
   "genres": [
     "japanese jazztronica"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 22,
+  "popularity": 23,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/11d0Ru1rFEenTY97PfN3VK"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1DODBZ5LLO4G9uEbRVy6cJ",
   "followers": {
     "href": null,
-    "total": 5165
+    "total": 5178
   },
   "genres": [
     "deathrock"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 15,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1DODBZ5LLO4G9uEbRVy6cJ"
   }

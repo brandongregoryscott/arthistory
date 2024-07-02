@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0z6Xi0tH2eGiuYKL9L2H5o",
   "followers": {
     "href": null,
-    "total": 1569
+    "total": 1570
   },
   "genres": [
     "deep christian rock"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 9,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0z6Xi0tH2eGiuYKL9L2H5o"
   }

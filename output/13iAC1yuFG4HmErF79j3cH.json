@@ -4,7 +4,7 @@
   "uri": "spotify:artist:13iAC1yuFG4HmErF79j3cH",
   "followers": {
     "href": null,
-    "total": 396
+    "total": 398
   },
   "genres": [
     "unblack metal"
@@ -12,17 +12,17 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b273efcdb7190a819c9673952523",
+      "url": "https://i.scdn.co/image/ab67616d0000b273fe377286f0b81e3cf51bef9a",
       "width": 640
     },
     {
       "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e02efcdb7190a819c9673952523",
+      "url": "https://i.scdn.co/image/ab67616d00001e02fe377286f0b81e3cf51bef9a",
       "width": 300
     },
     {
       "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d00004851efcdb7190a819c9673952523",
+      "url": "https://i.scdn.co/image/ab67616d00004851fe377286f0b81e3cf51bef9a",
       "width": 64
     }
   ],

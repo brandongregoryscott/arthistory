@@ -4,7 +4,7 @@
   "uri": "spotify:artist:13HCSe8J92zo90TYuzjeHB",
   "followers": {
     "href": null,
-    "total": 4965
+    "total": 4966
   },
   "genres": [
     "german cloud rap",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 23,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/13HCSe8J92zo90TYuzjeHB"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1G6Gq9pcDT5OwZjEdKXBZm",
   "followers": {
     "href": null,
-    "total": 9651
+    "total": 9656
   },
   "genres": [
     "cali rap"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 25,
+  "popularity": 26,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1G6Gq9pcDT5OwZjEdKXBZm"
   }

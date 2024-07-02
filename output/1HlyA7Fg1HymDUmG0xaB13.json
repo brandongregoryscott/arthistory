@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1HlyA7Fg1HymDUmG0xaB13",
   "followers": {
     "href": null,
-    "total": 54881
+    "total": 54898
   },
   "genres": [
     "bedroom r&b"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 43,
+  "popularity": 44,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1HlyA7Fg1HymDUmG0xaB13"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:15ybz1WxqVUtJp17cW0ExM",
   "followers": {
     "href": null,
-    "total": 914
+    "total": 916
   },
   "genres": [
     "fake",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 1,
+  "popularity": 0,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/15ybz1WxqVUtJp17cW0ExM"
   }

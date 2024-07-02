@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1BCTAGmHZ4djDWQ0KtfKdZ",
   "followers": {
     "href": null,
-    "total": 8440
+    "total": 8443
   },
   "genres": [
     "melbourne indie"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 25,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1BCTAGmHZ4djDWQ0KtfKdZ"
   }

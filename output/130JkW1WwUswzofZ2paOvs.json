@@ -4,7 +4,7 @@
   "uri": "spotify:artist:130JkW1WwUswzofZ2paOvs",
   "followers": {
     "href": null,
-    "total": 33038
+    "total": 33053
   },
   "genres": [
     "wu fam"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 27,
+  "popularity": 28,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/130JkW1WwUswzofZ2paOvs"
   }

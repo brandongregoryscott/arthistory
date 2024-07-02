@@ -4,7 +4,7 @@
   "uri": "spotify:artist:16j0wVUk9UOoYEDknfb9rK",
   "followers": {
     "href": null,
-    "total": 7337
+    "total": 7359
   },
   "genres": [
     "experimental indie"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 34,
+  "popularity": 35,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/16j0wVUk9UOoYEDknfb9rK"
   }

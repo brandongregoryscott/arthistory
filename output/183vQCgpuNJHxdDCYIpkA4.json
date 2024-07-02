@@ -4,7 +4,7 @@
   "uri": "spotify:artist:183vQCgpuNJHxdDCYIpkA4",
   "followers": {
     "href": null,
-    "total": 8372
+    "total": 8374
   },
   "genres": [
     "derby indie",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 14,
+  "popularity": 13,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/183vQCgpuNJHxdDCYIpkA4"
   }

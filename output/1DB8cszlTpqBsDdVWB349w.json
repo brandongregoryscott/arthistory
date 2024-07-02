@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1DB8cszlTpqBsDdVWB349w",
   "followers": {
     "href": null,
-    "total": 18947
+    "total": 18954
   },
   "genres": [
     "jam band"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 19,
+  "popularity": 20,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1DB8cszlTpqBsDdVWB349w"
   }

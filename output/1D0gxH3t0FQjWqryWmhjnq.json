@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1D0gxH3t0FQjWqryWmhjnq",
   "followers": {
     "href": null,
-    "total": 4544
+    "total": 4549
   },
   "genres": [
     "japanese shoegaze"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 23,
+  "popularity": 22,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1D0gxH3t0FQjWqryWmhjnq"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1EprrjlHDT5PD1w2NrHDPJ",
   "followers": {
     "href": null,
-    "total": 3732
+    "total": 3733
   },
   "genres": [
     "alt-idol",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 7,
+  "popularity": 8,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1EprrjlHDT5PD1w2NrHDPJ"
   }

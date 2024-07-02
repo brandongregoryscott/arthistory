@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1G3Grx20MtR0LrLxAMXNLg",
   "followers": {
     "href": null,
-    "total": 2393
+    "total": 2403
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 16,
+  "popularity": 17,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1G3Grx20MtR0LrLxAMXNLg"
   }

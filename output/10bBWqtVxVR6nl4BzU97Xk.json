@@ -4,7 +4,7 @@
   "uri": "spotify:artist:10bBWqtVxVR6nl4BzU97Xk",
   "followers": {
     "href": null,
-    "total": 21017
+    "total": 21020
   },
   "genres": [
     "taiwan hip hop",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 23,
+  "popularity": 22,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/10bBWqtVxVR6nl4BzU97Xk"
   }

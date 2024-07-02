@@ -4,7 +4,7 @@
   "uri": "spotify:artist:14Fd3BXAV8ipHmfQoGNIj4",
   "followers": {
     "href": null,
-    "total": 9735
+    "total": 9745
   },
   "genres": [
     "countrygaze",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 26,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/14Fd3BXAV8ipHmfQoGNIj4"
   }

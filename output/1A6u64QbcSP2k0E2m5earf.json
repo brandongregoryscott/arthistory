@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1A6u64QbcSP2k0E2m5earf",
   "followers": {
     "href": null,
-    "total": 1720
+    "total": 1721
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 9,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1A6u64QbcSP2k0E2m5earf"
   }

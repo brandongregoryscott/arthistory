@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1E1ltjB9QwLy9bC9RYdCIW",
   "followers": {
     "href": null,
-    "total": 746
+    "total": 749
   },
   "genres": [
     "malaysian hardcore",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 5,
+  "popularity": 4,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1E1ltjB9QwLy9bC9RYdCIW"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:19dF9fFNoOiNS9qRiQ4tqM",
   "followers": {
     "href": null,
-    "total": 3051
+    "total": 3056
   },
   "genres": [
     "powerviolence"
@@ -12,21 +12,21 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b273dd995229705b48735a9d14fe",
+      "url": "https://i.scdn.co/image/ab67616d0000b273a1ffe2889017fc03e3ed5667",
       "width": 640
     },
     {
       "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e02dd995229705b48735a9d14fe",
+      "url": "https://i.scdn.co/image/ab67616d00001e02a1ffe2889017fc03e3ed5667",
       "width": 300
     },
     {
       "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d00004851dd995229705b48735a9d14fe",
+      "url": "https://i.scdn.co/image/ab67616d00004851a1ffe2889017fc03e3ed5667",
       "width": 64
     }
   ],
-  "popularity": 14,
+  "popularity": 15,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/19dF9fFNoOiNS9qRiQ4tqM"
   }

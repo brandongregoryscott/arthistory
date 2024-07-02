@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1CSyDCZKVQyFIW0Eo8CHDp",
   "followers": {
     "href": null,
-    "total": 4592
+    "total": 4596
   },
   "genres": [
     "banjo",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 23,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1CSyDCZKVQyFIW0Eo8CHDp"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:12KB3lNnqU48FEP7744aCv",
   "followers": {
     "href": null,
-    "total": 542
+    "total": 556
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 9,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/12KB3lNnqU48FEP7744aCv"
   }

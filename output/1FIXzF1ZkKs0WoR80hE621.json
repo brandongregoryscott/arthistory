@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1FIXzF1ZkKs0WoR80hE621",
   "followers": {
     "href": null,
-    "total": 2402
+    "total": 2408
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 17,
+  "popularity": 18,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1FIXzF1ZkKs0WoR80hE621"
   }

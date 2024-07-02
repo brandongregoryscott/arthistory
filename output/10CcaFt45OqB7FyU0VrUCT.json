@@ -4,7 +4,7 @@
   "uri": "spotify:artist:10CcaFt45OqB7FyU0VrUCT",
   "followers": {
     "href": null,
-    "total": 12933
+    "total": 12941
   },
   "genres": [
     "doujin",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 17,
+  "popularity": 18,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/10CcaFt45OqB7FyU0VrUCT"
   }

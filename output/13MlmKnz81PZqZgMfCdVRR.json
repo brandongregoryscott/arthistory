@@ -4,7 +4,7 @@
   "uri": "spotify:artist:13MlmKnz81PZqZgMfCdVRR",
   "followers": {
     "href": null,
-    "total": 14125
+    "total": 14161
   },
   "genres": [
     "italian library music",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 51,
+  "popularity": 52,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/13MlmKnz81PZqZgMfCdVRR"
   }

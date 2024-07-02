@@ -4,7 +4,7 @@
   "uri": "spotify:artist:1FuQc9iJv3gdypigXiZ136",
   "followers": {
     "href": null,
-    "total": 5252
+    "total": 5253
   },
   "genres": [
     "american contemporary classical",
@@ -36,7 +36,7 @@
       "width": 64
     }
   ],
-  "popularity": 15,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/1FuQc9iJv3gdypigXiZ136"
   }

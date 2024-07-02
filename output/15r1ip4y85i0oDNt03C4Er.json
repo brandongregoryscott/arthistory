@@ -4,7 +4,7 @@
   "uri": "spotify:artist:15r1ip4y85i0oDNt03C4Er",
   "followers": {
     "href": null,
-    "total": 5612
+    "total": 5620
   },
   "genres": [
     "christian indie folk",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 31,
+  "popularity": 32,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/15r1ip4y85i0oDNt03C4Er"
   }
