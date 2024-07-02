@@ -4,7 +4,7 @@
   "uri": "spotify:artist:01F64hXfIisZbwBf1VCwQT",
   "followers": {
     "href": null,
-    "total": 70818
+    "total": 70827
   },
   "genres": [
     "musica goiana",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 33,
+  "popularity": 34,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/01F64hXfIisZbwBf1VCwQT"
   }

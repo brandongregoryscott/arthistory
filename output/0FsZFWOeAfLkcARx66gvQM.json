@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0FsZFWOeAfLkcARx66gvQM",
   "followers": {
     "href": null,
-    "total": 2536
+    "total": 2537
   },
   "genres": [
     "synth punk"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 14,
+  "popularity": 15,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0FsZFWOeAfLkcARx66gvQM"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:05kWC05qQmocVoC5Udgl6D",
   "followers": {
     "href": null,
-    "total": 34073
+    "total": 34074
   },
   "genres": [
     "indie hip hop",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 29,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/05kWC05qQmocVoC5Udgl6D"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0E0FX8RYDfwseJAhwO9AK2",
   "followers": {
     "href": null,
-    "total": 23995
+    "total": 23998
   },
   "genres": [
     "chilean indie",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 26,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0E0FX8RYDfwseJAhwO9AK2"
   }

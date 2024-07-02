@@ -4,7 +4,7 @@
   "uri": "spotify:artist:04Z2998QhvkAYYjobsmKdr",
   "followers": {
     "href": null,
-    "total": 611
+    "total": 616
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 30,
+  "popularity": 29,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/04Z2998QhvkAYYjobsmKdr"
   }

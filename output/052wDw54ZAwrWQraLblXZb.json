@@ -4,7 +4,7 @@
   "uri": "spotify:artist:052wDw54ZAwrWQraLblXZb",
   "followers": {
     "href": null,
-    "total": 8575
+    "total": 8576
   },
   "genres": [
     "japanese indie rock"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 23,
+  "popularity": 24,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/052wDw54ZAwrWQraLblXZb"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:00hobyLqureQySyaN1u626",
   "followers": {
     "href": null,
-    "total": 1314
+    "total": 1318
   },
   "genres": [
     "depressive black metal"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 6,
+  "popularity": 7,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/00hobyLqureQySyaN1u626"
   }

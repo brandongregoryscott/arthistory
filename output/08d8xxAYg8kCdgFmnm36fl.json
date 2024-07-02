@@ -4,7 +4,7 @@
   "uri": "spotify:artist:08d8xxAYg8kCdgFmnm36fl",
   "followers": {
     "href": null,
-    "total": 3117
+    "total": 3119
   },
   "genres": [
     "punk tico",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 15,
+  "popularity": 16,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/08d8xxAYg8kCdgFmnm36fl"
   }

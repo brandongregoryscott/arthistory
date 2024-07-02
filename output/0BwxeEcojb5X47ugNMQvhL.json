@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0BwxeEcojb5X47ugNMQvhL",
   "followers": {
     "href": null,
-    "total": 139319
+    "total": 139342
   },
   "genres": [
     "canadian rock"
@@ -31,7 +31,7 @@
       "width": 64
     }
   ],
-  "popularity": 41,
+  "popularity": 42,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0BwxeEcojb5X47ugNMQvhL"
   }

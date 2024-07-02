@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0AhnRzNnHI2Yhx9d00H5Cp",
   "followers": {
     "href": null,
-    "total": 16810
+    "total": 16830
   },
   "genres": [
     "djent",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 30,
+  "popularity": 31,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0AhnRzNnHI2Yhx9d00H5Cp"
   }

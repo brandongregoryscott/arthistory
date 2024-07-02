@@ -4,7 +4,7 @@
   "uri": "spotify:artist:02Dr2JOCmag0qkg2Ghgamr",
   "followers": {
     "href": null,
-    "total": 226
+    "total": 228
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 1,
+  "popularity": 2,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/02Dr2JOCmag0qkg2Ghgamr"
   }

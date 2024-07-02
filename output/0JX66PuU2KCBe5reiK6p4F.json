@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0JX66PuU2KCBe5reiK6p4F",
   "followers": {
     "href": null,
-    "total": 355
+    "total": 356
   },
   "genres": [
     "experimental psych"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 3,
+  "popularity": 2,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0JX66PuU2KCBe5reiK6p4F"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:02lml46UxbqAUHg0vKruG4",
   "followers": {
     "href": null,
-    "total": 2904
+    "total": 2916
   },
   "genres": [
     "boom bap"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 13,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/02lml46UxbqAUHg0vKruG4"
   }

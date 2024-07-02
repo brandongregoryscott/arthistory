@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0FUBGa2en9EKTagIY348g0",
   "followers": {
     "href": null,
-    "total": 4636
+    "total": 4640
   },
   "genres": [
     "chinese hip hop"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 8,
+  "popularity": 9,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0FUBGa2en9EKTagIY348g0"
   }

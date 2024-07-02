@@ -4,7 +4,7 @@
   "uri": "spotify:artist:02Y9YvfIFsX1nG4qPuBbW6",
   "followers": {
     "href": null,
-    "total": 10177
+    "total": 10190
   },
   "genres": [
     "german metalcore"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 22,
+  "popularity": 23,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/02Y9YvfIFsX1nG4qPuBbW6"
   }

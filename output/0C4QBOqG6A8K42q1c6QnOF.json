@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0C4QBOqG6A8K42q1c6QnOF",
   "followers": {
     "href": null,
-    "total": 554
+    "total": 555
   },
   "genres": [
     "ambient lo-fi"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 24,
+  "popularity": 23,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0C4QBOqG6A8K42q1c6QnOF"
   }

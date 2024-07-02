@@ -4,7 +4,7 @@
   "uri": "spotify:artist:05BsKVA8goTXE7WLxDYTyo",
   "followers": {
     "href": null,
-    "total": 2844
+    "total": 2847
   },
   "genres": [
     "argentine punk",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 13,
+  "popularity": 14,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/05BsKVA8goTXE7WLxDYTyo"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:000BblCiHJeKvtiq5aiHOs",
   "followers": {
     "href": null,
-    "total": 2417
+    "total": 2420
   },
   "genres": [
     "suomi rock"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 22,
+  "popularity": 23,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/000BblCiHJeKvtiq5aiHOs"
   }

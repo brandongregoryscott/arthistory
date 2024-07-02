@@ -4,7 +4,7 @@
   "uri": "spotify:artist:09LCTrVGnMsGbxexUFJoap",
   "followers": {
     "href": null,
-    "total": 139561
+    "total": 139672
   },
   "genres": [
     "hel",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 47,
+  "popularity": 48,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/09LCTrVGnMsGbxexUFJoap"
   }

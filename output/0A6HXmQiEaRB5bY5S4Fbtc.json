@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0A6HXmQiEaRB5bY5S4Fbtc",
   "followers": {
     "href": null,
-    "total": 2771
+    "total": 2778
   },
   "genres": [
     "tontipop"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 18,
+  "popularity": 19,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0A6HXmQiEaRB5bY5S4Fbtc"
   }

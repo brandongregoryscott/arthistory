@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Gcgzrheia2zEtiKkZTbzA",
   "followers": {
     "href": null,
-    "total": 35377
+    "total": 35387
   },
   "genres": [
     "classic venezuelan pop",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 22,
+  "popularity": 23,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Gcgzrheia2zEtiKkZTbzA"
   }

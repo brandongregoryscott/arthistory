@@ -4,7 +4,7 @@
   "uri": "spotify:artist:06CnMUXOCyNg8loWh2Ogn0",
   "followers": {
     "href": null,
-    "total": 879
+    "total": 881
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 5,
+  "popularity": 4,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/06CnMUXOCyNg8loWh2Ogn0"
   }

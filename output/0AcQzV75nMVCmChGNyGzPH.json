@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0AcQzV75nMVCmChGNyGzPH",
   "followers": {
     "href": null,
-    "total": 5035
+    "total": 5038
   },
   "genres": [
     "pop punk"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 23,
+  "popularity": 22,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0AcQzV75nMVCmChGNyGzPH"
   }

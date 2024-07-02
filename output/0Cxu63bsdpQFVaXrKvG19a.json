@@ -4,11 +4,12 @@
   "uri": "spotify:artist:0Cxu63bsdpQFVaXrKvG19a",
   "followers": {
     "href": null,
-    "total": 6589
+    "total": 6594
   },
   "genres": [
     "american grindcore",
-    "goregrind"
+    "goregrind",
+    "grindcore"
   ],
   "images": [
     {

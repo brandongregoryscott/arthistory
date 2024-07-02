@@ -4,7 +4,7 @@
   "uri": "spotify:artist:06hxCeDcTDV3cuOyws488C",
   "followers": {
     "href": null,
-    "total": 34520
+    "total": 34532
   },
   "genres": [
     "jazz chileno",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 26,
+  "popularity": 27,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/06hxCeDcTDV3cuOyws488C"
   }

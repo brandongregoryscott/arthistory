@@ -4,7 +4,7 @@
   "uri": "spotify:artist:08Umb7G4TJvt2wiiFEMkYt",
   "followers": {
     "href": null,
-    "total": 744
+    "total": 745
   },
   "genres": [
     "ukrainian punk"
@@ -12,17 +12,17 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b273f7f8f178697af5c831382dec",
+      "url": "https://i.scdn.co/image/ab67616d0000b27373b38ace4e70dc5fe9415f0f",
       "width": 640
     },
     {
       "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e02f7f8f178697af5c831382dec",
+      "url": "https://i.scdn.co/image/ab67616d00001e0273b38ace4e70dc5fe9415f0f",
       "width": 300
     },
     {
       "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d00004851f7f8f178697af5c831382dec",
+      "url": "https://i.scdn.co/image/ab67616d0000485173b38ace4e70dc5fe9415f0f",
       "width": 64
     }
   ],

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:01YVQjFFgSmCdbFM2gzn3p",
   "followers": {
     "href": null,
-    "total": 11416
+    "total": 11419
   },
   "genres": [
     "mathcore",
@@ -14,7 +14,7 @@
   "images": [
 
   ],
-  "popularity": 11,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/01YVQjFFgSmCdbFM2gzn3p"
   }

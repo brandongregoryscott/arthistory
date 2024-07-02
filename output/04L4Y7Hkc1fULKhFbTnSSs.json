@@ -4,7 +4,7 @@
   "uri": "spotify:artist:04L4Y7Hkc1fULKhFbTnSSs",
   "followers": {
     "href": null,
-    "total": 26482
+    "total": 26502
   },
   "genres": [
     "deep house",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 48,
+  "popularity": 49,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/04L4Y7Hkc1fULKhFbTnSSs"
   }

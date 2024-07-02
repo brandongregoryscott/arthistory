@@ -4,7 +4,7 @@
   "uri": "spotify:artist:04r9MV32OBMdMv1eJ9I1CP",
   "followers": {
     "href": null,
-    "total": 4546
+    "total": 4552
   },
   "genres": [
     "hyperpop"
@@ -12,17 +12,17 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab6761610000e5eb56dbfb8ecbf1acdc74e017da",
+      "url": "https://i.scdn.co/image/ab6761610000e5ebf5d0f63e746cf2afab09d4fc",
       "width": 640
     },
     {
       "height": 320,
-      "url": "https://i.scdn.co/image/ab6761610000517456dbfb8ecbf1acdc74e017da",
+      "url": "https://i.scdn.co/image/ab67616100005174f5d0f63e746cf2afab09d4fc",
       "width": 320
     },
     {
       "height": 160,
-      "url": "https://i.scdn.co/image/ab6761610000f17856dbfb8ecbf1acdc74e017da",
+      "url": "https://i.scdn.co/image/ab6761610000f178f5d0f63e746cf2afab09d4fc",
       "width": 160
     }
   ],

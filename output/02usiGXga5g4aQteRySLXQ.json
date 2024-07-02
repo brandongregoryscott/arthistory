@@ -4,7 +4,7 @@
   "uri": "spotify:artist:02usiGXga5g4aQteRySLXQ",
   "followers": {
     "href": null,
-    "total": 38503
+    "total": 38518
   },
   "genres": [
     "japanese metalcore",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 31,
+  "popularity": 32,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/02usiGXga5g4aQteRySLXQ"
   }

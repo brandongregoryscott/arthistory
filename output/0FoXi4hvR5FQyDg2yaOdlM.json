@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0FoXi4hvR5FQyDg2yaOdlM",
   "followers": {
     "href": null,
-    "total": 1591
+    "total": 1593
   },
   "genres": [
     "canadian post-punk"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 6,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0FoXi4hvR5FQyDg2yaOdlM"
   }

@@ -4,12 +4,11 @@
   "uri": "spotify:artist:04vdWVjgi45nrMAxeCEVQe",
   "followers": {
     "href": null,
-    "total": 155429
+    "total": 155438
   },
   "genres": [
     "brostep",
-    "dubstep",
-    "gaming dubstep"
+    "dubstep"
   ],
   "images": [
     {

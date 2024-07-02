@@ -4,7 +4,7 @@
   "uri": "spotify:artist:06W84OT2eFUNVwG85UsxJw",
   "followers": {
     "href": null,
-    "total": 123332
+    "total": 123356
   },
   "genres": [
     "indie pop",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 45,
+  "popularity": 46,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/06W84OT2eFUNVwG85UsxJw"
   }

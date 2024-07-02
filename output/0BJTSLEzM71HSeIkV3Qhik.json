@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0BJTSLEzM71HSeIkV3Qhik",
   "followers": {
     "href": null,
-    "total": 1989
+    "total": 1995
   },
   "genres": [
     "emoviolence",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 7,
+  "popularity": 8,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0BJTSLEzM71HSeIkV3Qhik"
   }

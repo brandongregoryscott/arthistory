@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0FmOK4kdUOM0JKMFLUzHDh",
   "followers": {
     "href": null,
-    "total": 4249
+    "total": 4250
   },
   "genres": [
     "braindance"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 10,
+  "popularity": 9,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0FmOK4kdUOM0JKMFLUzHDh"
   }

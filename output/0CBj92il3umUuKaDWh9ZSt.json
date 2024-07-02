@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0CBj92il3umUuKaDWh9ZSt",
   "followers": {
     "href": null,
-    "total": 3379
+    "total": 3380
   },
   "genres": [
     "fast melodic punk"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 12,
+  "popularity": 13,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0CBj92il3umUuKaDWh9ZSt"
   }

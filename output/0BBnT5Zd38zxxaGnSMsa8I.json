@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0BBnT5Zd38zxxaGnSMsa8I",
   "followers": {
     "href": null,
-    "total": 3111
+    "total": 3119
   },
   "genres": [
     "autonomous black metal",
@@ -27,7 +27,7 @@
       "width": 64
     }
   ],
-  "popularity": 11,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0BBnT5Zd38zxxaGnSMsa8I"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0De6AsHTSn4Q2Jc049oh0U",
   "followers": {
     "href": null,
-    "total": 730
+    "total": 732
   },
   "genres": [
     "halifax indie"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 12,
+  "popularity": 13,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0De6AsHTSn4Q2Jc049oh0U"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:06sdJwlggq0PKOe4LPZWCg",
   "followers": {
     "href": null,
-    "total": 39022
+    "total": 39027
   },
   "genres": [
     "australian experimental",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 35,
+  "popularity": 34,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/06sdJwlggq0PKOe4LPZWCg"
   }

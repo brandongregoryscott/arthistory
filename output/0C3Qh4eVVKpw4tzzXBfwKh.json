@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0C3Qh4eVVKpw4tzzXBfwKh",
   "followers": {
     "href": null,
-    "total": 4491
+    "total": 4502
   },
   "genres": [
     "chinese experimental"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 11,
+  "popularity": 12,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0C3Qh4eVVKpw4tzzXBfwKh"
   }

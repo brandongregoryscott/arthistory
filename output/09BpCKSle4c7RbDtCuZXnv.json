@@ -4,7 +4,7 @@
   "uri": "spotify:artist:09BpCKSle4c7RbDtCuZXnv",
   "followers": {
     "href": null,
-    "total": 54598
+    "total": 54601
   },
   "genres": [
     "argentine hip hop",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 33,
+  "popularity": 34,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/09BpCKSle4c7RbDtCuZXnv"
   }

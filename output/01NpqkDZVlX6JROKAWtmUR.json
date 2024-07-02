@@ -4,7 +4,7 @@
   "uri": "spotify:artist:01NpqkDZVlX6JROKAWtmUR",
   "followers": {
     "href": null,
-    "total": 359
+    "total": 360
   },
   "genres": [
 
@@ -12,18 +12,18 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b27331dd4252b8eacdc2c041495d",
+      "url": "https://i.scdn.co/image/ab6761610000e5ebb32d0eb6698d1e894dc9fd5b",
       "width": 640
     },
     {
-      "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e0231dd4252b8eacdc2c041495d",
-      "width": 300
+      "height": 320,
+      "url": "https://i.scdn.co/image/ab67616100005174b32d0eb6698d1e894dc9fd5b",
+      "width": 320
     },
     {
-      "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d0000485131dd4252b8eacdc2c041495d",
-      "width": 64
+      "height": 160,
+      "url": "https://i.scdn.co/image/ab6761610000f178b32d0eb6698d1e894dc9fd5b",
+      "width": 160
     }
   ],
   "popularity": 12,

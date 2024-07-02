@@ -4,7 +4,7 @@
   "uri": "spotify:artist:04zRW4JgR3F42UNFRLuiAD",
   "followers": {
     "href": null,
-    "total": 1767
+    "total": 1766
   },
   "genres": [
     "death doom"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 3,
+  "popularity": 2,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/04zRW4JgR3F42UNFRLuiAD"
   }

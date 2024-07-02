@@ -4,7 +4,7 @@
   "uri": "spotify:artist:07PkYuHKeec24az6lKeUS5",
   "followers": {
     "href": null,
-    "total": 46988
+    "total": 47003
   },
   "genres": [
     "j-rock"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 34,
+  "popularity": 35,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/07PkYuHKeec24az6lKeUS5"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0GYgVB8HTSyBEdmjCC6hu3",
   "followers": {
     "href": null,
-    "total": 2987
+    "total": 2988
   },
   "genres": [
     "darkstep",
@@ -30,7 +30,7 @@
       "width": 160
     }
   ],
-  "popularity": 14,
+  "popularity": 15,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0GYgVB8HTSyBEdmjCC6hu3"
   }

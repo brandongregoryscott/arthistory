@@ -4,7 +4,7 @@
   "uri": "spotify:artist:02NkCCahOvRNuxKwbgoZbN",
   "followers": {
     "href": null,
-    "total": 1200
+    "total": 1199
   },
   "genres": [
     "doomcore",
@@ -13,17 +13,17 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b27324bc15a2de788c73c79e7384",
+      "url": "https://i.scdn.co/image/ab67616d0000b273fad59f66aa743b2c8d65ccfb",
       "width": 640
     },
     {
       "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e0224bc15a2de788c73c79e7384",
+      "url": "https://i.scdn.co/image/ab67616d00001e02fad59f66aa743b2c8d65ccfb",
       "width": 300
     },
     {
       "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d0000485124bc15a2de788c73c79e7384",
+      "url": "https://i.scdn.co/image/ab67616d00004851fad59f66aa743b2c8d65ccfb",
       "width": 64
     }
   ],

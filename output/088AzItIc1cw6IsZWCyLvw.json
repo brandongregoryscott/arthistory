@@ -4,7 +4,7 @@
   "uri": "spotify:artist:088AzItIc1cw6IsZWCyLvw",
   "followers": {
     "href": null,
-    "total": 11325
+    "total": 11339
   },
   "genres": [
     "atmospheric post-metal",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 28,
+  "popularity": 29,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/088AzItIc1cw6IsZWCyLvw"
   }

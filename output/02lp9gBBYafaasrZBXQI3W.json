@@ -12,21 +12,21 @@
   "images": [
     {
       "height": 640,
-      "url": "https://i.scdn.co/image/ab67616d0000b27384b3f99cb36e3a66d897c88c",
+      "url": "https://i.scdn.co/image/ab67616d0000b27367292c94012f244cbca3d754",
       "width": 640
     },
     {
       "height": 300,
-      "url": "https://i.scdn.co/image/ab67616d00001e0284b3f99cb36e3a66d897c88c",
+      "url": "https://i.scdn.co/image/ab67616d00001e0267292c94012f244cbca3d754",
       "width": 300
     },
     {
       "height": 64,
-      "url": "https://i.scdn.co/image/ab67616d0000485184b3f99cb36e3a66d897c88c",
+      "url": "https://i.scdn.co/image/ab67616d0000485167292c94012f244cbca3d754",
       "width": 64
     }
   ],
-  "popularity": 0,
+  "popularity": 1,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/02lp9gBBYafaasrZBXQI3W"
   }

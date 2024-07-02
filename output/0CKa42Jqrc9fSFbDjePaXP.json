@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0CKa42Jqrc9fSFbDjePaXP",
   "followers": {
     "href": null,
-    "total": 944792
+    "total": 945268
   },
   "genres": [
     "conscious hip hop",
@@ -29,7 +29,7 @@
       "width": 160
     }
   ],
-  "popularity": 55,
+  "popularity": 56,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0CKa42Jqrc9fSFbDjePaXP"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:08QfTWpB2d2tGtVA8Ldhru",
   "followers": {
     "href": null,
-    "total": 1029
+    "total": 1049
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 9,
+  "popularity": 10,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/08QfTWpB2d2tGtVA8Ldhru"
   }

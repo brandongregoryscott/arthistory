@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0JLSd1xUcQIHcP9nfK5wNG",
   "followers": {
     "href": null,
-    "total": 2350
+    "total": 2376
   },
   "genres": [
     "german hyperpop",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 19,
+  "popularity": 20,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0JLSd1xUcQIHcP9nfK5wNG"
   }

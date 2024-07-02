@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Hd5B36qOoLcEo30HeGloF",
   "followers": {
     "href": null,
-    "total": 1764
+    "total": 1766
   },
   "genres": [
     "new hampshire indie"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 8,
+  "popularity": 9,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Hd5B36qOoLcEo30HeGloF"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0HyKkzt6higWFs5IwxSzrw",
   "followers": {
     "href": null,
-    "total": 1486
+    "total": 1487
   },
   "genres": [
     "detroit techno"
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 16,
+  "popularity": 17,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0HyKkzt6higWFs5IwxSzrw"
   }

@@ -4,7 +4,7 @@
   "uri": "spotify:artist:02DBFa1jp5WLRo71ttC5Q8",
   "followers": {
     "href": null,
-    "total": 19930
+    "total": 19936
   },
   "genres": [
     "aesthetic rap"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 37,
+  "popularity": 38,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/02DBFa1jp5WLRo71ttC5Q8"
   }

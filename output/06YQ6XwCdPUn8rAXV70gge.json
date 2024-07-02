@@ -4,7 +4,7 @@
   "uri": "spotify:artist:06YQ6XwCdPUn8rAXV70gge",
   "followers": {
     "href": null,
-    "total": 63219
+    "total": 63247
   },
   "genres": [
     "britpop",
@@ -28,7 +28,7 @@
       "width": 160
     }
   ],
-  "popularity": 40,
+  "popularity": 41,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/06YQ6XwCdPUn8rAXV70gge"
   }

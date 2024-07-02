@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0FNlwdCICKgCIMQdA9n2Oe",
   "followers": {
     "href": null,
-    "total": 8754
+    "total": 8755
   },
   "genres": [
     "classic danish pop",
@@ -28,7 +28,7 @@
       "width": 64
     }
   ],
-  "popularity": 29,
+  "popularity": 30,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0FNlwdCICKgCIMQdA9n2Oe"
   }

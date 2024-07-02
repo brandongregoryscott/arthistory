@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0Hc4D2lYEhXR9rVmfb4Syf",
   "followers": {
     "href": null,
-    "total": 2087
+    "total": 2089
   },
   "genres": [
 
@@ -26,7 +26,7 @@
       "width": 64
     }
   ],
-  "popularity": 29,
+  "popularity": 30,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0Hc4D2lYEhXR9rVmfb4Syf"
   }

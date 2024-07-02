@@ -4,7 +4,7 @@
   "uri": "spotify:artist:0AmjQ7AztgqsgxwtNV7GL9",
   "followers": {
     "href": null,
-    "total": 7499
+    "total": 7501
   },
   "genres": [
     "japanese jazz fusion"
@@ -26,7 +26,7 @@
       "width": 160
     }
   ],
-  "popularity": 13,
+  "popularity": 12,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/0AmjQ7AztgqsgxwtNV7GL9"
   }

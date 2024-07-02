@@ -4,7 +4,7 @@
   "uri": "spotify:artist:01EtE7AOXrksyHnSOWrHoN",
   "followers": {
     "href": null,
-    "total": 1705
+    "total": 1706
   },
   "genres": [
     "dreampunk",
@@ -27,7 +27,7 @@
       "width": 160
     }
   ],
-  "popularity": 6,
+  "popularity": 5,
   "external_urls": {
     "spotify": "https://open.spotify.com/artist/01EtE7AOXrksyHnSOWrHoN"
   }
