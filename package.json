@@ -1,0 +1,35 @@
+{
+    "dependencies": {},
+    "devDependencies": {
+        "@repo/eslint-config": "*",
+        "@repo/typescript-config": "*",
+        "commitizen": "4.3.0",
+        "husky": "9.1.4",
+        "lint-staged": "15.2.8",
+        "prettier": "3.3.2",
+        "turbo": "2.0.4"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "lint-staged": {
+        "*.{ts,tsx,json,md}": "prettier --ignore-unknown --write",
+        "*.{ts,tsx}": "eslint --cache --fix"
+    },
+    "name": "arthistory",
+    "packageManager": "npm@7.24.2",
+    "private": true,
+    "scripts": {
+        "build": "turbo build",
+        "clean": "rm -rf node_modules build apps/**/node_modules packages/**/node_modules apps/**/dist apps/**/build packages/**/dist packages/**/build apps/**/.next",
+        "dev": "turbo dev",
+        "format": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
+        "lint": "turbo lint",
+        "prepare": "husky || exit 0"
+    },
+    "version": "0.0.0-development",
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ]
+}

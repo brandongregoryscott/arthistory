@@ -1,0 +1,36 @@
+services:
+    - type: web
+      name: arthistory-api
+
+      autoDeploy: true
+      branch: main
+      buildCommand: docker build
+      healthCheckPath: /healthcheck
+      plan: starter
+      runtime: docker
+      envVars:
+        - key: DATABASE_PATH
+          sync: false
+        - key: AWS_ACCESS_KEY_ID
+          sync: false
+        - key: AWS_SECRET_ACCESS_KEY
+          sync: false
+        - key: CLIENT_ID
+          sync: false
+        - key: CLIENT_SECRET
+          sync: false
+      buildFilter:
+        paths:
+        - apps/api/**/*
+        - process.yml
+
+    - type: web
+      name: arthistory-web
+
+      autoDeploy: true
+      branch: main
+      buildCommand: npm ci && npm run build
+      pullRequestPreviewsEnabled: true
+      rootDir: apps/web
+      runtime: static
+      staticPublishPath: out

@@ -1,0 +1,10 @@
+services:
+    api:
+        build:
+            context: .
+            args:
+                CLIENT_ID: 6d4172284c5b4de4a3d18ec8259eb18a
+                CLIENT_SECRET: e58148308cdc41d0836d9cfe8154e5d8
+
+        ports:
+            - "3001:3001"
