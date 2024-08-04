@@ -77,7 +77,10 @@ const HomePage: React.FC = () => {
         const labels = uniq(
             compact(
                 snapshots?.map((snapshot) =>
-                    new Date(snapshot.timestamp).toLocaleDateString()
+                    new Date(snapshot.timestamp).toLocaleDateString(undefined, {
+                        dateStyle:
+                            breakpoint === "mobile" ? "short" : undefined,
+                    })
                 )
             )
         );
@@ -99,7 +102,7 @@ const HomePage: React.FC = () => {
         });
 
         return { labels: compact(labels), datasets: compact(datasets) };
-    }, [snapshots, selectedArtistIds, artists, darkTheme]);
+    }, [snapshots, selectedArtistIds, breakpoint, artists, darkTheme]);
 
     const textColor = darkTheme
         ? color.dark.text.primary.default
@@ -120,6 +123,7 @@ const HomePage: React.FC = () => {
     const options = useMemo(
         () => ({
             indexAxis: "x" as const,
+            maintainAspectRatio: breakpoint === "desktop",
             elements: {
                 bar: {
                     borderWidth: 2,
@@ -320,7 +324,7 @@ const HomePage: React.FC = () => {
                             title="No artists selected"
                         />
                     ) : (
-                        <Bar data={data} options={options} />
+                        <Bar data={data} key={breakpoint} options={options} />
                     )}
                 </Box>
                 <Footer
