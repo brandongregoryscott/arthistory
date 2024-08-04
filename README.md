@@ -53,6 +53,9 @@ cp apps/web/.env.example apps/web/.env
 # Install packages (ensure you are using Node v20+, run `nvm use` if you have `nvm` installed.)
 npm i
 
+# Run a build (This ensures sqlite is built and placed in the right location in the monorepo)
+npm run build
+
 # Run the development servers for the web app and API
 npm run dev
 
