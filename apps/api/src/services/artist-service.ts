@@ -3,7 +3,6 @@ import type {
     ArtistSnapshot,
     ArtistSnapshotRow,
 } from "@repo/common";
-import { Artist } from "@repo/common";
 import { getDb } from "../database";
 import {
     fromUnixTime,
@@ -12,8 +11,9 @@ import {
     getQuarter,
     getWeek,
     getYear,
+    startOfDay,
 } from "date-fns";
-import { uniqBy } from "lodash";
+import { countBy, uniqBy } from "lodash";
 
 interface ListArtistSnapshotsOptions {
     ids: string[];
@@ -82,43 +82,37 @@ const ArtistService = {
 
         switch (resolution) {
             case "yearly":
-                snapshots = uniqBy(
+                return intersectionByNormalizedTimestamp(
+                    ids.length,
                     snapshots,
-                    (snapshot) =>
-                        `${snapshot.id}_${getYear(snapshot.timestamp)}`
+                    getYear
                 );
-                break;
             case "quarterly":
-                snapshots = uniqBy(
+                return intersectionByNormalizedTimestamp(
+                    ids.length,
                     snapshots,
-                    (snapshot) =>
-                        `${snapshot.id}_${getQuarter(snapshot.timestamp)}`
+                    getQuarter
                 );
-                break;
             case "monthly":
-                snapshots = uniqBy(
+                return intersectionByNormalizedTimestamp(
+                    ids.length,
                     snapshots,
-                    (snapshot) =>
-                        `${snapshot.id}_${getMonth(snapshot.timestamp)}`
+                    getMonth
                 );
-                break;
             case "daily":
-                snapshots = uniqBy(
+                return intersectionByNormalizedTimestamp(
+                    ids.length,
                     snapshots,
-                    (snapshot) =>
-                        `${snapshot.id}_${getDayOfYear(snapshot.timestamp)}`
+                    getDayOfYear
                 );
-                break;
             case "weekly":
             default:
-                snapshots = uniqBy(
+                return intersectionByNormalizedTimestamp(
+                    ids.length,
                     snapshots,
-                    (snapshot) =>
-                        `${snapshot.id}_${getWeek(snapshot.timestamp)}`
+                    getWeek
                 );
         }
-
-        return snapshots;
     },
 };
 
@@ -127,8 +121,26 @@ const queryPlaceholder = (count: number): string =>
 
 const normalizeArtistSnapshot = (row: ArtistSnapshotRow): ArtistSnapshot => ({
     ...row,
-    timestamp: fromUnixTime(row.timestamp).toISOString(),
+    timestamp: startOfDay(fromUnixTime(row.timestamp)).toISOString(),
 });
+
+const intersectionByNormalizedTimestamp = (
+    count: number,
+    snapshots: ArtistSnapshot[],
+    getInterval: (timestamp: string) => number
+): ArtistSnapshot[] => {
+    const countByTimestamp = countBy(
+        snapshots,
+        (snapshot) => snapshot.timestamp
+    );
+
+    return uniqBy(
+        snapshots.filter(
+            (snapshot) => countByTimestamp[snapshot.timestamp] === count
+        ),
+        (snapshot) => `${snapshot.id}_${getInterval(snapshot.timestamp)}`
+    );
+};
 
 export type { Resolution };
 export { ArtistService };
