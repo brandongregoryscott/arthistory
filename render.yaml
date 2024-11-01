@@ -6,7 +6,7 @@ services:
       branch: main
       buildCommand: docker build
       healthCheckPath: /healthcheck
-      plan: starter
+      plan: free
       runtime: docker
       envVars:
         - key: DATABASE_PATH
