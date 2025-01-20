@@ -1,4 +1,5 @@
-# docker-compose build --build-arg AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID --build-arg AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY --build-arg CLIENT_ID=CLIENT_ID --build-arg CLIENT_SECRET=CLIENT_SECRET
+# docker build . -t arthistory-api:latest --build-arg AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID --build-arg AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY --build-arg CLIENT_ID=CLIENT_ID --build-arg CLIENT_SECRET=CLIENT_SECRET
+# docker run arthistory-api
 
 ## Base
 FROM node:20-alpine3.19 AS base
