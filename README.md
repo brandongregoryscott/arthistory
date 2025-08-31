@@ -27,19 +27,19 @@ The Spotify API provides the current follower count and a popularity score for a
 
 ## How it works
 
-Artist data is synced and pushed everyday to the [spotify-data](https://github.com/brandongregoryscott/spotify-data) repo. To easily query the data over time, a SQLite database is built by iterating through the git history and pushed up to S3, which is pulled down and bundled with the API server.
+Artist data is synced and pushed to a SQLite database stored on S3 with scripts from the [spotify-data-scripts](https://github.com/brandongregoryscott/spotify-data-scripts) repo. This database is pulled down and bundled with the API server on build.
 
-Not every artist on Spotify is tracked, but new artists can be requested through the web UI or by opening up a pull request to the [spotify-data](https://github.com/brandongregoryscott/spotify-data) repo.
+Not every artist on Spotify is tracked, but new artists can be requested through the web UI.
 
 ## Development
 
 ### Database
 
-The API requires at least a partial SQLite database to query. See the [spotify-data](https://github.com/brandongregoryscott/spotify-data/tree/main?tab=readme-ov-file#building-a-sqlite-database) repo for instructions on how to build a SQLite database to use.
+The API requires a SQLite database to query. A small sample database is included in the repo: [`_spotify-data.db`](./_spotify-data.db).
 
 ### Spotify API keys
 
-The search endpoint in the API hits the Spotify API, so you'll need API keys to search for artists. See the [Spotify API](https://developer.spotify.com/documentation/web-api/tutorials/getting-started) documentation on signing up for developer access.
+The `/v1/artists` and `/v1/artists/search` endpoints in the API hit the Spotify API, so you'll need API keys to run them. See the [Spotify API](https://developer.spotify.com/documentation/web-api/tutorials/getting-started) documentation on signing up for developer access.
 
 ### Setup
 
