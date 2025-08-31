@@ -4,11 +4,13 @@ ARG AWS_ACCESS_KEY_ID
 ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
 ARG AWS_SECRET_ACCESS_KEY
 ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+ARG AWS_S3_ENDPOINT
+ENV AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
 WORKDIR /app
 RUN apk add aws-cli
 
 # Download the sqlite db from s3
-RUN aws s3 cp s3://arthistory-spotify-data/$(aws s3 ls s3://arthistory-spotify-data | sort | tail -n 1 | awk '{print $4}') _spotify-data.db
+RUN aws s3 --endpoint-url $AWS_S3_ENDPOINT cp s3://spotify-data/$(aws s3 ls s3://spotify-data | sort | tail -n 1 | awk '{print $4}') _spotify-data.db
 
 ## Builder
 FROM base AS builder
