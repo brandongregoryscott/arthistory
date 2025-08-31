@@ -351,6 +351,7 @@ const HomePage: React.FC = () => {
             </LeafyGreenProvider>
         );
     }
+
     return (
         <LeafyGreenProvider darkMode={darkMode}>
             <Box
@@ -368,11 +369,7 @@ const HomePage: React.FC = () => {
                         display: "flex",
                         flexDirection: "column",
                     })}>
-                    <Header
-                        breakpoint={breakpoint}
-                        darkMode={darkMode}
-                        onThemeChange={setDarkMode}
-                    />
+                    <Header />
                     <SearchSelect
                         getRemovableBadgeProps={getRemovableBadgeProps}
                         getSearchResultProps={getSearchResultProps}
@@ -402,6 +399,7 @@ const HomePage: React.FC = () => {
                     breakpoint={breakpoint}
                     darkMode={darkMode}
                     lastUpdated={latestMeta?.timestamp}
+                    onThemeChange={setDarkMode}
                 />
             </Box>
         </LeafyGreenProvider>
