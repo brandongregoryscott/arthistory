@@ -34,7 +34,7 @@ import {
     SearchSelect,
 } from "@repo/ui";
 import {
-    ArtistRow,
+    Artist,
     ArtistWithTrackingStatus,
     DEFAULT_ARTIST_IDS,
 } from "@repo/common";
@@ -51,7 +51,7 @@ ChartJS.register(
     Legend
 );
 
-const EMPTY_ARTISTS: Record<string, ArtistRow> = {};
+const EMPTY_ARTISTS: Record<string, Artist> = {};
 
 const HomePage: React.FC = () => {
     const [isMounted, setIsMounted] = useState<boolean>(false);
@@ -259,7 +259,7 @@ const HomePage: React.FC = () => {
     );
 
     const getRemovableBadgeProps = useCallback(
-        (artist: ArtistRow): RemovableBadgeProps => {
+        (artist: Artist): RemovableBadgeProps => {
             return {
                 onRemove: () => {
                     removeArtist(artist.id);

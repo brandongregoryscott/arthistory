@@ -1,19 +1,21 @@
-import type { GitHistory, GitHistoryRow } from "@repo/common";
+import type { ArtistSnapshot, ArtistSnapshotRow } from "@repo/common";
 import { getDb } from "../database";
 import { fromUnixTime } from "date-fns";
 
 const MetaService = {
-    latest: async (): Promise<GitHistory | undefined> => {
+    latest: async (): Promise<
+        Pick<ArtistSnapshot, "timestamp"> | undefined
+    > => {
         const db = await getDb();
-        const row = await db.get<GitHistoryRow>(
-            `SELECT * FROM git_history ORDER BY timestamp DESC LIMIT 1;`
+        const row = await db.get<ArtistSnapshotRow>(
+            `SELECT * FROM artist_snapshots ORDER BY timestamp DESC LIMIT 1;`
         );
 
         if (row === undefined) {
             return undefined;
         }
 
-        return { ...row, timestamp: fromUnixTime(row.timestamp).toISOString() };
+        return { timestamp: fromUnixTime(row.timestamp).toISOString() };
     },
 };
 
