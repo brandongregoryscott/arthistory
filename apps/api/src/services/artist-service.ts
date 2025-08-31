@@ -1,9 +1,4 @@
-import type {
-    Artist,
-    ArtistRow,
-    ArtistSnapshot,
-    ArtistSnapshotRow,
-} from "@repo/common";
+import type { Artist, ArtistSnapshot, ArtistSnapshotRow } from "@repo/common";
 import { getDb } from "../database";
 import {
     fromUnixTime,
@@ -47,7 +42,7 @@ const ArtistService = {
     },
     listArtists: async (
         options: ListArtistsOptions
-    ): Promise<Record<string, ArtistRow>> => {
+    ): Promise<Record<string, Artist>> => {
         const { ids } = options;
 
         const artists = await SpotifyClient.artists.get(ids);
