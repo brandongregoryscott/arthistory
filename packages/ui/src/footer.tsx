@@ -6,12 +6,12 @@ import { color } from "@leafygreen-ui/tokens";
 
 interface FooterProps {
     lastUpdated?: string;
-    darkTheme: boolean;
+    darkMode: boolean;
     breakpoint: "mobile" | "desktop";
 }
 
 const Footer: React.FC<FooterProps> = (props) => {
-    const { darkTheme, breakpoint } = props;
+    const { darkMode, breakpoint } = props;
     const flexClassName = cx(
         breakpoint === "mobile" && css({ display: "flex" })
     );
@@ -35,7 +35,7 @@ const Footer: React.FC<FooterProps> = (props) => {
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: breakpoint === "mobile" ? "center" : "flex-end",
-                backgroundColor: darkTheme
+                backgroundColor: darkMode
                     ? color.dark.background.secondary.default
                     : color.light.background.secondary.default,
                 height: 32,

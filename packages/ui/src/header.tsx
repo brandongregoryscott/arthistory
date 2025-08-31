@@ -6,13 +6,13 @@ import Icon from "@leafygreen-ui/icon";
 import { H3 } from "@leafygreen-ui/typography";
 
 interface HeaderProps {
-    darkTheme: boolean;
+    darkMode: boolean;
     breakpoint: "mobile" | "desktop";
     onThemeChange: (darkTheme: boolean | SetStateAction<boolean>) => void;
 }
 
 const Header: React.FC<HeaderProps> = (props) => {
-    const { darkTheme, onThemeChange, breakpoint } = props;
+    const { darkMode, onThemeChange, breakpoint } = props;
     const headerContainerClassName = cx(
         breakpoint !== "mobile" && css({ marginLeft: "50%" })
     );
@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = (props) => {
             <IconButton
                 aria-label="Theme switcher"
                 onClick={() => onThemeChange((darkTheme) => !darkTheme)}>
-                <Icon glyph={darkTheme ? "Sun" : "Moon"} />
+                <Icon glyph={darkMode ? "Sun" : "Moon"} />
             </IconButton>
         </Box>
     );

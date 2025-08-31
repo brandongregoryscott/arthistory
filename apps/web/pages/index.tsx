@@ -3,7 +3,8 @@
 import Box from "@leafygreen-ui/box";
 import { Link } from "@leafygreen-ui/typography";
 import { css } from "@leafygreen-ui/emotion";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { PageLoader } from "@leafygreen-ui/loading-indicator";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LeafyGreenProvider from "@leafygreen-ui/leafygreen-provider";
 import { Bar } from "react-chartjs-2";
 import {
@@ -56,7 +57,7 @@ const EMPTY_ARTISTS: Record<string, Artist> = {};
 const HomePage: React.FC = () => {
     const [isMounted, setIsMounted] = useState<boolean>(false);
     const breakpoint = useBreakpoint();
-    const [darkTheme, setDarkTheme] = useState<boolean>(getDefaultDarkTheme);
+    const [darkMode, setDarkMode] = useState<boolean>(getDefaultDarkMode);
     const [searchValue, setSearchValue] = useState<string>("");
     const [selectedArtistIds, setSelectedArtistIds] =
         useState<string[]>(DEFAULT_ARTIST_IDS);
@@ -64,14 +65,64 @@ const HomePage: React.FC = () => {
     const { data: searchResults } = useSearchArtistsByName({
         name: searchValue,
     });
+    const [loadingText, setLoadingText] = useState<string>("Loading...");
+    const initialTimestampRef = useRef<number>(new Date().valueOf());
+    const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined
+    );
     const { mutate: requestArtist } = useRequestArtist();
     const { data: latestMeta } = useGetLatestMeta();
     const { data: artists = EMPTY_ARTISTS } = useListArtists({
         ids: selectedArtistIds,
     });
-    const { data: snapshots } = useListArtistSnapshots({
+    const { data: snapshots, isLoading } = useListArtistSnapshots({
         ids: selectedArtistIds,
     });
+    const isLoadingRef = useRef<boolean>(isLoading);
+    isLoadingRef.current = isLoading;
+
+    useEffect(() => {
+        if (!isLoading) {
+            return;
+        }
+
+        timerRef.current = setInterval(() => {
+            const isLoading = isLoadingRef.current;
+            if (!isLoading) {
+                clearInterval(timerRef.current);
+                return;
+            }
+
+            const initialTimestamp = initialTimestampRef.current;
+            const currentTimestamp = new Date().valueOf();
+            const loadingTimeInSeconds = differenceInSeconds(
+                initialTimestamp,
+                currentTimestamp
+            );
+
+            if (loadingTimeInSeconds > 40) {
+                setLoadingText("Any second now...");
+                return;
+            }
+
+            if (loadingTimeInSeconds > 30) {
+                setLoadingText("Almost there...");
+                return;
+            }
+
+            if (loadingTimeInSeconds > 15) {
+                setLoadingText(
+                    "The server is likely cold booting, please hold..."
+                );
+                return;
+            }
+
+            if (loadingTimeInSeconds > 5) {
+                setLoadingText("Still loading, hold tight...");
+                return;
+            }
+        }, 1000);
+    }, [isLoading]);
 
     const data = useMemo(() => {
         const labels = uniq(
@@ -97,26 +148,26 @@ const HomePage: React.FC = () => {
             return {
                 label,
                 data: artistSnapshots.map((snapshot) => snapshot.followers),
-                ...getHashedBarChartColor(artistId, darkTheme),
+                ...getHashedBarChartColor(artistId, darkMode),
             };
         });
 
         return { labels: compact(labels), datasets: compact(datasets) };
-    }, [snapshots, selectedArtistIds, breakpoint, artists, darkTheme]);
+    }, [snapshots, selectedArtistIds, breakpoint, artists, darkMode]);
 
-    const textColor = darkTheme
+    const textColor = darkMode
         ? color.dark.text.primary.default
         : color.light.text.primary.default;
 
-    const invertedTextColor = darkTheme
+    const invertedTextColor = darkMode
         ? color.light.text.primary.default
         : color.dark.text.primary.default;
 
-    const invertedBackgroundColor = darkTheme
+    const invertedBackgroundColor = darkMode
         ? color.light.background.primary.default
         : color.dark.background.primary.default;
 
-    const gridColor = darkTheme
+    const gridColor = darkMode
         ? color.dark.background.disabled.default
         : color.light.background.disabled.default;
 
@@ -278,15 +329,35 @@ const HomePage: React.FC = () => {
         return;
     }
 
+    const backgroundColor = darkMode
+        ? color.dark.background.primary.default
+        : color.light.background.primary.default;
+
+    if (isLoading) {
+        return (
+            <LeafyGreenProvider darkMode={darkMode}>
+                <Box
+                    className={css({
+                        backgroundColor,
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    })}>
+                    <PageLoader description={loadingText} />
+                </Box>
+            </LeafyGreenProvider>
+        );
+    }
     return (
-        <LeafyGreenProvider darkMode={darkTheme}>
+        <LeafyGreenProvider darkMode={darkMode}>
             <Box
                 className={css({
                     width: "100%",
                     height: "100%",
-                    backgroundColor: darkTheme
-                        ? color.dark.background.primary.default
-                        : color.light.background.primary.default,
+                    backgroundColor,
                 })}>
                 <Box
                     className={css({
@@ -299,8 +370,8 @@ const HomePage: React.FC = () => {
                     })}>
                     <Header
                         breakpoint={breakpoint}
-                        darkTheme={darkTheme}
-                        onThemeChange={setDarkTheme}
+                        darkMode={darkMode}
+                        onThemeChange={setDarkMode}
                     />
                     <SearchSelect
                         getRemovableBadgeProps={getRemovableBadgeProps}
@@ -329,7 +400,7 @@ const HomePage: React.FC = () => {
                 </Box>
                 <Footer
                     breakpoint={breakpoint}
-                    darkTheme={darkTheme}
+                    darkMode={darkMode}
                     lastUpdated={latestMeta?.timestamp}
                 />
             </Box>
@@ -337,7 +408,7 @@ const HomePage: React.FC = () => {
     );
 };
 
-const getHashedBarChartColor = (id: string, darkTheme: boolean) => {
+const getHashedBarChartColor = (id: string, darkMode: boolean) => {
     const lightThemeColors = [
         {
             borderColor: palette.gray.dark3,
@@ -388,7 +459,7 @@ const getHashedBarChartColor = (id: string, darkTheme: boolean) => {
         },
     ];
 
-    const colors = darkTheme
+    const colors = darkMode
         ? lightOrDarkColors
         : [...lightThemeColors, ...lightOrDarkColors];
 
@@ -399,6 +470,14 @@ const getHashedBarChartColor = (id: string, darkTheme: boolean) => {
     return color!;
 };
 
+const differenceInSeconds = (
+    initialTimestamp: number,
+    currentTimestamp: number
+): number => {
+    const difference = currentTimestamp - initialTimestamp;
+    return difference / 1000;
+};
+
 const hash = (value: string) => {
     var h = 0,
         l = value.length,
@@ -407,7 +486,7 @@ const hash = (value: string) => {
     return h;
 };
 
-const getDefaultDarkTheme = (): boolean =>
+const getDefaultDarkMode = (): boolean =>
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
 
