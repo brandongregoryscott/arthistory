@@ -1,4 +1,5 @@
 import type {
+    Artist,
     ArtistRow,
     ArtistSnapshot,
     ArtistSnapshotRow,
@@ -14,6 +15,7 @@ import {
     startOfDay,
 } from "date-fns";
 import { countBy, uniqBy } from "lodash";
+import { SpotifyClient } from "../spotify";
 
 interface ListArtistSnapshotsOptions {
     ids: string[];
@@ -47,24 +49,12 @@ const ArtistService = {
         options: ListArtistsOptions
     ): Promise<Record<string, ArtistRow>> => {
         const { ids } = options;
-        const db = await getDb();
-        const results = await db.all<ArtistRow[]>(
-            `SELECT * FROM artists WHERE id IN (${queryPlaceholder(ids.length)});`,
-            ids
-        );
 
-        const result = ids.reduce(
-            (accumulated, id) => {
-                const result = results.find((result) => result.id === id);
-                if (result === undefined) {
-                    return accumulated;
-                }
-                return {
-                    ...accumulated,
-                    [id]: result,
-                };
-            },
-            {} as Record<string, ArtistRow>
+        const artists = await SpotifyClient.artists.get(ids);
+
+        const result: Record<string, Artist> = artists.reduce(
+            (accumulated, artist) => ({ ...accumulated, [artist.id]: artist }),
+            {}
         );
 
         return result;
