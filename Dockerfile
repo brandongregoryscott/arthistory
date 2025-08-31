@@ -10,7 +10,8 @@ WORKDIR /app
 RUN apk add aws-cli
 
 # Download the sqlite db from s3
-RUN aws s3 --endpoint-url $AWS_S3_ENDPOINT cp s3://spotify-data/$(aws s3 ls s3://spotify-data | sort | tail -n 1 | awk '{print $4}') _spotify-data.db
+RUN aws s3 --endpoint-url $AWS_S3_ENDPOINT ls s3://spotify-data
+RUN aws s3 --endpoint-url $AWS_S3_ENDPOINT cp s3://spotify-data/$(aws s3 --endpoint-url $AWS_S3_ENDPOINT ls s3://spotify-data | sort | tail -n 1 | awk '{print $4}') _spotify-data.db
 
 ## Builder
 FROM base AS builder
