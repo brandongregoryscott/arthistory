@@ -1,12 +1,13 @@
 import type { ApiErrorResponse, ApiSuccessResponse } from "../responses";
 import type {
-    ArtistRow,
+    Artist,
     ArtistSnapshot,
     ArtistWithTrackingStatus,
-    GitHistory,
 } from "../types";
 
-type GetLatestMetaResult = ApiErrorResponse | ApiSuccessResponse<GitHistory>;
+type GetLatestMetaResult =
+    | ApiErrorResponse
+    | ApiSuccessResponse<Pick<ArtistSnapshot, "timestamp">>;
 
 interface GetArtistSnapshotsOptions {
     id: string;
@@ -30,7 +31,7 @@ interface ListArtistsOptions {
 
 type ListArtistsResult =
     | ApiErrorResponse
-    | ApiSuccessResponse<Record<string, ArtistRow>>;
+    | ApiSuccessResponse<Record<string, Artist>>;
 
 interface RequestArtistOptions {
     id: string;
