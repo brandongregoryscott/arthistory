@@ -11,7 +11,7 @@ type SQLStatement = [sql: string, values: any[]];
 
 const main = async () => {
     const targetDb = await openDb(MERGED_DB_NAME);
-    createArtistSnapshotsTable(targetDb);
+    await createArtistSnapshotsTable(targetDb);
 
     const sourceDbFileNames = await getSourceDbFileNames();
 
@@ -33,12 +33,14 @@ const main = async () => {
         );
     }
 
+    await createArtistSnapshotsIndexes(targetDb);
+
     console.timeEnd(endLabel);
 };
 
-const createArtistSnapshotsTable = (
+const createArtistSnapshotsTable = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
-) => {
+) =>
     db.exec(`
     CREATE TABLE IF NOT EXISTS artist_snapshots (
         id TEXT,
@@ -48,12 +50,13 @@ const createArtistSnapshotsTable = (
         UNIQUE (id, timestamp)
     )`);
 
-    db.exec("CREATE INDEX artist_snapshot_id ON artist_snapshots (id)");
-
-    db.exec(
-        "CREATE INDEX artist_snapshot_timestamp ON artist_snapshots (timestamp)"
-    );
-};
+const createArtistSnapshotsIndexes = async (
+    db: Database<sqlite3.Database, sqlite3.Statement>
+) =>
+    db.exec(`
+    CREATE INDEX artist_snapshot_id ON artist_snapshots (id);
+    CREATE INDEX artist_snapshot_timestamp ON artist_snapshots (timestamp);
+`);
 
 const bulkExecute = async <T>(
     db: Database<sqlite3.Database, sqlite3.Statement>,
