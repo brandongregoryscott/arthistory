@@ -5,7 +5,7 @@ import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, isEmpty } from "lodash";
 import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
-const CHUNK_SIZE = 25000;
+const CHUNK_SIZE = 50000;
 const MERGED_DB_NAME = "merged-spotify-data.db";
 
 type SQLStatement = [sql: string, values: any[]];
@@ -29,13 +29,16 @@ const main = async () => {
             `Merging ${sourceDbFileName} (${index + 1}/${sourceDbFileNames.length})...`
         );
         const sourceDb = await openDb(sourceDbFileName);
-        const sourceRecords = await sourceDb.all<ArtistSnapshotRow[]>(
-            "SELECT * FROM artist_snapshots;"
-        );
-        await bulkExecute(
-            targetDb,
-            sourceRecords,
-            generateInsertArtistSnapshotStatements
+        await paginateRows<ArtistSnapshotRow>(
+            sourceDb,
+            "artist_snapshots",
+            CHUNK_SIZE,
+            (rows) =>
+                bulkExecute(
+                    targetDb,
+                    rows,
+                    generateInsertArtistSnapshotStatements
+                )
         );
         await sourceDb.close();
     }
@@ -43,6 +46,33 @@ const main = async () => {
     await createArtistSnapshotsIndexes(targetDb);
 
     console.timeEnd(endLabel);
+};
+
+const countRows = async (
+    db: Database<sqlite3.Database, sqlite3.Statement>,
+    table: string
+): Promise<number> => {
+    const result = (await db.get(`SELECT COUNT(*) FROM ${table};`)) as {
+        "COUNT(*)": number;
+    };
+    return result["COUNT(*)"];
+};
+
+const paginateRows = async <T>(
+    db: Database<sqlite3.Database, sqlite3.Statement>,
+    table: string,
+    pageSize: number,
+    callback: (rows: T[]) => Promise<void>
+): Promise<void> => {
+    const total = await countRows(db, table);
+    let counter = 0;
+    while (counter < total) {
+        const rows = await db.all<T[]>(
+            `SELECT * FROM ${table} LIMIT ${pageSize} OFFSET ${counter};`
+        );
+        counter += rows.length;
+        await callback(rows);
+    }
 };
 
 /**
@@ -120,6 +150,7 @@ const flushStatements = async (
 ): Promise<void> =>
     new Promise((resolve) => {
         if (isEmpty(statements)) {
+            resolve();
             return;
         }
 
