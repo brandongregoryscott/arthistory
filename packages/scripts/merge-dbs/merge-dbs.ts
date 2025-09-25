@@ -1,10 +1,11 @@
 import sqlite3 from "sqlite3";
-import { Database, open, ISqlite } from "sqlite";
+import { Database, open } from "sqlite";
 import { glob } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, isEmpty } from "lodash";
 import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
+const CHUNK_SIZE = 50000;
 const MERGED_DB_NAME = "merged-spotify-data.db";
 
 type SQLStatement = [sql: string, values: any[]];
@@ -62,8 +63,8 @@ const bulkExecute = async <T>(
     db: Database<sqlite3.Database, sqlite3.Statement>,
     items: T[],
     generateStatements: (items: T[]) => SQLStatement[],
-    chunkSize = 50,
-    flushAfter = 500
+    chunkSize = CHUNK_SIZE,
+    flushAfter = CHUNK_SIZE
 ): Promise<void> => {
     let statements: SQLStatement[] = [];
     const itemChunks = chunk(items, chunkSize);
