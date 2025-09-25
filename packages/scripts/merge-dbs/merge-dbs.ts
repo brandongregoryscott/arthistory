@@ -5,7 +5,7 @@ import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, isEmpty } from "lodash";
 import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
-const CHUNK_SIZE = 100000;
+const CHUNK_SIZE = 50000;
 const MERGED_DB_NAME = "merged-spotify-data.db";
 
 type SQLStatement = [sql: string, values: any[]];
