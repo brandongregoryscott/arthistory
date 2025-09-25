@@ -2,6 +2,8 @@ import { S3, _Object } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import { PARTIAL_DB_PREFIX, S3_BUCKET_NAME } from "../constants/storage";
 import { writeFile } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { pipeline } from "node:stream";
 
 dotenv.config();
 
@@ -44,12 +46,18 @@ const downloadObject = async (object: _Object) => {
         Bucket: S3_BUCKET_NAME,
         Key: key,
     });
-    const body = await result.Body?.transformToByteArray();
-    if (body === undefined) {
+    const objectStream = result.Body?.transformToWebStream();
+    if (objectStream === undefined) {
         return;
     }
 
-    await writeFile(key, body);
+    const fileStream = createWriteStream(key);
+    const writableStream = new WritableStream({
+        write: (chunk) => {
+            fileStream.write(chunk);
+        },
+    });
+    objectStream.pipeTo(writableStream);
 };
 
 main();
