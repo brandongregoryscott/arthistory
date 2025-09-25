@@ -7,6 +7,8 @@ import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
 const MERGED_DB_NAME = "merged-spotify-data.db";
 
+type SQLStatement = [sql: string, values: any[]];
+
 const main = async () => {
     const targetDb = await openDb(MERGED_DB_NAME);
     createArtistSnapshotsTable(targetDb);
@@ -24,7 +26,7 @@ const main = async () => {
         const sourceRecords = await sourceDb.all<ArtistSnapshotRow[]>(
             "SELECT * FROM artist_snapshots;"
         );
-        bulkExecute(
+        await bulkExecute(
             targetDb,
             sourceRecords,
             generateInsertArtistSnapshotStatements
@@ -45,66 +47,77 @@ const createArtistSnapshotsTable = (
         popularity NUMERIC,
         UNIQUE (id, timestamp)
     )`);
+
+    db.exec("CREATE INDEX artist_snapshot_id ON artist_snapshots (id)");
+
+    db.exec(
+        "CREATE INDEX artist_snapshot_timestamp ON artist_snapshots (timestamp)"
+    );
 };
 
-const bulkExecute = <T>(
+const bulkExecute = async <T>(
     db: Database<sqlite3.Database, sqlite3.Statement>,
     items: T[],
-    generateStatements: (items: T[]) => ISqlite.SQLStatement[],
+    generateStatements: (items: T[]) => SQLStatement[],
     chunkSize = 50,
     flushAfter = 500
-) => {
-    let statements: ISqlite.SQLStatement[] = [];
+): Promise<void> => {
+    let statements: SQLStatement[] = [];
     const itemChunks = chunk(items, chunkSize);
-    itemChunks.forEach((itemChunk) => {
+    for (const itemChunk of itemChunks) {
         statements = [...statements, ...generateStatements(itemChunk)];
-        const flushed = flushStatementsIfNeeded(db, statements, flushAfter);
+        const flushed = await flushStatementsIfNeeded(
+            db,
+            statements,
+            flushAfter
+        );
         if (flushed) {
             statements = [];
         }
-    });
+    }
 
-    flushStatements(db, statements);
+    await flushStatements(db, statements);
 };
 
-const flushStatementsIfNeeded = (
+const flushStatementsIfNeeded = async (
     db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: ISqlite.SQLStatement[],
+    statements: SQLStatement[],
     flushAfter: number
-): boolean => {
+): Promise<boolean> => {
     if (statements.length < flushAfter) {
         return false;
     }
 
-    flushStatements(db, statements);
+    await flushStatements(db, statements);
     return true;
 };
 
-const flushStatements = (
+const flushStatements = async (
     db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: ISqlite.SQLStatement[]
-) => {
-    if (isEmpty(statements)) {
-        return;
-    }
+    statements: SQLStatement[]
+): Promise<void> =>
+    new Promise((resolve) => {
+        if (isEmpty(statements)) {
+            return;
+        }
 
-    db.getDatabaseInstance().serialize(() => {
-        db.run("BEGIN TRANSACTION");
-        statements.forEach((statement) => {
-            db.exec(statement);
+        const _db = db.getDatabaseInstance();
+        _db.serialize(() => {
+            _db.run("BEGIN TRANSACTION");
+            statements.forEach((statement) => {
+                _db.run(...statement);
+            });
+            _db.run("COMMIT", resolve);
         });
-        db.run("COMMIT");
     });
-};
 
 const generateInsertArtistSnapshotStatements = (
     snapshots: ArtistSnapshotRow[]
-): ISqlite.SQLStatement[] =>
-    snapshots.map(generateInsertArtistSnapshotStatement);
+): SQLStatement[] => snapshots.map(generateInsertArtistSnapshotStatement);
 
 const generateInsertArtistSnapshotStatement = (
     snapshot: ArtistSnapshotRow
-): ISqlite.SQLStatement => {
+): SQLStatement => {
     const values = [
         snapshot.id,
         snapshot.timestamp,
@@ -112,10 +125,10 @@ const generateInsertArtistSnapshotStatement = (
         snapshot.followers,
     ];
 
-    return {
-        sql: "INSERT OR IGNORE INTO artist_snapshots (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);",
+    return [
+        "INSERT OR IGNORE INTO artist_snapshots (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);",
         values,
-    };
+    ];
 };
 
 const getSourceDbFileNames = async (): Promise<string[]> => {
