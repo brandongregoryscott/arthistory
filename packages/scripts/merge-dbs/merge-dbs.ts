@@ -5,7 +5,7 @@ import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, isEmpty } from "lodash";
 import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
-const CHUNK_SIZE = 50000;
+const CHUNK_SIZE = 100000;
 const MERGED_DB_NAME = "merged-spotify-data.db";
 
 type SQLStatement = [sql: string, values: any[]];
@@ -13,6 +13,7 @@ type SQLStatement = [sql: string, values: any[]];
 const main = async () => {
     const targetDb = await openDb(MERGED_DB_NAME);
     await createArtistSnapshotsTable(targetDb);
+    await setPerformancePragmas(targetDb);
 
     const sourceDbFileNames = await getSourceDbFileNames();
 
@@ -23,6 +24,10 @@ const main = async () => {
     console.time(endLabel);
 
     for (const sourceDbFileName of sourceDbFileNames) {
+        const index = sourceDbFileNames.indexOf(sourceDbFileName);
+        console.log(
+            `Merging ${sourceDbFileName} (${index + 1}/${sourceDbFileNames.length})...`
+        );
         const sourceDb = await openDb(sourceDbFileName);
         const sourceRecords = await sourceDb.all<ArtistSnapshotRow[]>(
             "SELECT * FROM artist_snapshots;"
@@ -38,6 +43,18 @@ const main = async () => {
 
     console.timeEnd(endLabel);
 };
+
+/**
+ * @see https://stackoverflow.com/a/58547438
+ */
+const setPerformancePragmas = async (
+    db: Database<sqlite3.Database, sqlite3.Statement>
+) =>
+    db.exec(`
+    PRAGMA synchronous = OFF;
+    PRAGMA locking_mode = EXCLUSIVE;
+    PRAGMA journal_mode = OFF;
+`);
 
 const createArtistSnapshotsTable = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
