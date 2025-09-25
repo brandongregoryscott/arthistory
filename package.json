@@ -3,6 +3,7 @@
     "devDependencies": {
         "@repo/eslint-config": "*",
         "@repo/typescript-config": "*",
+        "@types/node": "24.5.2",
         "commitizen": "4.3.0",
         "husky": "9.1.4",
         "lint-staged": "15.2.8",
@@ -27,7 +28,7 @@
         "format": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
         "lint": "turbo lint",
         "prepare": "husky || exit 0",
-        "sync": "tsx packages/scripts/sync"
+        "merge-dbs": "tsx packages/scripts/merge-dbs"
     },
     "version": "0.0.0-development",
     "workspaces": [
