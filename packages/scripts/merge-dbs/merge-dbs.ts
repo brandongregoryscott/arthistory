@@ -47,6 +47,12 @@ const createArtistSnapshotsTable = (
         popularity NUMERIC,
         UNIQUE (id, timestamp)
     )`);
+
+    db.exec("CREATE INDEX artist_snapshot_id ON artist_snapshots (id)");
+
+    db.exec(
+        "CREATE INDEX artist_snapshot_timestamp ON artist_snapshots (timestamp)"
+    );
 };
 
 const bulkExecute = <T>(
