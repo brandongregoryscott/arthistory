@@ -13,6 +13,7 @@ type SQLStatement = [sql: string, values: any[]];
 const main = async () => {
     const targetDb = await openDb(MERGED_DB_NAME);
     await createArtistSnapshotsTable(targetDb);
+    await setPerformancePragmas(targetDb);
 
     const sourceDbFileNames = await getSourceDbFileNames();
 
@@ -42,6 +43,18 @@ const main = async () => {
 
     console.timeEnd(endLabel);
 };
+
+/**
+ * @see https://stackoverflow.com/a/58547438
+ */
+const setPerformancePragmas = async (
+    db: Database<sqlite3.Database, sqlite3.Statement>
+) =>
+    db.exec(`
+    PRAGMA synchronous = OFF;
+    PRAGMA locking_mode = EXCLUSIVE;
+    PRAGMA journal_mode = OFF;
+`);
 
 const createArtistSnapshotsTable = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
