@@ -8,8 +8,8 @@
         "husky": "9.1.4",
         "lint-staged": "15.2.8",
         "prettier": "3.3.2",
-        "turbo": "2.0.4",
-        "tsx": "4.20.5"
+        "tsx": "4.20.5",
+        "turbo": "2.0.4"
     },
     "engines": {
         "node": ">=20"
@@ -25,10 +25,11 @@
         "build": "turbo build",
         "clean": "rm -rf node_modules build apps/**/node_modules packages/**/node_modules apps/**/dist apps/**/build packages/**/dist packages/**/build apps/**/.next",
         "dev": "turbo dev",
+        "download-dbs": "tsx packages/scripts/download-dbs",
         "format": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
         "lint": "turbo lint",
-        "prepare": "husky || exit 0",
-        "merge-dbs": "tsx packages/scripts/merge-dbs"
+        "merge-dbs": "tsx packages/scripts/merge-dbs",
+        "prepare": "husky || exit 0"
     },
     "version": "0.0.0-development",
     "workspaces": [

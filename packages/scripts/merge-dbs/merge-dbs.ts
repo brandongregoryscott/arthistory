@@ -3,9 +3,9 @@ import { Database, open, ISqlite } from "sqlite";
 import { glob } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, isEmpty } from "lodash";
+import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
 const MERGED_DB_NAME = "merged-spotify-data.db";
-const PARTIAL_DB_PATTERN = "spotify-data*.db";
 
 const main = async () => {
     const targetDb = await openDb(MERGED_DB_NAME);
