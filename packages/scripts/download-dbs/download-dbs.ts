@@ -1,9 +1,7 @@
 import { S3, _Object } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import { PARTIAL_DB_PREFIX, S3_BUCKET_NAME } from "../constants/storage";
-import { writeFile } from "node:fs/promises";
 import { createWriteStream } from "node:fs";
-import { pipeline } from "node:stream";
 
 dotenv.config();
 
