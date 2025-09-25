@@ -1,17 +1,5 @@
 ## Base
-FROM node:20-alpine3.19 AS base
-ARG AWS_ACCESS_KEY_ID
-ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-ARG AWS_SECRET_ACCESS_KEY
-ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-ARG AWS_S3_ENDPOINT
-ENV AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
-WORKDIR /app
-RUN apk add aws-cli
-
-# Download the sqlite db from s3
-RUN aws s3 --endpoint-url $AWS_S3_ENDPOINT ls s3://spotify-data
-RUN aws s3 --endpoint-url $AWS_S3_ENDPOINT cp s3://spotify-data/$(aws s3 --endpoint-url $AWS_S3_ENDPOINT ls s3://spotify-data | sort | tail -n 1 | awk '{print $4}') _spotify-data.db
+FROM node:24.8-alpine3.21 AS base
 
 ## Builder
 FROM base AS builder
@@ -24,12 +12,20 @@ COPY . .
 
 # Generate a partial monorepo with a pruned lockfile for a target workspace.
 # Assuming "api" is the name entered in the project's package.json: { name: "api" }
-RUN npx turbo prune api --docker
+RUN npx turbo prune api scripts --docker
 
 ## Installer
 FROM base AS installer
+
+ARG AWS_ACCESS_KEY_ID
+ENV AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+ARG AWS_SECRET_ACCESS_KEY
+ENV AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+ARG AWS_S3_ENDPOINT
+ENV AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
+
 RUN apk update
-RUN apk add python3 make gcc g++ libc-dev
+RUN apk add python3 py3-setuptools make gcc g++ libc-dev
 WORKDIR /app
 
 COPY --from=builder /app/out/json/ .
@@ -39,6 +35,9 @@ RUN npm install
 # Build the project
 COPY --from=builder /app/out/full/ .
 RUN npx turbo run build --filter=api...
+
+# Download the partial sqlite dbs from s3 and merge them
+RUN npm run download-dbs && npm run merge-dbs
 
 ## Runner
 FROM base AS runner
@@ -55,7 +54,7 @@ COPY --from=builder /app/process.yml ./process.yml
 COPY --from=builder /app/package.json ./package.json
 COPY --from=installer /app/apps/api/dist ./dist
 COPY --from=installer /app/apps/api/build ./build
-COPY --from=base /app/_spotify-data.db ./_spotify-data.db
+COPY --from=installer /app/merged-spotify-data.db ./_spotify-data.db
 
 ARG PORT=3001
 ENV PORT=${PORT}
