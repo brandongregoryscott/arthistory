@@ -20,9 +20,15 @@ const main = async () => {
         Prefix: PARTIAL_DB_PREFIX,
     });
 
-    console.log(`Found ${objects.length} partial databases...`);
+    const startLabel = `Downloading ${objects.length} partial databases...`;
+    console.log(startLabel);
+
+    const endLabel = `Downloaded ${objects.length} partial databases`;
+    console.time(endLabel);
 
     await downloadObjects(objects);
+
+    console.timeEnd(endLabel);
 };
 
 const downloadObjects = async (objects: _Object[]) =>

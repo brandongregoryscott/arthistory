@@ -12,6 +12,13 @@ const main = async () => {
     createArtistSnapshotsTable(targetDb);
 
     const sourceDbFileNames = await getSourceDbFileNames();
+
+    const startLabel = `Merging ${sourceDbFileNames.length} partial databases...`;
+    console.log(startLabel);
+
+    const endLabel = `Merged ${sourceDbFileNames.length} partial databases`;
+    console.time(endLabel);
+
     for (const sourceDbFileName of sourceDbFileNames) {
         const sourceDb = await openDb(sourceDbFileName);
         const sourceRecords = await sourceDb.all<ArtistSnapshotRow[]>(
@@ -23,6 +30,8 @@ const main = async () => {
             generateInsertArtistSnapshotStatements
         );
     }
+
+    console.timeEnd(endLabel);
 };
 
 const createArtistSnapshotsTable = (
