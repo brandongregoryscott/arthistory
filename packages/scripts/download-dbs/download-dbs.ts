@@ -57,7 +57,7 @@ const downloadObject = async (object: _Object) => {
             fileStream.write(chunk);
         },
     });
-    objectStream.pipeTo(writableStream);
+    await objectStream.pipeTo(writableStream);
 };
 
 main();
