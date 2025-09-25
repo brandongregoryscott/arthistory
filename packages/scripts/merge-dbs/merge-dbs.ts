@@ -7,6 +7,8 @@ import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
 const MERGED_DB_NAME = "merged-spotify-data.db";
 
+type SQLStatement = [sql: string, values: any[]];
+
 const main = async () => {
     const targetDb = await openDb(MERGED_DB_NAME);
     createArtistSnapshotsTable(targetDb);
@@ -50,11 +52,11 @@ const createArtistSnapshotsTable = (
 const bulkExecute = <T>(
     db: Database<sqlite3.Database, sqlite3.Statement>,
     items: T[],
-    generateStatements: (items: T[]) => ISqlite.SQLStatement[],
+    generateStatements: (items: T[]) => SQLStatement[],
     chunkSize = 50,
     flushAfter = 500
 ) => {
-    let statements: ISqlite.SQLStatement[] = [];
+    let statements: SQLStatement[] = [];
     const itemChunks = chunk(items, chunkSize);
     itemChunks.forEach((itemChunk) => {
         statements = [...statements, ...generateStatements(itemChunk)];
@@ -69,7 +71,7 @@ const bulkExecute = <T>(
 
 const flushStatementsIfNeeded = (
     db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: ISqlite.SQLStatement[],
+    statements: SQLStatement[],
     flushAfter: number
 ): boolean => {
     if (statements.length < flushAfter) {
@@ -82,29 +84,29 @@ const flushStatementsIfNeeded = (
 
 const flushStatements = (
     db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: ISqlite.SQLStatement[]
+    statements: SQLStatement[]
 ) => {
     if (isEmpty(statements)) {
         return;
     }
 
-    db.getDatabaseInstance().serialize(() => {
-        db.run("BEGIN TRANSACTION");
+    const _db = db.getDatabaseInstance();
+    _db.serialize(() => {
+        _db.run("BEGIN TRANSACTION");
         statements.forEach((statement) => {
-            db.exec(statement);
+            _db.run(...statement);
         });
-        db.run("COMMIT");
+        _db.run("COMMIT");
     });
 };
 
 const generateInsertArtistSnapshotStatements = (
     snapshots: ArtistSnapshotRow[]
-): ISqlite.SQLStatement[] =>
-    snapshots.map(generateInsertArtistSnapshotStatement);
+): SQLStatement[] => snapshots.map(generateInsertArtistSnapshotStatement);
 
 const generateInsertArtistSnapshotStatement = (
     snapshot: ArtistSnapshotRow
-): ISqlite.SQLStatement => {
+): SQLStatement => {
     const values = [
         snapshot.id,
         snapshot.timestamp,
@@ -112,10 +114,10 @@ const generateInsertArtistSnapshotStatement = (
         snapshot.followers,
     ];
 
-    return {
-        sql: "INSERT OR IGNORE INTO artist_snapshots (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);",
+    return [
+        "INSERT OR IGNORE INTO artist_snapshots (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);",
         values,
-    };
+    ];
 };
 
 const getSourceDbFileNames = async (): Promise<string[]> => {
