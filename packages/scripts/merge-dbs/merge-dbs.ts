@@ -26,7 +26,7 @@ const main = async () => {
         const sourceRecords = await sourceDb.all<ArtistSnapshotRow[]>(
             "SELECT * FROM artist_snapshots;"
         );
-        bulkExecute(
+        await bulkExecute(
             targetDb,
             sourceRecords,
             generateInsertArtistSnapshotStatements
@@ -55,56 +55,61 @@ const createArtistSnapshotsTable = (
     );
 };
 
-const bulkExecute = <T>(
+const bulkExecute = async <T>(
     db: Database<sqlite3.Database, sqlite3.Statement>,
     items: T[],
     generateStatements: (items: T[]) => SQLStatement[],
     chunkSize = 50,
     flushAfter = 500
-) => {
+): Promise<void> => {
     let statements: SQLStatement[] = [];
     const itemChunks = chunk(items, chunkSize);
-    itemChunks.forEach((itemChunk) => {
+    for (const itemChunk of itemChunks) {
         statements = [...statements, ...generateStatements(itemChunk)];
-        const flushed = flushStatementsIfNeeded(db, statements, flushAfter);
+        const flushed = await flushStatementsIfNeeded(
+            db,
+            statements,
+            flushAfter
+        );
         if (flushed) {
             statements = [];
         }
-    });
+    }
 
-    flushStatements(db, statements);
+    await flushStatements(db, statements);
 };
 
-const flushStatementsIfNeeded = (
+const flushStatementsIfNeeded = async (
     db: Database<sqlite3.Database, sqlite3.Statement>,
     statements: SQLStatement[],
     flushAfter: number
-): boolean => {
+): Promise<boolean> => {
     if (statements.length < flushAfter) {
         return false;
     }
 
-    flushStatements(db, statements);
+    await flushStatements(db, statements);
     return true;
 };
 
-const flushStatements = (
+const flushStatements = async (
     db: Database<sqlite3.Database, sqlite3.Statement>,
     statements: SQLStatement[]
-) => {
-    if (isEmpty(statements)) {
-        return;
-    }
+): Promise<void> =>
+    new Promise((resolve) => {
+        if (isEmpty(statements)) {
+            return;
+        }
 
-    const _db = db.getDatabaseInstance();
-    _db.serialize(() => {
-        _db.run("BEGIN TRANSACTION");
-        statements.forEach((statement) => {
-            _db.run(...statement);
+        const _db = db.getDatabaseInstance();
+        _db.serialize(() => {
+            _db.run("BEGIN TRANSACTION");
+            statements.forEach((statement) => {
+                _db.run(...statement);
+            });
+            _db.run("COMMIT", resolve);
         });
-        _db.run("COMMIT");
     });
-};
 
 const generateInsertArtistSnapshotStatements = (
     snapshots: ArtistSnapshotRow[]
