@@ -1,5 +1,5 @@
 import { glob } from "fs/promises";
-import { PARTIAL_DB_PATTERN } from "./constants/storage";
+import { PARTIAL_DB_PATTERN } from "../constants/storage";
 
 const getDbFileNames = async (): Promise<string[]> => {
     const fileNames: string[] = [];

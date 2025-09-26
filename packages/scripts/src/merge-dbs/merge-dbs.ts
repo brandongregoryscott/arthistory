@@ -4,7 +4,7 @@ import { rename, stat } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, first, isEmpty, sortBy } from "lodash";
 import { MERGED_DB_NAME } from "../constants/storage";
-import { getDbFileNames } from "../utils";
+import { getDbFileNames } from "../utils/fs-utils";
 import { program } from "commander";
 
 const CHUNK_SIZE = 100000;
