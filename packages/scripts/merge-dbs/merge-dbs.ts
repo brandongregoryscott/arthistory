@@ -1,16 +1,28 @@
 import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
-import { glob } from "fs/promises";
+import { glob, rename } from "fs/promises";
+import { existsSync } from "fs";
 import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, isEmpty } from "lodash";
-import { PARTIAL_DB_PATTERN } from "../constants/storage";
+import {
+    CHECKPOINT_DB_NAME,
+    MERGED_DB_NAME,
+    PARTIAL_DB_PATTERN,
+} from "../constants/storage";
 
-const CHUNK_SIZE = 25000;
-const MERGED_DB_NAME = "merged-spotify-data.db";
+const CHUNK_SIZE = 100000;
+const USE_CHECKPOINT_DB_AS_BASE_IF_FOUND = true;
 
 type SQLStatement = [sql: string, values: any[]];
 
 const main = async () => {
+    // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
+    // over to a new, empty database. Just rename it and move on
+    const hasCheckpointDb = existsSync(CHECKPOINT_DB_NAME);
+    if (hasCheckpointDb && USE_CHECKPOINT_DB_AS_BASE_IF_FOUND) {
+        await rename(CHECKPOINT_DB_NAME, MERGED_DB_NAME);
+    }
+
     const targetDb = await openDb(MERGED_DB_NAME);
     await createArtistSnapshotsTable(targetDb);
     await setPerformancePragmas(targetDb);
@@ -29,13 +41,16 @@ const main = async () => {
             `Merging ${sourceDbFileName} (${index + 1}/${sourceDbFileNames.length})...`
         );
         const sourceDb = await openDb(sourceDbFileName);
-        const sourceRecords = await sourceDb.all<ArtistSnapshotRow[]>(
-            "SELECT * FROM artist_snapshots;"
-        );
-        await bulkExecute(
-            targetDb,
-            sourceRecords,
-            generateInsertArtistSnapshotStatements
+        await paginateRows<ArtistSnapshotRow>(
+            sourceDb,
+            "artist_snapshots",
+            CHUNK_SIZE,
+            (rows) =>
+                bulkExecute(
+                    targetDb,
+                    rows,
+                    generateInsertArtistSnapshotStatements
+                )
         );
         await sourceDb.close();
     }
@@ -43,6 +58,33 @@ const main = async () => {
     await createArtistSnapshotsIndexes(targetDb);
 
     console.timeEnd(endLabel);
+};
+
+const countRows = async (
+    db: Database<sqlite3.Database, sqlite3.Statement>,
+    table: string
+): Promise<number> => {
+    const result = (await db.get(`SELECT COUNT(*) FROM ${table};`)) as {
+        "COUNT(*)": number;
+    };
+    return result["COUNT(*)"];
+};
+
+const paginateRows = async <T>(
+    db: Database<sqlite3.Database, sqlite3.Statement>,
+    table: string,
+    pageSize: number,
+    callback: (rows: T[]) => Promise<void>
+): Promise<void> => {
+    const total = await countRows(db, table);
+    let counter = 0;
+    while (counter < total) {
+        const rows = await db.all<T[]>(
+            `SELECT * FROM ${table} LIMIT ${pageSize} OFFSET ${counter};`
+        );
+        counter += rows.length;
+        await callback(rows);
+    }
 };
 
 /**
@@ -120,6 +162,7 @@ const flushStatements = async (
 ): Promise<void> =>
     new Promise((resolve) => {
         if (isEmpty(statements)) {
+            resolve();
             return;
         }
 
