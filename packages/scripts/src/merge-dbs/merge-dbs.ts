@@ -9,6 +9,7 @@ import { getDbFileNames } from "../utils";
 
 const CHUNK_SIZE = 100000;
 const USE_CHECKPOINT_DB_AS_BASE_IF_FOUND = true;
+const CREATE_INDEXES = true;
 
 type SQLStatement = [sql: string, values: any[]];
 
@@ -52,7 +53,9 @@ const main = async () => {
         await sourceDb.close();
     }
 
-    await createArtistSnapshotsIndexes(targetDb);
+    if (CREATE_INDEXES) {
+        await createArtistSnapshotsIndexes(targetDb);
+    }
 
     console.timeEnd(endLabel);
 };
