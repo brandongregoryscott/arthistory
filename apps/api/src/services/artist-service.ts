@@ -60,7 +60,7 @@ const ArtistService = {
         const { ids, resolution } = options;
         const db = await getDb();
         const results = await db.all<ArtistSnapshotRow[]>(
-            `SELECT * FROM artist_snapshots WHERE id IN (${queryPlaceholder(ids.length)});`,
+            `SELECT * FROM artist_snapshots WHERE id IN (${queryPlaceholder(ids.length)}) ORDER BY timestamp ASC;`,
             ids
         );
         let snapshots = results.map(normalizeArtistSnapshot);
