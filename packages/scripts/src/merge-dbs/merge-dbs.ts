@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
-import { rename, stat } from "fs/promises";
+import { rename, copyFile, stat } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, first, isEmpty, sortBy } from "lodash";
 import { MERGED_DB_NAME } from "../constants/storage";
@@ -31,21 +31,26 @@ program.parse();
 const { skipCheckpointAsBase, skipIndexes } = program.opts<Options>();
 
 const main = async () => {
+    let sourceDbFileNames = await getDbFileNames();
+
     // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
-    // over to a new, empty database. Just rename it and move on
+    // over to a new, empty database. Just copy it with a new filename and move on
     const checkpointDb = await findCheckpointDb();
     if (checkpointDb !== undefined && !skipCheckpointAsBase) {
         console.log(
-            `Found checkpoint db '${checkpointDb}', renaming to ${MERGED_DB_NAME} to use as base...`
+            `Found checkpoint db '${checkpointDb}', copying to ${MERGED_DB_NAME} to use as base...`
         );
-        await rename(checkpointDb, MERGED_DB_NAME);
+        await copyFile(checkpointDb, MERGED_DB_NAME);
+
+        // Filter out the checkpoint db so we don't try to merge it into the copied base
+        sourceDbFileNames = sourceDbFileNames.filter(
+            (sourceDbFileName) => sourceDbFileName !== checkpointDb
+        );
     }
 
     const targetDb = await openDb(MERGED_DB_NAME);
     await createArtistSnapshotsTable(targetDb);
     await setPerformancePragmas(targetDb);
-
-    const sourceDbFileNames = await getDbFileNames();
 
     const startLabel = `Merging ${sourceDbFileNames.length} partial databases...`;
     console.log(startLabel);
