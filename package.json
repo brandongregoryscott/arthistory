@@ -25,10 +25,10 @@
         "build": "turbo build",
         "clean": "rm -rf node_modules build apps/**/node_modules packages/**/node_modules apps/**/dist apps/**/build packages/**/dist packages/**/build apps/**/.next",
         "dev": "turbo dev",
-        "download-dbs": "tsx packages/scripts/download-dbs",
+        "download-dbs": "tsx packages/scripts/src/download-dbs",
         "format": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
         "lint": "turbo lint",
-        "merge-dbs": "tsx packages/scripts/merge-dbs",
+        "merge-dbs": "tsx packages/scripts/src/merge-dbs",
         "prepare": "husky || exit 0"
     },
     "version": "0.0.0-development",
