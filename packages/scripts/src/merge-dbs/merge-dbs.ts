@@ -1,13 +1,18 @@
 import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
-import { rename, copyFile, stat } from "fs/promises";
+import { copyFile, stat } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
-import { chunk, first, isEmpty, sortBy } from "lodash";
-import { MERGED_DB_NAME } from "../constants/storage";
+import { first, isEmpty, sortBy } from "lodash";
+import {
+    MERGED_DB_NAME,
+    TABLE_NAME,
+    TABLE_WITH_CONSTRAINT_NAME,
+} from "../constants/storage";
 import { getDbFileNames } from "../utils/fs-utils";
 import { program } from "commander";
 
 const CHUNK_SIZE = 100000;
+const FLUSH_AFTER = 250000;
 
 interface Options {
     skipCheckpointAsBase: boolean;
@@ -38,7 +43,7 @@ const main = async () => {
     const checkpointDb = await findCheckpointDb();
     if (checkpointDb !== undefined && !skipCheckpointAsBase) {
         console.log(
-            `Found checkpoint db '${checkpointDb}', copying to ${MERGED_DB_NAME} to use as base...`
+            `Found checkpoint db '${checkpointDb}', copying to '${MERGED_DB_NAME}' to use as base...`
         );
         await copyFile(checkpointDb, MERGED_DB_NAME);
 
@@ -49,7 +54,7 @@ const main = async () => {
     }
 
     const targetDb = await openDb(MERGED_DB_NAME);
-    await createArtistSnapshotsTable(targetDb);
+    await createArtistSnapshotsTableWithoutConstraint(targetDb);
     await setPerformancePragmas(targetDb);
 
     const startLabel = `Merging ${sourceDbFileNames.length} partial databases...`;
@@ -58,28 +63,46 @@ const main = async () => {
     const endLabel = `Merged ${sourceDbFileNames.length} partial databases`;
     console.time(endLabel);
 
+    let statements: SQLStatement[] = [];
     for (const sourceDbFileName of sourceDbFileNames) {
         const index = sourceDbFileNames.indexOf(sourceDbFileName);
         console.log(
-            `Merging ${sourceDbFileName} (${index + 1}/${sourceDbFileNames.length})...`
+            `Reading rows from ${sourceDbFileName} (${index + 1}/${sourceDbFileNames.length})...`
         );
         const sourceDb = await openDb(sourceDbFileName);
         await paginateRows<ArtistSnapshotRow>(
             sourceDb,
-            "artist_snapshots",
+            TABLE_NAME,
             CHUNK_SIZE,
-            (rows) =>
-                bulkExecute(
+            async (rows) => {
+                statements = [
+                    ...statements,
+                    ...generateInsertArtistSnapshotStatements(rows),
+                ];
+                const flushed = await flushStatementsIfNeeded(
                     targetDb,
-                    rows,
-                    generateInsertArtistSnapshotStatements
-                )
+                    statements,
+                    FLUSH_AFTER
+                );
+                if (flushed) {
+                    console.log(`Flushed at ${statements.length} statements`);
+                    statements = [];
+                }
+            }
         );
+
         await sourceDb.close();
     }
 
+    await flushStatements(targetDb, statements);
+    statements = [];
+
     if (!skipIndexes) {
+        console.log("Creating indexes...");
+        const createdIndexLabel = "Created indexes";
+        console.time(createdIndexLabel);
         await createArtistSnapshotsIndexes(targetDb);
+        console.timeEnd(createdIndexLabel);
     }
 
     console.timeEnd(endLabel);
@@ -142,49 +165,53 @@ const setPerformancePragmas = async (
     PRAGMA journal_mode = OFF;
 `);
 
-const createArtistSnapshotsTable = async (
+const createArtistSnapshotsTableWithoutConstraint = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
-) =>
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS artist_snapshots (
+) => {
+    const label = `Created '${TABLE_NAME}'`;
+    console.log(`Creating '${TABLE_NAME}' without unique constraint...`);
+    console.time(label);
+    await db.exec(`
+    PRAGMA foreign_keys=off;
+
+    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
         id TEXT,
         timestamp NUMERIC,
         followers NUMERIC,
         popularity NUMERIC,
         UNIQUE (id, timestamp)
-    )`);
+    );
+
+    BEGIN TRANSACTION;
+
+    ALTER TABLE ${TABLE_NAME} RENAME TO ${TABLE_WITH_CONSTRAINT_NAME};
+
+    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
+        id TEXT,
+        timestamp NUMERIC,
+        followers NUMERIC,
+        popularity NUMERIC
+    );
+
+    INSERT INTO ${TABLE_NAME} SELECT * FROM ${TABLE_WITH_CONSTRAINT_NAME};
+
+    COMMIT;
+
+    DROP TABLE IF EXISTS ${TABLE_WITH_CONSTRAINT_NAME};
+    VACUUM;
+
+    PRAGMA foreign_keys=on;
+    `);
+    console.timeEnd(label);
+};
 
 const createArtistSnapshotsIndexes = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
 ) =>
     db.exec(`
-    CREATE INDEX artist_snapshot_id ON artist_snapshots (id);
-    CREATE INDEX artist_snapshot_timestamp ON artist_snapshots (timestamp);
+    CREATE INDEX artist_snapshot_id ON ${TABLE_NAME} (id);
+    CREATE INDEX artist_snapshot_timestamp ON ${TABLE_NAME} (timestamp);
 `);
-
-const bulkExecute = async <T>(
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    items: T[],
-    generateStatements: (items: T[]) => SQLStatement[],
-    chunkSize = CHUNK_SIZE,
-    flushAfter = CHUNK_SIZE
-): Promise<void> => {
-    let statements: SQLStatement[] = [];
-    const itemChunks = chunk(items, chunkSize);
-    for (const itemChunk of itemChunks) {
-        statements = [...statements, ...generateStatements(itemChunk)];
-        const flushed = await flushStatementsIfNeeded(
-            db,
-            statements,
-            flushAfter
-        );
-        if (flushed) {
-            statements = [];
-        }
-    }
-
-    await flushStatements(db, statements);
-};
 
 const flushStatementsIfNeeded = async (
     db: Database<sqlite3.Database, sqlite3.Statement>,
@@ -234,7 +261,7 @@ const generateInsertArtistSnapshotStatement = (
     ];
 
     return [
-        "INSERT OR IGNORE INTO artist_snapshots (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);",
+        `INSERT OR IGNORE INTO ${TABLE_NAME} (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);`,
         values,
     ];
 };
