@@ -1,16 +1,28 @@
 import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
-import { glob } from "fs/promises";
+import { glob, rename } from "fs/promises";
+import { existsSync } from "fs";
 import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, isEmpty } from "lodash";
-import { PARTIAL_DB_PATTERN } from "../constants/storage";
+import {
+    CHECKPOINT_DB_NAME,
+    MERGED_DB_NAME,
+    PARTIAL_DB_PATTERN,
+} from "../constants/storage";
 
-const CHUNK_SIZE = 50000;
-const MERGED_DB_NAME = "merged-spotify-data.db";
+const CHUNK_SIZE = 100000;
+const USE_CHECKPOINT_DB_AS_BASE_IF_FOUND = true;
 
 type SQLStatement = [sql: string, values: any[]];
 
 const main = async () => {
+    // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
+    // over to a new, empty database. Just rename it and move on
+    const hasCheckpointDb = existsSync(CHECKPOINT_DB_NAME);
+    if (hasCheckpointDb && USE_CHECKPOINT_DB_AS_BASE_IF_FOUND) {
+        await rename(CHECKPOINT_DB_NAME, MERGED_DB_NAME);
+    }
+
     const targetDb = await openDb(MERGED_DB_NAME);
     await createArtistSnapshotsTable(targetDb);
     await setPerformancePragmas(targetDb);
