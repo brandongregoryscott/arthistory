@@ -1,10 +1,9 @@
 import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
-import { rename } from "fs/promises";
-import { existsSync } from "fs";
+import { rename, stat } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
-import { chunk, isEmpty } from "lodash";
-import { CHECKPOINT_DB_NAME, MERGED_DB_NAME } from "../constants/storage";
+import { chunk, first, isEmpty, sortBy } from "lodash";
+import { MERGED_DB_NAME } from "../constants/storage";
 import { getDbFileNames } from "../utils";
 
 const CHUNK_SIZE = 100000;
@@ -16,9 +15,12 @@ type SQLStatement = [sql: string, values: any[]];
 const main = async () => {
     // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
     // over to a new, empty database. Just rename it and move on
-    const hasCheckpointDb = existsSync(CHECKPOINT_DB_NAME);
-    if (hasCheckpointDb && USE_CHECKPOINT_DB_AS_BASE_IF_FOUND) {
-        await rename(CHECKPOINT_DB_NAME, MERGED_DB_NAME);
+    const checkpointDb = await findCheckpointDb();
+    if (checkpointDb !== undefined && USE_CHECKPOINT_DB_AS_BASE_IF_FOUND) {
+        console.log(
+            `Found checkpoint db '${checkpointDb}', renaming to ${MERGED_DB_NAME} to use as base...`
+        );
+        await rename(checkpointDb, MERGED_DB_NAME);
     }
 
     const targetDb = await openDb(MERGED_DB_NAME);
@@ -58,6 +60,24 @@ const main = async () => {
     }
 
     console.timeEnd(endLabel);
+};
+
+const findCheckpointDb = async (): Promise<string | undefined> => {
+    const dbFileNames = await getDbFileNames();
+    const dbFileSizes = await Promise.all(
+        dbFileNames.map(async (fileName) => {
+            const { size } = await stat(fileName);
+            return { fileName, size };
+        })
+    );
+    const dbFilesBySize = sortBy(dbFileSizes, ({ size }) => size).reverse();
+    const largestDb = first(dbFilesBySize);
+    // The checkpoint db should very likely be several GB at this point of tracking, so throw out anything smaller
+    if (largestDb !== undefined && largestDb.size >= Math.pow(1024, 3)) {
+        return largestDb.fileName;
+    }
+
+    return undefined;
 };
 
 const countRows = async (
