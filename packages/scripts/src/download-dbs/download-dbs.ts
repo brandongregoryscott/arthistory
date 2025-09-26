@@ -2,6 +2,7 @@ import { S3, _Object } from "@aws-sdk/client-s3";
 import dotenv from "dotenv";
 import { PARTIAL_DB_PREFIX, S3_BUCKET_NAME } from "../constants/storage";
 import { createWriteStream } from "node:fs";
+import { getDbFileNames } from "../utils";
 
 dotenv.config();
 
@@ -20,13 +21,20 @@ const main = async () => {
         Prefix: PARTIAL_DB_PREFIX,
     });
 
-    const startLabel = `Downloading ${objects.length} partial databases...`;
+    const localDbs = await getDbFileNames();
+    const total = objects.length;
+    const missingObjects = objects.filter(
+        (object) => !localDbs.includes(object.Key ?? "")
+    );
+    const count = missingObjects.length;
+
+    const startLabel = `Downloading ${count} partial databases (${total - count} found locally)...`;
     console.log(startLabel);
 
-    const endLabel = `Downloaded ${objects.length} partial databases`;
+    const endLabel = `Downloaded ${count} partial databases`;
     console.time(endLabel);
 
-    await downloadObjects(objects);
+    await downloadObjects(missingObjects);
 
     console.timeEnd(endLabel);
 };
