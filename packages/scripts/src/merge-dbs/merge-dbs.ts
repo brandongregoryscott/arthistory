@@ -5,18 +5,36 @@ import { ArtistSnapshotRow } from "@repo/common";
 import { chunk, first, isEmpty, sortBy } from "lodash";
 import { MERGED_DB_NAME } from "../constants/storage";
 import { getDbFileNames } from "../utils";
+import { program } from "commander";
 
 const CHUNK_SIZE = 100000;
-const USE_CHECKPOINT_DB_AS_BASE_IF_FOUND = true;
-const CREATE_INDEXES = true;
+
+interface Options {
+    skipCheckpointAsBase: boolean;
+    skipIndexes: boolean;
+}
 
 type SQLStatement = [sql: string, values: any[]];
+
+program.option(
+    "--skip-checkpoint-as-base",
+    "Skip using the largest partial database as the base to merge onto",
+    false
+);
+program.option(
+    "--skip-indexes",
+    "Skip creating indexes after merging partial databases",
+    false
+);
+
+program.parse();
+const { skipCheckpointAsBase, skipIndexes } = program.opts<Options>();
 
 const main = async () => {
     // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
     // over to a new, empty database. Just rename it and move on
     const checkpointDb = await findCheckpointDb();
-    if (checkpointDb !== undefined && USE_CHECKPOINT_DB_AS_BASE_IF_FOUND) {
+    if (checkpointDb !== undefined && !skipCheckpointAsBase) {
         console.log(
             `Found checkpoint db '${checkpointDb}', renaming to ${MERGED_DB_NAME} to use as base...`
         );
@@ -55,7 +73,7 @@ const main = async () => {
         await sourceDb.close();
     }
 
-    if (CREATE_INDEXES) {
+    if (!skipIndexes) {
         await createArtistSnapshotsIndexes(targetDb);
     }
 
