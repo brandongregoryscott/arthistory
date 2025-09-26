@@ -3,7 +3,6 @@
 import Box from "@leafygreen-ui/box";
 import { Link } from "@leafygreen-ui/typography";
 import { css } from "@leafygreen-ui/emotion";
-import { PageLoader } from "@leafygreen-ui/loading-indicator";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LeafyGreenProvider from "@leafygreen-ui/leafygreen-provider";
 import { Bar } from "react-chartjs-2";
@@ -42,6 +41,17 @@ import {
 import { humanizeNumber } from "@/utils/number-utils";
 import { BasicEmptyState } from "@leafygreen-ui/empty-state";
 import Icon from "@leafygreen-ui/icon";
+import dynamic from "next/dynamic";
+/**
+ * This component needs to be dynamically imported for the NextJS build to work with Node 24+
+ */
+const PageLoader = dynamic(
+    () =>
+        import("@leafygreen-ui/loading-indicator").then(
+            ({ PageLoader }) => PageLoader
+        ),
+    { ssr: false }
+);
 
 ChartJS.register(
     CategoryScale,
