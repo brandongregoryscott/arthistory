@@ -2,13 +2,13 @@ import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
 import { copyFile, stat } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
-import { first, isEmpty, sortBy } from "lodash";
+import { compact, first, isEmpty, last, sortBy } from "lodash";
 import {
     MERGED_DB_NAME,
     TABLE_NAME,
     TABLE_WITH_CONSTRAINT_NAME,
 } from "../constants/storage";
-import { getDbFileNames } from "../utils/fs-utils";
+import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
 
 const CHUNK_SIZE = 100000;
@@ -17,6 +17,7 @@ const FLUSH_AFTER = 250000;
 interface Options {
     skipCheckpointAsBase: boolean;
     skipIndexes: boolean;
+    useRangeFilename: boolean;
 }
 
 type SQLStatement = [sql: string, values: any[]];
@@ -31,21 +32,40 @@ program.option(
     "Skip creating indexes after merging partial databases",
     false
 );
+program.option(
+    "--use-range-filename",
+    `Set the name of the merged file to the start and end timestamps instead of '${MERGED_DB_NAME}'`,
+    false
+);
 
 program.parse();
-const { skipCheckpointAsBase, skipIndexes } = program.opts<Options>();
+const { skipCheckpointAsBase, skipIndexes, useRangeFilename } =
+    program.opts<Options>();
 
 const main = async () => {
+    let mergedDbName = MERGED_DB_NAME;
     let sourceDbFileNames = await getDbFileNames();
+
+    if (useRangeFilename) {
+        const timestamps = sortBy(
+            compact(sourceDbFileNames.map(parseTimestamp))
+        ).reverse();
+
+        const start = first(timestamps);
+        const end = last(timestamps);
+        if (start !== undefined && end !== undefined) {
+            mergedDbName = `spotify-data_${start}-${end}.db`;
+        }
+    }
 
     // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
     // over to a new, empty database. Just copy it with a new filename and move on
     const checkpointDb = await findCheckpointDb();
     if (checkpointDb !== undefined && !skipCheckpointAsBase) {
         console.log(
-            `Found checkpoint db '${checkpointDb}', copying to '${MERGED_DB_NAME}' to use as base...`
+            `Found checkpoint db '${checkpointDb}', copying to '${mergedDbName}' to use as base...`
         );
-        await copyFile(checkpointDb, MERGED_DB_NAME);
+        await copyFile(checkpointDb, mergedDbName);
 
         // Filter out the checkpoint db so we don't try to merge it into the copied base
         sourceDbFileNames = sourceDbFileNames.filter(
@@ -53,7 +73,7 @@ const main = async () => {
         );
     }
 
-    const targetDb = await openDb(MERGED_DB_NAME);
+    const targetDb = await openDb(mergedDbName);
     await createArtistSnapshotsTableWithoutConstraint(targetDb);
     await setPerformancePragmas(targetDb);
 
