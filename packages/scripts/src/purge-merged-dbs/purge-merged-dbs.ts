@@ -3,6 +3,20 @@ import { getDbFileNames } from "../utils/fs-utils";
 import { s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import { program } from "commander";
+
+interface Options {
+    skipConfirmation: boolean;
+}
+
+program.option(
+    "--skip-confirmation",
+    "Skips the confirmation prompt before deleting",
+    false
+);
+
+program.parse();
+const { skipConfirmation } = program.opts<Options>();
 
 const readlineInterface = readline.createInterface({ input, output });
 
@@ -25,12 +39,14 @@ const main = async () => {
         `Remote dbs slated for deletion:\n${remoteDbObjectsToDelete.map((object) => object.Key).join("\n")}`
     );
 
-    const answer = await readlineInterface.question(
-        `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${BUCKET_NAME}'? [y/N] `
-    );
+    if (!skipConfirmation) {
+        const answer = await readlineInterface.question(
+            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${BUCKET_NAME}'? [y/N] `
+        );
 
-    if (answer.toLowerCase().trim() !== "y") {
-        process.exit(0);
+        if (answer.toLowerCase().trim() !== "y") {
+            process.exit(0);
+        }
     }
 
     readlineInterface.close();
