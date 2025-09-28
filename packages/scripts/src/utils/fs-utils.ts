@@ -29,4 +29,7 @@ const parseTimestamp = (fileName: string): number | undefined => {
     return timestamp;
 };
 
-export { getDbFileNames, parseTimestamp };
+const bytesToMb = (bytes: number): string =>
+    `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+
+export { getDbFileNames, bytesToMb, parseTimestamp };

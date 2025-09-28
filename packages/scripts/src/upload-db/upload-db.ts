@@ -1,9 +1,10 @@
 import { program } from "commander";
 import { existsSync } from "node:fs";
-import { s3 } from "../utils/storage-utils";
+import { logUploadProgress, s3 } from "../utils/storage-utils";
 import { createReadStream } from "node:fs";
 import { Upload } from "@aws-sdk/lib-storage";
 import { BUCKET_NAME } from "../constants/storage";
+import { bytesToMb } from "../utils/fs-utils";
 
 interface Options {
     filename: string;
@@ -59,21 +60,10 @@ const main = async () => {
         },
     });
 
-    upload.on("httpUploadProgress", (progress) => {
-        const loaded = progress.loaded ?? 1;
-        const total = progress.total ?? 1;
-
-        const percentage = ((loaded / total) * 100).toFixed(2);
-        console.log(
-            `Part ${progress.part} - ${bytesToMb(loaded)} / ${bytesToMb(total)} - ${percentage}% complete`
-        );
-    });
+    upload.on("httpUploadProgress", logUploadProgress);
 
     await upload.done();
     console.timeEnd(label);
 };
-
-const bytesToMb = (bytes: number): string =>
-    `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 
 main();
