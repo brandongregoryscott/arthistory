@@ -1,4 +1,4 @@
-import { PARTIAL_DB_PREFIX, S3_BUCKET_NAME } from "../constants/storage";
+import { PARTIAL_DB_PREFIX, BUCKET_NAME } from "../constants/storage";
 import { getDbFileNames } from "../utils/fs-utils";
 import { s3 } from "../utils/storage-utils";
 
@@ -7,7 +7,7 @@ const main = async () => {
     console.log(`Found ${localDbFileNames.length} dbs locally`);
 
     const { Contents: remoteDbObjects = [] } = await s3.listObjectsV2({
-        Bucket: S3_BUCKET_NAME,
+        Bucket: BUCKET_NAME,
         Prefix: PARTIAL_DB_PREFIX,
     });
 

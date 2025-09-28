@@ -3,16 +3,26 @@ import { existsSync } from "node:fs";
 import { s3 } from "../utils/storage-utils";
 import { createReadStream } from "node:fs";
 import { Upload } from "@aws-sdk/lib-storage";
-import { S3_BUCKET_NAME } from "../constants/storage";
+import { BUCKET_NAME } from "../constants/storage";
 
 interface Options {
-    name: string;
+    filename: string;
+    bucket: string;
 }
 
-program.requiredOption("--name <name>", "Name of the database to upload");
+program.requiredOption(
+    "--filename <filename>",
+    "Name of the database to upload"
+);
+
+program.requiredOption(
+    "--bucket <bucket>",
+    "Name of the bucket to upload to",
+    BUCKET_NAME
+);
 
 program.parse();
-const { name } = program.opts<Options>();
+const { filename, bucket } = program.opts<Options>();
 
 /**
  * Upload parts 50 MB at a time to reduce API usage
@@ -20,15 +30,15 @@ const { name } = program.opts<Options>();
 const PART_SIZE = 50 * Math.pow(1024, 2);
 
 const main = async () => {
-    if (!existsSync(name)) {
-        console.error(`File '${name}' not found.`);
+    if (!existsSync(filename)) {
+        console.error(`File '${filename}' not found.`);
         process.exit(1);
     }
 
-    console.log(`Starting upload for ${name}...`);
-    const label = `Uploaded '${name}'`;
+    console.log(`Starting upload for ${filename}...`);
+    const label = `Uploaded '${filename}'`;
     console.time(label);
-    const readStream = createReadStream(name);
+    const readStream = createReadStream(filename);
 
     // This is a hack, but the Upload utility class from `@aws-sdk/lib-storage` is currently bugged
     // and does not respect the `partSize` that is passed in. The internal logic will take the MIN_PART_SIZE
@@ -40,8 +50,8 @@ const main = async () => {
     const upload = new Upload({
         client: s3,
         params: {
-            Bucket: S3_BUCKET_NAME,
-            Key: name,
+            Bucket: bucket,
+            Key: filename,
             Body: readStream,
         },
     });
