@@ -57,7 +57,9 @@ const main = async () => {
     await s3.deleteObjects({
         Bucket: BUCKET_NAME,
         Delete: {
-            Objects: remoteDbObjects.map((object) => ({ Key: object.Key })),
+            Objects: remoteDbObjectsToDelete.map((object) => ({
+                Key: object.Key,
+            })),
         },
     });
 
