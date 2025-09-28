@@ -54,7 +54,7 @@ const main = async () => {
         const start = first(timestamps);
         const end = last(timestamps);
         if (start !== undefined && end !== undefined) {
-            mergedDbName = `spotify-data_${start}-${end}.db`;
+            mergedDbName = MERGED_DB_NAME.replace(".db", `_${start}-${end}.db`);
         }
     }
 
