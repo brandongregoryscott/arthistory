@@ -2,13 +2,13 @@ import sqlite3 from "sqlite3";
 import { Database, open } from "sqlite";
 import { copyFile, stat } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
-import { first, isEmpty, sortBy } from "lodash";
+import { compact, first, isEmpty, last, sortBy } from "lodash";
 import {
     MERGED_DB_NAME,
     TABLE_NAME,
     TABLE_WITH_CONSTRAINT_NAME,
 } from "../constants/storage";
-import { getDbFileNames } from "../utils/fs-utils";
+import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
 
 const CHUNK_SIZE = 100000;
@@ -17,6 +17,7 @@ const FLUSH_AFTER = 250000;
 interface Options {
     skipCheckpointAsBase: boolean;
     skipIndexes: boolean;
+    useRangeFilename: boolean;
 }
 
 type SQLStatement = [sql: string, values: any[]];
@@ -31,21 +32,40 @@ program.option(
     "Skip creating indexes after merging partial databases",
     false
 );
+program.option(
+    "--use-range-filename",
+    `Set the name of the merged file to the start and end timestamps instead of '${MERGED_DB_NAME}'`,
+    false
+);
 
 program.parse();
-const { skipCheckpointAsBase, skipIndexes } = program.opts<Options>();
+const { skipCheckpointAsBase, skipIndexes, useRangeFilename } =
+    program.opts<Options>();
 
 const main = async () => {
+    let mergedDbName = MERGED_DB_NAME;
     let sourceDbFileNames = await getDbFileNames();
+
+    if (useRangeFilename) {
+        const timestamps = sortBy(
+            compact(sourceDbFileNames.map(parseTimestamp))
+        ).reverse();
+
+        const start = first(timestamps);
+        const end = last(timestamps);
+        if (start !== undefined && end !== undefined) {
+            mergedDbName = MERGED_DB_NAME.replace(".db", `_${start}-${end}.db`);
+        }
+    }
 
     // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
     // over to a new, empty database. Just copy it with a new filename and move on
     const checkpointDb = await findCheckpointDb();
     if (checkpointDb !== undefined && !skipCheckpointAsBase) {
         console.log(
-            `Found checkpoint db '${checkpointDb}', copying to '${MERGED_DB_NAME}' to use as base...`
+            `Found checkpoint db '${checkpointDb}', copying to '${mergedDbName}' to use as base...`
         );
-        await copyFile(checkpointDb, MERGED_DB_NAME);
+        await copyFile(checkpointDb, mergedDbName);
 
         // Filter out the checkpoint db so we don't try to merge it into the copied base
         sourceDbFileNames = sourceDbFileNames.filter(
@@ -53,8 +73,8 @@ const main = async () => {
         );
     }
 
-    const targetDb = await openDb(MERGED_DB_NAME);
-    await createArtistSnapshotsTableWithoutConstraint(targetDb);
+    const targetDb = await openDb(mergedDbName);
+    await maybeDropArtistSnapshotsConstraint(targetDb);
     await setPerformancePragmas(targetDb);
 
     const startLabel = `Merging ${sourceDbFileNames.length} partial databases...`;
@@ -85,7 +105,6 @@ const main = async () => {
                     FLUSH_AFTER
                 );
                 if (flushed) {
-                    console.log(`Flushed at ${statements.length} statements`);
                     statements = [];
                 }
             }
@@ -165,9 +184,28 @@ const setPerformancePragmas = async (
     PRAGMA journal_mode = OFF;
 `);
 
-const createArtistSnapshotsTableWithoutConstraint = async (
+const maybeDropArtistSnapshotsConstraint = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
 ) => {
+    // Check to see if the table actually has a unique index before doing extra work to transfer records
+    // to a new table that definitely does not have the index
+    const hasUniqueIndex =
+        (await db.get(`PRAGMA index_list(${TABLE_NAME});`)) !== undefined;
+
+    if (!hasUniqueIndex) {
+        console.log(
+            `No unique index found, creating ${TABLE_NAME} if it does not exist...`
+        );
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
+                id TEXT,
+                timestamp NUMERIC,
+                followers NUMERIC,
+                popularity NUMERIC
+            );`);
+        return;
+    }
+
     const label = `Created '${TABLE_NAME}'`;
     console.log(`Creating '${TABLE_NAME}' without unique constraint...`);
     console.time(label);
@@ -200,8 +238,7 @@ const createArtistSnapshotsTableWithoutConstraint = async (
     DROP TABLE IF EXISTS ${TABLE_WITH_CONSTRAINT_NAME};
     VACUUM;
 
-    PRAGMA foreign_keys=on;
-    `);
+    PRAGMA foreign_keys=on;`);
     console.timeEnd(label);
 };
 
@@ -236,13 +273,19 @@ const flushStatements = async (
             return;
         }
 
+        console.log(`Flushing ${statements.length} statements...`);
+        const label = `Flushed ${statements.length} statements`;
+        console.time(label);
         const _db = db.getDatabaseInstance();
         _db.serialize(() => {
             _db.run("BEGIN TRANSACTION");
             statements.forEach((statement) => {
                 _db.run(...statement);
             });
-            _db.run("COMMIT", resolve);
+            _db.run("COMMIT", () => {
+                console.timeEnd(label);
+                resolve();
+            });
         });
     });
 
