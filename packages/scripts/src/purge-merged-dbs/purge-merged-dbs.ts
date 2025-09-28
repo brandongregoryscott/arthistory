@@ -36,7 +36,7 @@ const main = async () => {
     );
 
     console.log(
-        `Remote dbs slated for deletion:\n${remoteDbObjectsToDelete.map((object) => object.Key).join("\n")}`
+        `Remote dbs slated for deletion:\n${remoteDbObjectsToDelete.map((object, index) => `[${index + 1}] ${object.Key}`).join("\n")}`
     );
 
     if (!skipConfirmation) {
