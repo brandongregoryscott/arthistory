@@ -25,6 +25,7 @@
         "build": "turbo build",
         "build:force": "turbo build --force",
         "clean": "rm -rf node_modules build apps/**/node_modules packages/**/node_modules apps/**/dist apps/**/build packages/**/dist packages/**/build apps/**/.next",
+        "copy-object": "tsx packages/scripts/src/copy-object",
         "dev": "turbo dev",
         "download-dbs": "tsx packages/scripts/src/download-dbs",
         "format": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
