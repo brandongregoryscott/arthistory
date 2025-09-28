@@ -40,11 +40,14 @@ const main = async () => {
     console.time(label);
     const readStream = createReadStream(filename);
 
-    // This is a hack, but the Upload utility class from `@aws-sdk/lib-storage` is currently bugged
-    // and does not respect the `partSize` that is passed in. The internal logic will take the MIN_PART_SIZE
-    // even if you pass in a value larger than it, because it does some check based on the total byte count / MAX_PARTS:
-    // https://github.com/aws/aws-sdk-js-v3/blob/ad1514df905b7b661f7f81050f5f2102d31e5cfa/lib/lib-storage/src/Upload.ts#L96
-    // For example, if `totalBytes` is 7019552768, roughly ~6.5 GB, it will result in `Math.max(Upload.MIN_PART_SIZE = 5 * 1024 * 1024 = 5 MB, 7019552768 / 10000 = 701955.2768 = 0.66 MB)`
+    /**
+     * This is a hack, but the Upload utility class from `@aws-sdk/lib-storage` is currently bugged
+     * and does not respect the `partSize` that is passed in. The internal logic will take the MIN_PART_SIZE
+     *  even if you pass in a value larger than it, because it does some check based on the total byte count / MAX_PARTS:
+     * https://github.com/aws/aws-sdk-js-v3/blob/ad1514df905b7b661f7f81050f5f2102d31e5cfa/lib/lib-storage/src/Upload.ts#L96
+     * For example, if `totalBytes` is 7019552768, roughly ~6.5 GB, it will result in `Math.max(Upload.MIN_PART_SIZE = 5 * 1024 * 1024 = 5 MB, 7019552768 / 10000 = 701955.2768 = 0.66 MB)`
+     * @see https://github.com/aws/aws-sdk-js-v3/issues/7379
+     */
     /* @ts-ignore */
     Upload.MIN_PART_SIZE = PART_SIZE;
     const upload = new Upload({
