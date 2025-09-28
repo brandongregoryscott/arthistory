@@ -74,7 +74,7 @@ const main = async () => {
     }
 
     const targetDb = await openDb(mergedDbName);
-    await createArtistSnapshotsTableWithoutConstraint(targetDb);
+    await maybeDropArtistSnapshotsConstraint(targetDb);
     await setPerformancePragmas(targetDb);
 
     const startLabel = `Merging ${sourceDbFileNames.length} partial databases...`;
@@ -185,9 +185,28 @@ const setPerformancePragmas = async (
     PRAGMA journal_mode = OFF;
 `);
 
-const createArtistSnapshotsTableWithoutConstraint = async (
+const maybeDropArtistSnapshotsConstraint = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
 ) => {
+    // Check to see if the table actually has a unique index before doing extra work to transfer records
+    // to a new table that definitely does not have the index
+    const hasUniqueIndex =
+        (await db.get(`PRAGMA index_list(${TABLE_NAME});`)) !== undefined;
+
+    if (!hasUniqueIndex) {
+        console.log(
+            `No unique index found, creating ${TABLE_NAME} if it does not exist...`
+        );
+        await db.exec(`
+            CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
+                id TEXT,
+                timestamp NUMERIC,
+                followers NUMERIC,
+                popularity NUMERIC
+            );`);
+        return;
+    }
+
     const label = `Created '${TABLE_NAME}'`;
     console.log(`Creating '${TABLE_NAME}' without unique constraint...`);
     console.time(label);
@@ -220,8 +239,7 @@ const createArtistSnapshotsTableWithoutConstraint = async (
     DROP TABLE IF EXISTS ${TABLE_WITH_CONSTRAINT_NAME};
     VACUUM;
 
-    PRAGMA foreign_keys=on;
-    `);
+    PRAGMA foreign_keys=on;`);
     console.timeEnd(label);
 };
 
