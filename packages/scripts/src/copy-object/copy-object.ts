@@ -38,6 +38,13 @@ const targetFilename = options.targetFilename ?? sourceFilename;
  */
 const PART_SIZE = 50 * Math.pow(1024, 2);
 
+/**
+ * The maximum size of an object that can be copied using the `CopyObject` endpoint is 5 GB. Files
+ * larger than that will need to be streamed + uploaded using the multi-part upload API, which is slower.
+ * Let's support both for now, since the files are currently < 5 GB, but will likely grow past it in the future.
+ */
+const MAX_COPY_OBJECT_SIZE_IN_BYTES = 5 * Math.pow(1024, 3);
+
 const main = async () => {
     const copySource = `${sourceBucket}/${sourceFilename}`;
     const target = `${targetBucket}/${targetFilename}`;
@@ -45,6 +52,21 @@ const main = async () => {
     console.log(`Copying ${copySource} to ${target}...`);
     const label = `Copied ${copySource} to ${target}`;
     console.time(label);
+
+    const { ContentLength: size } = await s3.headObject({
+        Key: sourceFilename,
+        Bucket: sourceBucket,
+    });
+
+    if (size !== undefined && size < MAX_COPY_OBJECT_SIZE_IN_BYTES) {
+        await s3.copyObject({
+            Bucket: targetBucket,
+            Key: targetFilename,
+            CopySource: copySource,
+        });
+        console.timeEnd(label);
+        return;
+    }
 
     const sourceObject = await s3.getObject({
         Key: sourceFilename,
