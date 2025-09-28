@@ -105,7 +105,6 @@ const main = async () => {
                     FLUSH_AFTER
                 );
                 if (flushed) {
-                    console.log(`Flushed at ${statements.length} statements`);
                     statements = [];
                 }
             }
@@ -274,13 +273,19 @@ const flushStatements = async (
             return;
         }
 
+        console.log(`Flushing ${statements.length} statements...`);
+        const label = `Flushed ${statements.length} statements`;
+        console.time(label);
         const _db = db.getDatabaseInstance();
         _db.serialize(() => {
             _db.run("BEGIN TRANSACTION");
             statements.forEach((statement) => {
                 _db.run(...statement);
             });
-            _db.run("COMMIT", resolve);
+            _db.run("COMMIT", () => {
+                console.timeEnd(label);
+                resolve();
+            });
         });
     });
 
