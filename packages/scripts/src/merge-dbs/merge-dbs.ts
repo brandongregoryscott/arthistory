@@ -296,9 +296,13 @@ const generateInsertArtistSnapshotStatements = (
 const generateInsertArtistSnapshotStatement = (
     snapshot: ArtistSnapshotRow
 ): SQLStatement => {
+    const timestampInSeconds =
+        snapshot.timestamp.toString().length === 13
+            ? Math.round(snapshot.timestamp / 1000)
+            : snapshot.timestamp;
     const values = [
         snapshot.id,
-        snapshot.timestamp,
+        timestampInSeconds,
         snapshot.popularity,
         snapshot.followers,
     ];
