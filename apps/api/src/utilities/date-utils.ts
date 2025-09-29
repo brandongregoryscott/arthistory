@@ -1,4 +1,4 @@
-import { isValid, parseISO } from "date-fns";
+import { fromUnixTime, isValid, parseISO, startOfDay } from "date-fns";
 
 const parseDate = (value: string | undefined): Date | undefined => {
     if (value === undefined || !isValid(parseISO(value))) {
@@ -8,4 +8,8 @@ const parseDate = (value: string | undefined): Date | undefined => {
     return parseISO(value);
 };
 
-export { parseDate };
+const normalizeTimestamp = (unixTimestampInSeconds: number): string => {
+    return startOfDay(fromUnixTime(unixTimestampInSeconds)).toISOString();
+};
+
+export { normalizeTimestamp, parseDate };

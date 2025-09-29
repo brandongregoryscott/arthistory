@@ -1,6 +1,6 @@
 import type { ArtistSnapshot, ArtistSnapshotRow } from "@repo/common";
 import { getDb } from "../database";
-import { fromUnixTime } from "date-fns";
+import { normalizeTimestamp } from "../utilities/date-utils";
 
 const MetaService = {
     latest: async (): Promise<
@@ -15,7 +15,7 @@ const MetaService = {
             return undefined;
         }
 
-        return { timestamp: fromUnixTime(row.timestamp).toISOString() };
+        return { timestamp: normalizeTimestamp(row.timestamp) };
     },
 };
 
