@@ -1,4 +1,5 @@
 apps:
-  - script: dist/server.js
-    instances: 2
+  - script: apps/api/dist/server.js
+    name: arthistory-api
+    instances: 4
     exec_mode: cluster
