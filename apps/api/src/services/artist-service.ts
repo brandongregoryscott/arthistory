@@ -1,16 +1,9 @@
 import type { Artist, ArtistSnapshot, ArtistSnapshotRow } from "@repo/common";
 import { getDb } from "../database";
-import {
-    fromUnixTime,
-    getDayOfYear,
-    getMonth,
-    getQuarter,
-    getWeek,
-    getYear,
-    startOfDay,
-} from "date-fns";
+import { getDayOfYear, getMonth, getQuarter, getWeek, getYear } from "date-fns";
 import { countBy, uniqBy } from "lodash";
 import { SpotifyClient } from "../spotify";
+import { normalizeTimestamp } from "../utilities/date-utils";
 
 interface ListArtistSnapshotsOptions {
     ids: string[];
@@ -106,7 +99,7 @@ const queryPlaceholder = (count: number): string =>
 
 const normalizeArtistSnapshot = (row: ArtistSnapshotRow): ArtistSnapshot => ({
     ...row,
-    timestamp: startOfDay(fromUnixTime(row.timestamp)).toISOString(),
+    timestamp: normalizeTimestamp(row.timestamp),
 });
 
 const intersectionByNormalizedTimestamp = (
