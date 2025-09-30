@@ -1,3 +1,5 @@
+# sudo systemctl enable /home/brandon/arthistory-api-tunnel.service
+# sudo systemctl status arthistory-api-tunnel.service
 [Unit]
 Description=SSH tunnel for bscott-arthistory-api.tuns.sh
 After=network.target
