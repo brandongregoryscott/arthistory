@@ -1,0 +1,13 @@
+[Unit]
+Description=SSH tunnel for bscott-arthistory-api.tuns.sh
+After=network.target
+
+[Service]
+Type=forking
+User=brandon
+Restart=on-failure
+
+ExecStart=ssh -R arthistory-api:80:localhost:3001 tuns.sh
+
+[Install]
+WantedBy=multi-user.target
