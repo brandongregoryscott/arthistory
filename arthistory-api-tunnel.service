@@ -10,7 +10,7 @@ User=brandon
 Restart=always
 RuntimeMaxSec=1d
 
-ExecStart=ssh -R arthistory-api:80:localhost:3001 tuns.sh
+ExecStart=autossh -M 0 -R arthistory-api:80:localhost:3001 tuns.sh
 
 [Install]
 WantedBy=multi-user.target
