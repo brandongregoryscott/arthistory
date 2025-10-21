@@ -13,11 +13,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Setup node 20
+            - name: Setup node
               uses: actions/setup-node@v4
               with:
                   cache: 'npm'
-                  node-version: 20.15.0
+                  node-version: 24.8.0
 
             - name: npm ci
               run: npm ci
@@ -33,11 +33,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Setup node 20
+            - name: Setup node
               uses: actions/setup-node@v4
               with:
                   cache: 'npm'
-                  node-version: 20.15.0
+                  node-version: 24.8.0
 
             - name: Install semantic-release
               run: npm i -g semantic-release
