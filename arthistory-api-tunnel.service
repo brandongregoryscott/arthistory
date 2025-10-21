@@ -8,6 +8,7 @@ After=network.target
 Type=forking
 User=brandon
 Restart=always
+RestartSec=30s
 RuntimeMaxSec=1d
 
 ExecStart=autossh -M 0 -R arthistory-api:80:localhost:3001 tuns.sh
