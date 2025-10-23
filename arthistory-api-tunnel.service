@@ -1,4 +1,5 @@
 # sudo systemctl enable /home/brandon/arthistory-api-tunnel.service
+# sudo systemctl start arthistory-api-tunnel.service
 # sudo systemctl status arthistory-api-tunnel.service
 [Unit]
 Description=SSH tunnel for bscott-arthistory-api.tuns.sh
@@ -8,7 +9,9 @@ After=network.target
 Type=forking
 User=brandon
 Restart=always
-RestartSec=30s
+RestartSec=3s
+RestartMaxDelaySec=3m
+RestartSteps=5
 RuntimeMaxSec=1d
 
 ExecStart=autossh -M 0 -R arthistory-api:80:localhost:3001 tuns.sh
