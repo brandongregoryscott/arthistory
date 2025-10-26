@@ -34,7 +34,7 @@ RestartMaxDelaySec=3m
 RestartSteps=5
 
 WorkingDirectory=/home/brandon/arthistory
-ExecStart=start-cron-service.sh
+ExecStart=sh start-cron-service.sh
 
 [Install]
 WantedBy=multi-user.target
