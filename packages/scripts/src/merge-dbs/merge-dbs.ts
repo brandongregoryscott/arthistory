@@ -16,6 +16,7 @@ import {
     flushStatements,
     flushStatementsIfNeeded,
     openDb,
+    paginateRows,
     setPerformancePragmas,
 } from "../utils/db-utils";
 import { toUnixTimestampInSeconds } from "../utils/date-utils";
@@ -152,23 +153,6 @@ const findCheckpointDb = async (): Promise<string | undefined> => {
     }
 
     return undefined;
-};
-
-const paginateRows = async <T>(
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    table: string,
-    pageSize: number,
-    callback: (rows: T[]) => Promise<void>
-): Promise<void> => {
-    const total = await countRows(db, table);
-    let counter = 0;
-    while (counter < total) {
-        const rows = await db.all<T[]>(
-            `SELECT * FROM ${table} LIMIT ${pageSize} OFFSET ${counter};`
-        );
-        counter += rows.length;
-        await callback(rows);
-    }
 };
 
 const maybeDropArtistSnapshotsConstraint = async (

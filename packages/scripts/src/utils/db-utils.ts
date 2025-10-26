@@ -71,6 +71,23 @@ const flushStatements = async (
         });
     });
 
+const paginateRows = async <T>(
+    db: Database,
+    table: string,
+    pageSize: number,
+    callback: (rows: T[]) => Promise<void>
+): Promise<void> => {
+    const total = await countRows(db, table);
+    let counter = 0;
+    while (counter < total) {
+        const rows = await db.all<T[]>(
+            `SELECT * FROM ${table} LIMIT ${pageSize} OFFSET ${counter};`
+        );
+        counter += rows.length;
+        await callback(rows);
+    }
+};
+
 /**
  * Returns the hourly sync database name.
  */
@@ -92,5 +109,6 @@ export {
     getDbName,
     openDb,
     openSnapshotDb,
+    paginateRows,
     setPerformancePragmas,
 };
