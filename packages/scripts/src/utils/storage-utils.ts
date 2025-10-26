@@ -1,5 +1,5 @@
 import { S3 } from "@aws-sdk/client-s3";
-import { Progress } from "@aws-sdk/lib-storage";
+import type { Progress } from "@aws-sdk/lib-storage";
 import { bytesToMb } from "./fs-utils";
 import {
     AWS_ACCESS_KEY_ID,
@@ -29,4 +29,4 @@ const logUploadProgress = (progress: Progress) => {
     );
 };
 
-export { s3, logUploadProgress };
+export { logUploadProgress, s3 };

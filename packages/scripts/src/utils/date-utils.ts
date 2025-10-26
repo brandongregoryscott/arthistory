@@ -18,4 +18,4 @@ const getRoundedTimestamp = (): number => {
  */
 const getCurrentHourIndex = (): number => new Date().getHours();
 
-export { getRoundedTimestamp, getCurrentHourIndex };
+export { getCurrentHourIndex, getRoundedTimestamp };

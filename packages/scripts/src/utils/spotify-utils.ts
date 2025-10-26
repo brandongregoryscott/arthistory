@@ -24,4 +24,4 @@ const buildCurrentSpotifyClient = () => {
     return buildSpotifyClient({ clientId, clientSecret });
 };
 
-export { buildSpotifyClient, buildCurrentSpotifyClient };
+export { buildCurrentSpotifyClient, buildSpotifyClient };

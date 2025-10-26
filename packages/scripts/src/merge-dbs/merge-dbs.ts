@@ -1,7 +1,7 @@
-import sqlite3 from "sqlite3";
-import { Database } from "sqlite";
+import type sqlite3 from "sqlite3";
+import type { Database } from "sqlite";
 import { copyFile, stat } from "fs/promises";
-import { ArtistSnapshotRow } from "@repo/common";
+import type { ArtistSnapshotRow } from "@repo/common";
 import { compact, first, isEmpty, last, sortBy } from "lodash";
 import {
     MERGED_DB_NAME,

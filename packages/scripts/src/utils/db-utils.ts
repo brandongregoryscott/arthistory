@@ -1,4 +1,5 @@
-import { Database, open } from "sqlite";
+import type { Database } from "sqlite";
+import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { getRoundedTimestamp } from "./date-utils";
 
@@ -50,8 +51,8 @@ const openDb = async (fileName: string) =>
 const openSnapshotDb = async () => openDb(getDbName());
 
 export {
-    createArtistSnapshotsTable,
     countRows,
+    createArtistSnapshotsTable,
     getDbName,
     openDb,
     openSnapshotDb,
