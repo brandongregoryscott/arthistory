@@ -58,13 +58,18 @@ const flushStatements = async (
         console.log(`Flushing ${statements.length} statements...`);
         const label = `Flushed ${statements.length} statements`;
         console.time(label);
-        const _db = db.getDatabaseInstance();
-        _db.serialize(() => {
-            _db.run("BEGIN TRANSACTION");
+        const dbInstance = db.getDatabaseInstance();
+        dbInstance.serialize(() => {
+            dbInstance.run("BEGIN TRANSACTION");
             statements.forEach((statement) => {
-                _db.run(...statement);
+                if (Array.isArray(statement)) {
+                    dbInstance.run(...statement);
+                    return;
+                }
+
+                dbInstance.run(statement);
             });
-            _db.run("COMMIT", () => {
+            dbInstance.run("COMMIT", () => {
                 console.timeEnd(label);
                 resolve();
             });

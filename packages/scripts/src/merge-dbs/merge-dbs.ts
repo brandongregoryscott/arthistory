@@ -7,6 +7,7 @@ import {
     MERGED_DB_NAME,
     ARTIST_SNAPSHOTS_TABLE_NAME,
     ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME,
+    BULK_INSERTION_CHUNK_SIZE,
 } from "../constants/storage";
 import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
@@ -22,7 +23,6 @@ import {
 import { toUnixTimestampInSeconds } from "../utils/date-utils";
 
 const CHUNK_SIZE = 100000;
-const FLUSH_AFTER = 250000;
 
 interface Options {
     skipCheckpointAsBase: boolean;
@@ -112,7 +112,7 @@ const main = async () => {
                 const flushed = await flushStatementsIfNeeded(
                     targetDb,
                     statements,
-                    FLUSH_AFTER
+                    BULK_INSERTION_CHUNK_SIZE
                 );
                 if (flushed) {
                     statements = [];

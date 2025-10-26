@@ -1,8 +1,8 @@
-import type { Artist, SpotifyApi } from "@spotify/web-api-ts-sdk";
-import { ARTIST_ID_ALEX_G, ARTIST_ID_DUSTER } from "../constants/spotify";
+import type { Artist } from "@spotify/web-api-ts-sdk";
 import {
     countRows,
     createArtistSnapshotsTable,
+    flushStatements,
     openDb,
     openSnapshotDb,
 } from "../utils/db-utils";
@@ -20,6 +20,7 @@ import {
 import {
     ARTIST_IDS_TABLE_NAME,
     ARTIST_SNAPSHOTS_TABLE_NAME,
+    BULK_INSERTION_CHUNK_SIZE,
 } from "../constants/storage";
 import type { Entity } from "@repo/common";
 import { chunk, flatten, take } from "lodash";
@@ -38,7 +39,6 @@ const MAX_RETRY_ATTEMPTS = 10;
 const sync = async () => {
     const timestamp = getRoundedTimestamp();
 
-    const spotify = buildCurrentSpotifyClient();
     const db = await openSnapshotDb();
     await createArtistSnapshotsTable(db);
 
@@ -56,12 +56,18 @@ const sync = async () => {
             )
         )
     );
-    console.log(statements);
+
+    const statementChunks = chunk(statements, BULK_INSERTION_CHUNK_SIZE);
+    await Promise.all(
+        statementChunks.map(async (statementChunk) =>
+            flushStatements(db, statementChunk)
+        )
+    );
 };
 
 const readArtistIds = async (): Promise<string[]> => {
     const artistIdsDb = await openDb("artist_ids.db");
-    const total = await countRows(artistIdsDb, "artist_ids");
+    const total = await countRows(artistIdsDb, ARTIST_IDS_TABLE_NAME);
     const chunkSize = Math.floor(total / 24);
     const currentHourIndex = getCurrentHourIndex();
     const limit = chunkSize;
@@ -110,17 +116,15 @@ const buildInsertStatement = (
     artist: Artist,
     timestamp: number
 ): SQLStatement => {
-    const row = [
-        artist.id,
-        toUnixTimestampInSeconds(timestamp),
-        artist.popularity,
-        artist.followers.total,
-    ];
+    const { id, popularity } = artist;
+    const followers = artist.followers.total;
+    const secondsTimestamp = toUnixTimestampInSeconds(timestamp);
 
-    return [
-        `INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME} (id, timestamp, popularity, followers) VALUES ($, ?, ?, ?);`,
-        row,
-    ];
+    return `
+        INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME}
+            (id, timestamp, popularity, followers)
+        VALUES
+            ('${id}', ${secondsTimestamp}, ${popularity}, ${followers});`;
 };
 
 export { sync };
