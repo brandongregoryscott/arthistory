@@ -9,10 +9,15 @@ import {
 import { buildCurrentSpotifyClient } from "../utils/spotify-utils";
 import type { SQLStatement } from "../types";
 import {
+    getCurrentHourIndex,
     getRoundedTimestamp,
     toUnixTimestampInSeconds,
 } from "../utils/date-utils";
-import { ARTIST_SNAPSHOTS_TABLE_NAME } from "../constants/storage";
+import {
+    ARTIST_IDS_TABLE_NAME,
+    ARTIST_SNAPSHOTS_TABLE_NAME,
+} from "../constants/storage";
+import type { Entity } from "@repo/common";
 
 const sync = async () => {
     const timestamp = getRoundedTimestamp();
@@ -21,27 +26,27 @@ const sync = async () => {
     const db = await openSnapshotDb();
     await createArtistSnapshotsTable(db);
 
+    const artistIds = await readArtistIds();
     const artists = await spotify.artists.get([
         ARTIST_ID_ALEX_G,
         ARTIST_ID_DUSTER,
     ]);
 };
 
-// def read_artist_ids
-//   @artist_ids_db.results_as_hash = false
-//   total = @artist_ids_db.get_first_value('SELECT COUNT(id) FROM artist_ids;')
-//   @artist_ids_db.results_as_hash = true
-//   chunk_size = (total / 24).floor
-//   puts "db_name #{db_name} timestamp #{@timestamp} artist_ids total #{total} chunk_size #{chunk_size}"
-//   limit = chunk_size
-//   offset = chunk_size * current_hour_index
-//   artist_id_rows = @artist_ids_db.execute('SELECT id FROM artist_ids LIMIT ? OFFSET ?;', [limit, offset])
-//   artist_id_rows.map { |row| row['id'] }
-// end
 const readArtistIds = async (): Promise<string[]> => {
     const artistIdsDb = await openDb("artist_ids.db");
     const total = await countRows(artistIdsDb, "artist_ids");
-    return [];
+    const chunkSize = Math.floor(total / 24);
+    const currentHourIndex = getCurrentHourIndex();
+    const limit = chunkSize;
+    const offset = chunkSize * currentHourIndex;
+
+    const rows = await artistIdsDb.all<Entity[]>(
+        `SELECT id FROM ${ARTIST_IDS_TABLE_NAME} LIMIT ${limit} OFFSET ${offset};`
+    );
+    const ids = rows.map((row) => row.id);
+
+    return ids;
 };
 
 const buildInsertStatement = (
@@ -56,7 +61,7 @@ const buildInsertStatement = (
     ];
 
     return [
-        `INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME} (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);`,
+        `INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME} (id, timestamp, popularity, followers) VALUES ($, ?, ?, ?);`,
         row,
     ];
 };
