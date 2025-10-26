@@ -92,6 +92,9 @@ const paginateRows = async <T>(
     }
 };
 
+const getSnapshotDbFilename = (timestamp: number) =>
+    `spotify-data_${timestamp}.db`;
+
 const openDb = async (fileName: string): Promise<Database> =>
     open({
         filename: fileName,
@@ -99,13 +102,14 @@ const openDb = async (fileName: string): Promise<Database> =>
     });
 
 const openSnapshotDb = async (timestamp: number) =>
-    openDb(`spotify-data_${timestamp}.db`);
+    openDb(getSnapshotDbFilename(timestamp));
 
 export {
     countRows,
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
+    getSnapshotDbFilename,
     openDb,
     openSnapshotDb,
     paginateRows,

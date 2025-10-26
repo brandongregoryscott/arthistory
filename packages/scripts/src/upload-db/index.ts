@@ -1,5 +1,5 @@
 import { program } from "commander";
-import { BUCKET_NAME } from "../constants/storage";
+import { SNAPSHOT_DB_BUCKET_NAME } from "../constants/storage";
 import { uploadDb } from "./upload-db";
 
 interface Options {
@@ -15,7 +15,7 @@ program.requiredOption(
 program.requiredOption(
     "--bucket <bucket>",
     "Name of the bucket to upload to",
-    BUCKET_NAME
+    SNAPSHOT_DB_BUCKET_NAME
 );
 
 program.parse();

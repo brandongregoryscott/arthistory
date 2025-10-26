@@ -1,4 +1,7 @@
-import { PARTIAL_DB_PREFIX, BUCKET_NAME } from "../constants/storage";
+import {
+    PARTIAL_DB_PREFIX,
+    SNAPSHOT_DB_BUCKET_NAME,
+} from "../constants/storage";
 import { getDbFileNames } from "../utils/fs-utils";
 import { s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
@@ -25,7 +28,7 @@ const main = async () => {
     console.log(`Found ${localDbFileNames.length} dbs locally`);
 
     const { Contents: remoteDbObjects = [] } = await s3.listObjectsV2({
-        Bucket: BUCKET_NAME,
+        Bucket: SNAPSHOT_DB_BUCKET_NAME,
         Prefix: PARTIAL_DB_PREFIX,
     });
 
@@ -41,7 +44,7 @@ const main = async () => {
 
     if (!skipConfirmation) {
         const answer = await readlineInterface.question(
-            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${BUCKET_NAME}'? [y/N] `
+            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${SNAPSHOT_DB_BUCKET_NAME}'? [y/N] `
         );
 
         if (answer.toLowerCase().trim() !== "y") {
@@ -55,7 +58,7 @@ const main = async () => {
     console.time(label);
 
     await s3.deleteObjects({
-        Bucket: BUCKET_NAME,
+        Bucket: SNAPSHOT_DB_BUCKET_NAME,
         Delete: {
             Objects: remoteDbObjectsToDelete.map((object) => ({
                 Key: object.Key,

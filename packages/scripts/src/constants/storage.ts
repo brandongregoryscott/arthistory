@@ -1,6 +1,6 @@
 const MERGED_DB_NAME = "merged-spotify-data.db";
 
-const BUCKET_NAME = "spotify-data";
+const SNAPSHOT_DB_BUCKET_NAME = "spotify-data";
 
 const PARTIAL_DB_PREFIX = "spotify-data_";
 
@@ -18,9 +18,9 @@ export {
     ARTIST_IDS_TABLE_NAME,
     ARTIST_SNAPSHOTS_TABLE_NAME,
     ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME,
-    BUCKET_NAME,
     BULK_INSERTION_CHUNK_SIZE,
     MERGED_DB_NAME,
     PARTIAL_DB_PATTERN,
     PARTIAL_DB_PREFIX,
+    SNAPSHOT_DB_BUCKET_NAME,
 };
