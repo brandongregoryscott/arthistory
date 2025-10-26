@@ -8,6 +8,7 @@
         "@aws-sdk/lib-storage": "3.899.0",
         "commander": "14.0.1",
         "cron": "4.3.3",
+        "dotenv": "17.2.3",
         "lodash": "4.17.21",
         "sqlite": "5.1.1",
         "sqlite3": "5.1.7"

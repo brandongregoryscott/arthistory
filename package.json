@@ -33,6 +33,7 @@
         "merge-dbs": "tsx packages/scripts/src/merge-dbs",
         "prepare": "husky || exit 0",
         "purge-merged-dbs": "tsx packages/scripts/src/purge-merged-dbs",
+        "sync": "tsx packages/scripts/src/sync",
         "upload-db": "tsx packages/scripts/src/upload-db"
     },
     "version": "0.0.0-development",
