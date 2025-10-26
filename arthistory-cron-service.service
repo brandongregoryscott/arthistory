@@ -17,7 +17,7 @@
 # sudo systemctl edit arthistory-cron-service.service
 
 # To restart the system daemon & service
-sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
+# sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
 
 [Unit]
 Description=Cron service for syncing data and uploading snapshots to S3
