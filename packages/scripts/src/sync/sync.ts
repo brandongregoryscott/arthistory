@@ -98,7 +98,7 @@ const getArtistSnapshotStatements = async (
         return artists.map((artist) => buildInsertStatement(artist, timestamp));
     } catch (error) {
         if (isRateLimitError(error) && attempt < MAX_RETRY_ATTEMPTS) {
-            const secondsToSleep = 2 ** attempt;
+            const secondsToSleep = Math.pow(2, attempt);
             await sleep(secondsToSleep * 1000);
             return getArtistSnapshotStatements({
                 timestamp,
