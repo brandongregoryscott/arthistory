@@ -10,7 +10,13 @@ import {
 } from "../constants/storage";
 import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
-import { countRows, openDb, setPerformancePragmas } from "../utils/db-utils";
+import {
+    countRows,
+    flushStatements,
+    flushStatementsIfNeeded,
+    openDb,
+    setPerformancePragmas,
+} from "../utils/db-utils";
 import { toUnixTimestampInSeconds } from "../utils/date-utils";
 
 const CHUNK_SIZE = 100000;
@@ -229,45 +235,6 @@ const createArtistSnapshotsIndexes = async (
     CREATE INDEX artist_snapshot_id ON ${TABLE_NAME} (id);
     CREATE INDEX artist_snapshot_timestamp ON ${TABLE_NAME} (timestamp);
 `);
-
-const flushStatementsIfNeeded = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: SQLStatement[],
-    flushAfter: number
-): Promise<boolean> => {
-    if (statements.length < flushAfter) {
-        return false;
-    }
-
-    await flushStatements(db, statements);
-    return true;
-};
-
-const flushStatements = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: SQLStatement[]
-): Promise<void> =>
-    new Promise((resolve) => {
-        if (isEmpty(statements)) {
-            resolve();
-            return;
-        }
-
-        console.log(`Flushing ${statements.length} statements...`);
-        const label = `Flushed ${statements.length} statements`;
-        console.time(label);
-        const _db = db.getDatabaseInstance();
-        _db.serialize(() => {
-            _db.run("BEGIN TRANSACTION");
-            statements.forEach((statement) => {
-                _db.run(...statement);
-            });
-            _db.run("COMMIT", () => {
-                console.timeEnd(label);
-                resolve();
-            });
-        });
-    });
 
 const generateInsertArtistSnapshotStatements = (
     snapshots: ArtistSnapshotRow[]
