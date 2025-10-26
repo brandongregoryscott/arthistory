@@ -7,6 +7,12 @@
 # Check the service status
 # sudo systemctl status arthistory-cron-service.service
 
+# View systemd process logs
+# journalctl -xeu arthistory-cron-service.service
+
+# View service logs
+# sudo journalctl -u arthistory-cron-service.service
+
 # To edit environment variables
 # sudo systemctl edit arthistory-cron-service.service
 
@@ -27,7 +33,8 @@ RuntimeMaxSec=1d
 RestartMaxDelaySec=3m
 RestartSteps=5
 
-ExecStart=npm run cron-service
+WorkingDirectory=/home/brandon/arthistory
+ExecStart=start-cron-service.sh
 
 [Install]
 WantedBy=multi-user.target
