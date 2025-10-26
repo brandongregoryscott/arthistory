@@ -10,7 +10,7 @@ const getRoundedTimestamp = (): number => {
     now.setSeconds(0);
     now.setMilliseconds(0);
 
-    return now.valueOf();
+    return toUnixTimestampInSeconds(now.valueOf());
 };
 
 const toUnixTimestampInSeconds = (timestamp: number): number => {

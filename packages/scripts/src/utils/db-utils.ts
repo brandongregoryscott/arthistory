@@ -1,6 +1,5 @@
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { getRoundedTimestamp } from "./date-utils";
 import { isEmpty } from "lodash";
 import type { Database, SQLStatement } from "../types";
 import { ARTIST_SNAPSHOTS_TABLE_NAME } from "../constants/storage";
@@ -93,25 +92,20 @@ const paginateRows = async <T>(
     }
 };
 
-/**
- * Returns the hourly sync database name.
- */
-const getDbName = (): string => `spotify-data_${getRoundedTimestamp()}.db`;
-
 const openDb = async (fileName: string): Promise<Database> =>
     open({
         filename: fileName,
         driver: sqlite3.cached.Database,
     });
 
-const openSnapshotDb = async () => openDb(getDbName());
+const openSnapshotDb = async (timestamp: number) =>
+    openDb(`spotify-data_${timestamp}.db`);
 
 export {
     countRows,
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
-    getDbName,
     openDb,
     openSnapshotDb,
     paginateRows,

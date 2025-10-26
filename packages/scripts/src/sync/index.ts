@@ -1,9 +1,4 @@
-import { CronJob } from "cron";
 import { sync } from "./sync";
+import { getRoundedTimestamp } from "../utils/date-utils";
 
-CronJob.from({
-    cronTime: "* * * * * *",
-    onTick: sync,
-    start: true,
-    timeZone: "America/New_York",
-});
+sync({ timestamp: getRoundedTimestamp() });

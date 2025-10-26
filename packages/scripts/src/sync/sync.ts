@@ -12,18 +12,14 @@ import {
     isRateLimitError,
 } from "../utils/spotify-utils";
 import type { SQLStatement } from "../types";
-import {
-    getCurrentHourIndex,
-    getRoundedTimestamp,
-    toUnixTimestampInSeconds,
-} from "../utils/date-utils";
+import { getCurrentHourIndex } from "../utils/date-utils";
 import {
     ARTIST_IDS_TABLE_NAME,
     ARTIST_SNAPSHOTS_TABLE_NAME,
     BULK_INSERTION_CHUNK_SIZE,
 } from "../constants/storage";
 import type { Entity } from "@repo/common";
-import { chunk, flatten, take } from "lodash";
+import { chunk, flatten } from "lodash";
 import { sleep } from "../utils/core-utils";
 
 /**
@@ -36,20 +32,24 @@ const MAX_ARTIST_IDS_PER_REQUEST = 50;
  */
 const MAX_RETRY_ATTEMPTS = 10;
 
-const sync = async () => {
-    const timestamp = getRoundedTimestamp();
+interface SyncOptions {
+    timestamp: number;
+}
 
-    const db = await openSnapshotDb();
+const sync = async (options: SyncOptions) => {
+    const { timestamp } = options;
+
+    const db = await openSnapshotDb(timestamp);
     await createArtistSnapshotsTable(db);
 
-    const artistIds = take(await readArtistIds(), 3000);
+    const artistIds = await getArtistIds();
 
     const artistIdChunks = chunk(artistIds, MAX_ARTIST_IDS_PER_REQUEST);
 
     const statements = flatten(
         await Promise.all(
             artistIdChunks.map(async (artistIdChunk) =>
-                getArtistSnapshots({
+                getArtistSnapshotStatements({
                     artistIds: artistIdChunk,
                     timestamp,
                 })
@@ -65,7 +65,7 @@ const sync = async () => {
     );
 };
 
-const readArtistIds = async (): Promise<string[]> => {
+const getArtistIds = async (): Promise<string[]> => {
     const artistIdsDb = await openDb("artist_ids.db");
     const total = await countRows(artistIdsDb, ARTIST_IDS_TABLE_NAME);
     const chunkSize = Math.floor(total / 24);
@@ -81,14 +81,14 @@ const readArtistIds = async (): Promise<string[]> => {
     return ids;
 };
 
-interface GetArtistSnapshotsOptions {
+interface GetArtistSnapshotStatementsOptions {
     artistIds: string[];
     attempt?: number;
     timestamp: number;
 }
 
-const getArtistSnapshots = async (
-    options: GetArtistSnapshotsOptions
+const getArtistSnapshotStatements = async (
+    options: GetArtistSnapshotStatementsOptions
 ): Promise<SQLStatement[]> => {
     const { timestamp, artistIds, attempt = 0 } = options;
     const spotify =
@@ -100,7 +100,7 @@ const getArtistSnapshots = async (
         if (isRateLimitError(error) && attempt < MAX_RETRY_ATTEMPTS) {
             const secondsToSleep = 2 ** attempt;
             await sleep(secondsToSleep * 1000);
-            return getArtistSnapshots({
+            return getArtistSnapshotStatements({
                 timestamp,
                 artistIds,
                 attempt: attempt + 1,
@@ -118,13 +118,12 @@ const buildInsertStatement = (
 ): SQLStatement => {
     const { id, popularity } = artist;
     const followers = artist.followers.total;
-    const secondsTimestamp = toUnixTimestampInSeconds(timestamp);
 
     return `
         INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME}
             (id, timestamp, popularity, followers)
         VALUES
-            ('${id}', ${secondsTimestamp}, ${popularity}, ${followers});`;
+            ('${id}', ${timestamp}, ${popularity}, ${followers});`;
 };
 
 export { sync };
