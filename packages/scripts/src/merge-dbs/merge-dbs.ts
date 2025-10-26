@@ -10,6 +10,7 @@ import {
 } from "../constants/storage";
 import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
+import { setPerformancePragmas } from "../utils/db-utils";
 
 const CHUNK_SIZE = 100000;
 const FLUSH_AFTER = 250000;
@@ -171,18 +172,6 @@ const paginateRows = async <T>(
         await callback(rows);
     }
 };
-
-/**
- * @see https://stackoverflow.com/a/58547438
- */
-const setPerformancePragmas = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>
-) =>
-    db.exec(`
-    PRAGMA synchronous = OFF;
-    PRAGMA locking_mode = EXCLUSIVE;
-    PRAGMA journal_mode = OFF;
-`);
 
 const maybeDropArtistSnapshotsConstraint = async (
     db: Database<sqlite3.Database, sqlite3.Statement>

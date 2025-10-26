@@ -1,10 +1,15 @@
+import { ARTIST_ID_ALEX_G, ARTIST_ID_DUSTER } from "../constants/spotify";
+import { createArtistSnapshotsTable, openOrCreateDb } from "../utils/db-utils";
 import { buildCurrentSpotifyClient } from "../utils/spotify-utils";
 
 const sync = async () => {
     const spotify = buildCurrentSpotifyClient();
+    const db = await openOrCreateDb();
+    await createArtistSnapshotsTable(db);
+
     const artists = await spotify.artists.get([
-        "6lcwlkAjBPSKnFBZjjZFJs",
-        "5AyEXCtu3xnnsTGCo4RVZh",
+        ARTIST_ID_ALEX_G,
+        ARTIST_ID_DUSTER,
     ]);
 };
 

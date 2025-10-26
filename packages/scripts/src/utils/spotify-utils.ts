@@ -1,4 +1,4 @@
-import { Artist, SpotifyApi } from "@spotify/web-api-ts-sdk";
+import { SpotifyApi } from "@spotify/web-api-ts-sdk";
 import { getCurrentHourIndex } from "./date-utils";
 import { CLIENT_IDS, CLIENT_SECRETS } from "../config";
 
