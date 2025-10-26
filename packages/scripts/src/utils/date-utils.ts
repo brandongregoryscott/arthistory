@@ -23,7 +23,7 @@ const toUnixTimestampInSeconds = (timestamp: number): number => {
 };
 
 /**
- * Returns the current hour as a 0-based index, i.e. 23 == 11 AM, 0 = 1 AM
+ * Returns the current hour as a 0-based index, i.e. 23 == 11 PM, 0 = 1 AM
  */
 const getCurrentHourIndex = (): number => new Date().getHours();
 
