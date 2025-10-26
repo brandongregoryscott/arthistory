@@ -6,7 +6,7 @@ import { uploadDb } from "../upload-db/upload-db";
 import { SNAPSHOT_DB_BUCKET_NAME } from "../constants/storage";
 
 CronJob.from({
-    cronTime: "* * * * * *",
+    cronTime: "34 * * * *",
     onTick: async () => {
         const timestamp = getRoundedTimestamp();
         const dbFilename = getSnapshotDbFilename(timestamp);
