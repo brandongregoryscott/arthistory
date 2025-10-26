@@ -1,12 +1,15 @@
 import { _Object } from "@aws-sdk/client-s3";
-import { PARTIAL_DB_PREFIX, BUCKET_NAME } from "../constants/storage";
+import {
+    PARTIAL_DB_PREFIX,
+    SNAPSHOT_DB_BUCKET_NAME,
+} from "../constants/storage";
 import { createWriteStream } from "node:fs";
 import { getDbFileNames } from "../utils/fs-utils";
 import { s3 } from "../utils/storage-utils";
 
 const main = async () => {
     const { Contents: objects = [] } = await s3.listObjectsV2({
-        Bucket: BUCKET_NAME,
+        Bucket: SNAPSHOT_DB_BUCKET_NAME,
         Prefix: PARTIAL_DB_PREFIX,
     });
 
@@ -38,7 +41,7 @@ const downloadObject = async (object: _Object) => {
     }
 
     const result = await s3.getObject({
-        Bucket: BUCKET_NAME,
+        Bucket: SNAPSHOT_DB_BUCKET_NAME,
         Key: key,
     });
     const objectStream = result.Body?.transformToWebStream();

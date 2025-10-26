@@ -1,18 +1,28 @@
-import sqlite3 from "sqlite3";
-import { Database, open } from "sqlite";
+import type sqlite3 from "sqlite3";
+import type { Database } from "sqlite";
 import { copyFile, stat } from "fs/promises";
-import { ArtistSnapshotRow } from "@repo/common";
-import { compact, first, isEmpty, last, sortBy } from "lodash";
+import type { ArtistSnapshotRow } from "@repo/common";
+import { compact, first, last, sortBy } from "lodash";
 import {
     MERGED_DB_NAME,
-    TABLE_NAME,
-    TABLE_WITH_CONSTRAINT_NAME,
+    ARTIST_SNAPSHOTS_TABLE_NAME,
+    ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME,
+    BULK_INSERTION_CHUNK_SIZE,
 } from "../constants/storage";
 import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
+import {
+    countRows,
+    createArtistSnapshotsTable,
+    flushStatements,
+    flushStatementsIfNeeded,
+    openDb,
+    paginateRows,
+    setPerformancePragmas,
+} from "../utils/db-utils";
+import { toUnixTimestampInSeconds } from "../utils/date-utils";
 
 const CHUNK_SIZE = 100000;
-const FLUSH_AFTER = 250000;
 
 interface Options {
     skipCheckpointAsBase: boolean;
@@ -92,7 +102,7 @@ const main = async () => {
         const sourceDb = await openDb(sourceDbFileName);
         await paginateRows<ArtistSnapshotRow>(
             sourceDb,
-            TABLE_NAME,
+            ARTIST_SNAPSHOTS_TABLE_NAME,
             CHUNK_SIZE,
             async (rows) => {
                 statements = [
@@ -102,7 +112,7 @@ const main = async () => {
                 const flushed = await flushStatementsIfNeeded(
                     targetDb,
                     statements,
-                    FLUSH_AFTER
+                    BULK_INSERTION_CHUNK_SIZE
                 );
                 if (flushed) {
                     statements = [];
@@ -145,74 +155,32 @@ const findCheckpointDb = async (): Promise<string | undefined> => {
     return undefined;
 };
 
-const countRows = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    table: string
-): Promise<number> => {
-    const result = (await db.get(`SELECT COUNT(*) FROM ${table};`)) as {
-        "COUNT(*)": number;
-    };
-    return result["COUNT(*)"];
-};
-
-const paginateRows = async <T>(
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    table: string,
-    pageSize: number,
-    callback: (rows: T[]) => Promise<void>
-): Promise<void> => {
-    const total = await countRows(db, table);
-    let counter = 0;
-    while (counter < total) {
-        const rows = await db.all<T[]>(
-            `SELECT * FROM ${table} LIMIT ${pageSize} OFFSET ${counter};`
-        );
-        counter += rows.length;
-        await callback(rows);
-    }
-};
-
-/**
- * @see https://stackoverflow.com/a/58547438
- */
-const setPerformancePragmas = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>
-) =>
-    db.exec(`
-    PRAGMA synchronous = OFF;
-    PRAGMA locking_mode = EXCLUSIVE;
-    PRAGMA journal_mode = OFF;
-`);
-
 const maybeDropArtistSnapshotsConstraint = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
 ) => {
     // Check to see if the table actually has a unique index before doing extra work to transfer records
     // to a new table that definitely does not have the index
     const hasUniqueIndex =
-        (await db.get(`PRAGMA index_list(${TABLE_NAME});`)) !== undefined;
+        (await db.get(`PRAGMA index_list(${ARTIST_SNAPSHOTS_TABLE_NAME});`)) !==
+        undefined;
 
     if (!hasUniqueIndex) {
         console.log(
-            `No unique index found, creating ${TABLE_NAME} if it does not exist...`
+            `No unique index found, creating ${ARTIST_SNAPSHOTS_TABLE_NAME} if it does not exist...`
         );
-        await db.exec(`
-            CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
-                id TEXT,
-                timestamp NUMERIC,
-                followers NUMERIC,
-                popularity NUMERIC
-            );`);
+        await createArtistSnapshotsTable(db);
         return;
     }
 
-    const label = `Created '${TABLE_NAME}'`;
-    console.log(`Creating '${TABLE_NAME}' without unique constraint...`);
+    const label = `Created '${ARTIST_SNAPSHOTS_TABLE_NAME}'`;
+    console.log(
+        `Creating '${ARTIST_SNAPSHOTS_TABLE_NAME}' without unique constraint...`
+    );
     console.time(label);
     await db.exec(`
     PRAGMA foreign_keys=off;
 
-    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
+    CREATE TABLE IF NOT EXISTS ${ARTIST_SNAPSHOTS_TABLE_NAME} (
         id TEXT,
         timestamp NUMERIC,
         followers NUMERIC,
@@ -222,20 +190,20 @@ const maybeDropArtistSnapshotsConstraint = async (
 
     BEGIN TRANSACTION;
 
-    ALTER TABLE ${TABLE_NAME} RENAME TO ${TABLE_WITH_CONSTRAINT_NAME};
+    ALTER TABLE ${ARTIST_SNAPSHOTS_TABLE_NAME} RENAME TO ${ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME};
 
-    CREATE TABLE IF NOT EXISTS ${TABLE_NAME} (
+    CREATE TABLE IF NOT EXISTS ${ARTIST_SNAPSHOTS_TABLE_NAME} (
         id TEXT,
         timestamp NUMERIC,
         followers NUMERIC,
         popularity NUMERIC
     );
 
-    INSERT INTO ${TABLE_NAME} SELECT * FROM ${TABLE_WITH_CONSTRAINT_NAME};
+    INSERT INTO ${ARTIST_SNAPSHOTS_TABLE_NAME} SELECT * FROM ${ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME};
 
     COMMIT;
 
-    DROP TABLE IF EXISTS ${TABLE_WITH_CONSTRAINT_NAME};
+    DROP TABLE IF EXISTS ${ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME};
     VACUUM;
 
     PRAGMA foreign_keys=on;`);
@@ -246,48 +214,9 @@ const createArtistSnapshotsIndexes = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
 ) =>
     db.exec(`
-    CREATE INDEX artist_snapshot_id ON ${TABLE_NAME} (id);
-    CREATE INDEX artist_snapshot_timestamp ON ${TABLE_NAME} (timestamp);
+    CREATE INDEX ${ARTIST_SNAPSHOTS_TABLE_NAME}_id ON ${ARTIST_SNAPSHOTS_TABLE_NAME} (id);
+    CREATE INDEX ${ARTIST_SNAPSHOTS_TABLE_NAME}_timestamp ON ${ARTIST_SNAPSHOTS_TABLE_NAME} (timestamp);
 `);
-
-const flushStatementsIfNeeded = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: SQLStatement[],
-    flushAfter: number
-): Promise<boolean> => {
-    if (statements.length < flushAfter) {
-        return false;
-    }
-
-    await flushStatements(db, statements);
-    return true;
-};
-
-const flushStatements = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    statements: SQLStatement[]
-): Promise<void> =>
-    new Promise((resolve) => {
-        if (isEmpty(statements)) {
-            resolve();
-            return;
-        }
-
-        console.log(`Flushing ${statements.length} statements...`);
-        const label = `Flushed ${statements.length} statements`;
-        console.time(label);
-        const _db = db.getDatabaseInstance();
-        _db.serialize(() => {
-            _db.run("BEGIN TRANSACTION");
-            statements.forEach((statement) => {
-                _db.run(...statement);
-            });
-            _db.run("COMMIT", () => {
-                console.timeEnd(label);
-                resolve();
-            });
-        });
-    });
 
 const generateInsertArtistSnapshotStatements = (
     snapshots: ArtistSnapshotRow[]
@@ -296,10 +225,8 @@ const generateInsertArtistSnapshotStatements = (
 const generateInsertArtistSnapshotStatement = (
     snapshot: ArtistSnapshotRow
 ): SQLStatement => {
-    const timestampInSeconds =
-        snapshot.timestamp.toString().length === 13
-            ? Math.round(snapshot.timestamp / 1000)
-            : snapshot.timestamp;
+    const timestampInSeconds = toUnixTimestampInSeconds(snapshot.timestamp);
+
     const values = [
         snapshot.id,
         timestampInSeconds,
@@ -308,15 +235,9 @@ const generateInsertArtistSnapshotStatement = (
     ];
 
     return [
-        `INSERT OR IGNORE INTO ${TABLE_NAME} (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);`,
+        `INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME} (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);`,
         values,
     ];
 };
-
-const openDb = async (fileName: string) =>
-    open({
-        filename: fileName,
-        driver: sqlite3.cached.Database,
-    });
 
 main();

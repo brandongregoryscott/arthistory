@@ -1,36 +1,20 @@
-import { program } from "commander";
 import { existsSync } from "node:fs";
 import { logUploadProgress, s3 } from "../utils/storage-utils";
 import { createReadStream } from "node:fs";
 import { Upload } from "@aws-sdk/lib-storage";
-import { BUCKET_NAME } from "../constants/storage";
-import { bytesToMb } from "../utils/fs-utils";
-
-interface Options {
-    filename: string;
-    bucket: string;
-}
-
-program.requiredOption(
-    "--filename <filename>",
-    "Name of the database to upload"
-);
-
-program.requiredOption(
-    "--bucket <bucket>",
-    "Name of the bucket to upload to",
-    BUCKET_NAME
-);
-
-program.parse();
-const { filename, bucket } = program.opts<Options>();
 
 /**
  * Upload parts 50 MB at a time to reduce API usage
  */
 const PART_SIZE = 50 * Math.pow(1024, 2);
 
-const main = async () => {
+interface UploadDbOptions {
+    bucket: string;
+    filename: string;
+}
+
+const uploadDb = async (options: UploadDbOptions) => {
+    const { filename, bucket } = options;
     if (!existsSync(filename)) {
         console.error(`File '${filename}' not found.`);
         process.exit(1);
@@ -57,4 +41,4 @@ const main = async () => {
     console.timeEnd(label);
 };
 
-main();
+export { uploadDb };

@@ -1,0 +1,33 @@
+# Installs the service
+# sudo systemctl enable /home/brandon/arthistory/arthistory-cron-service.service
+
+# Starts the service
+# sudo systemctl start arthistory-cron-service.service
+
+# Check the service status
+# sudo systemctl status arthistory-cron-service.service
+
+# To edit environment variables
+# sudo systemctl edit arthistory-cron-service.service
+
+# To restart the system daemon & service
+sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
+
+[Unit]
+Description=Cron service for syncing data and uploading snapshots to S3
+After=network.target
+
+[Service]
+Type=forking
+User=brandon
+Restart=always
+RestartSec=3s
+RuntimeMaxSec=1d
+# These are ignored before systemd v254, but keeping them in for future reference.
+RestartMaxDelaySec=3m
+RestartSteps=5
+
+ExecStart=npm run cron-service
+
+[Install]
+WantedBy=multi-user.target
