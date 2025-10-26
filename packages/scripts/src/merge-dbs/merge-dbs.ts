@@ -1,5 +1,5 @@
 import sqlite3 from "sqlite3";
-import { Database, open } from "sqlite";
+import { Database } from "sqlite";
 import { copyFile, stat } from "fs/promises";
 import { ArtistSnapshotRow } from "@repo/common";
 import { compact, first, isEmpty, last, sortBy } from "lodash";
@@ -10,7 +10,7 @@ import {
 } from "../constants/storage";
 import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
-import { setPerformancePragmas } from "../utils/db-utils";
+import { countRows, openDb, setPerformancePragmas } from "../utils/db-utils";
 
 const CHUNK_SIZE = 100000;
 const FLUSH_AFTER = 250000;
@@ -144,16 +144,6 @@ const findCheckpointDb = async (): Promise<string | undefined> => {
     }
 
     return undefined;
-};
-
-const countRows = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>,
-    table: string
-): Promise<number> => {
-    const result = (await db.get(`SELECT COUNT(*) FROM ${table};`)) as {
-        "COUNT(*)": number;
-    };
-    return result["COUNT(*)"];
 };
 
 const paginateRows = async <T>(
@@ -301,11 +291,5 @@ const generateInsertArtistSnapshotStatement = (
         values,
     ];
 };
-
-const openDb = async (fileName: string) =>
-    open({
-        filename: fileName,
-        driver: sqlite3.cached.Database,
-    });
 
 main();

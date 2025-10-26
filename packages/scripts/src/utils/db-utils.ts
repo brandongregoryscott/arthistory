@@ -21,28 +21,39 @@ const setPerformancePragmas = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
 ) =>
     db.exec(`
-     PRAGMA synchronous = OFF;
-     PRAGMA locking_mode = EXCLUSIVE;
-     PRAGMA journal_mode = OFF;
+    PRAGMA synchronous = OFF;
+    PRAGMA locking_mode = EXCLUSIVE;
+    PRAGMA journal_mode = OFF;
  `);
+
+const countRows = async (
+    db: Database<sqlite3.Database, sqlite3.Statement>,
+    table: string
+): Promise<number> => {
+    const result = (await db.get(`SELECT COUNT(*) FROM ${table};`)) as {
+        "COUNT(*)": number;
+    };
+    return result["COUNT(*)"];
+};
 
 /**
  * Returns the hourly sync database name.
  */
 const getDbName = (): string => `spotify-data_${getRoundedTimestamp()}.db`;
 
-/**
- * Opens or creates the hourly sync database.
- */
-const openOrCreateDb = async () =>
+const openDb = async (fileName: string) =>
     open({
-        filename: getDbName(),
+        filename: fileName,
         driver: sqlite3.cached.Database,
     });
 
+const openSnapshotDb = async () => openDb(getDbName());
+
 export {
     createArtistSnapshotsTable,
+    countRows,
     getDbName,
-    openOrCreateDb,
+    openDb,
+    openSnapshotDb,
     setPerformancePragmas,
 };
