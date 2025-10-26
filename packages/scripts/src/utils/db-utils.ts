@@ -3,10 +3,11 @@ import sqlite3 from "sqlite3";
 import { getRoundedTimestamp } from "./date-utils";
 import { isEmpty } from "lodash";
 import type { Database, SQLStatement } from "../types";
+import { ARTIST_SNAPSHOTS_TABLE_NAME } from "../constants/storage";
 
 const createArtistSnapshotsTable = (db: Database) =>
     db.exec(`
-    CREATE TABLE IF NOT EXISTS artist_snapshots (
+    CREATE TABLE IF NOT EXISTS ${ARTIST_SNAPSHOTS_TABLE_NAME} (
         id TEXT,
         timestamp NUMERIC,
         followers NUMERIC,
@@ -75,7 +76,7 @@ const flushStatements = async (
  */
 const getDbName = (): string => `spotify-data_${getRoundedTimestamp()}.db`;
 
-const openDb = async (fileName: string) =>
+const openDb = async (fileName: string): Promise<Database> =>
     open({
         filename: fileName,
         driver: sqlite3.cached.Database,
