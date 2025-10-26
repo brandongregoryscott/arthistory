@@ -11,6 +11,7 @@ import {
 import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
 import { program } from "commander";
 import { countRows, openDb, setPerformancePragmas } from "../utils/db-utils";
+import { toUnixTimestampInSeconds } from "../utils/date-utils";
 
 const CHUNK_SIZE = 100000;
 const FLUSH_AFTER = 250000;
@@ -275,10 +276,8 @@ const generateInsertArtistSnapshotStatements = (
 const generateInsertArtistSnapshotStatement = (
     snapshot: ArtistSnapshotRow
 ): SQLStatement => {
-    const timestampInSeconds =
-        snapshot.timestamp.toString().length === 13
-            ? Math.round(snapshot.timestamp / 1000)
-            : snapshot.timestamp;
+    const timestampInSeconds = toUnixTimestampInSeconds(snapshot.timestamp);
+
     const values = [
         snapshot.id,
         timestampInSeconds,
