@@ -53,4 +53,19 @@ const downloadObject = async (key: string, bucket: string) => {
     await objectStream.pipeTo(writableStream);
 };
 
-export { downloadObject, downloadObjects, logUploadProgress, s3 };
+interface ListObjectsOptions {
+    bucket: string;
+    prefix?: string;
+}
+
+const listObjects = async (options: ListObjectsOptions): Promise<_Object[]> => {
+    const { bucket, prefix } = options;
+    const { Contents: objects = [] } = await s3.listObjectsV2({
+        Bucket: bucket,
+        Prefix: prefix,
+    });
+
+    return objects;
+};
+
+export { downloadObject, downloadObjects, listObjects, logUploadProgress, s3 };

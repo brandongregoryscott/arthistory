@@ -21,6 +21,7 @@ import {
     setPerformancePragmas,
 } from "../utils/db-utils";
 import { toUnixTimestampInSeconds } from "../utils/date-utils";
+import type { SQLStatement } from "../types";
 
 const CHUNK_SIZE = 100000;
 
@@ -29,8 +30,6 @@ interface Options {
     skipIndexes: boolean;
     useRangeFilename: boolean;
 }
-
-type SQLStatement = [sql: string, values: any[]];
 
 program.option(
     "--skip-checkpoint-as-base",

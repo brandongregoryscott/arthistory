@@ -4,13 +4,13 @@ import {
     SNAPSHOT_DB_BUCKET_NAME,
 } from "../constants/storage";
 import { getDbFileNames } from "../utils/fs-utils";
-import { downloadObjects, s3 } from "../utils/storage-utils";
+import { downloadObjects, listObjects } from "../utils/storage-utils";
 import { compact } from "lodash";
 
 const main = async () => {
-    const { Contents: objects = [] } = await s3.listObjectsV2({
-        Bucket: SNAPSHOT_DB_BUCKET_NAME,
-        Prefix: PARTIAL_DB_PREFIX,
+    const objects = await listObjects({
+        bucket: SNAPSHOT_DB_BUCKET_NAME,
+        prefix: PARTIAL_DB_PREFIX,
     });
 
     const localDbs = await getDbFileNames();
