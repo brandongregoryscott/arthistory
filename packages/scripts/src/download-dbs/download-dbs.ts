@@ -1,11 +1,11 @@
-import { _Object } from "@aws-sdk/client-s3";
+import type { _Object } from "@aws-sdk/client-s3";
 import {
     PARTIAL_DB_PREFIX,
     SNAPSHOT_DB_BUCKET_NAME,
 } from "../constants/storage";
-import { createWriteStream } from "node:fs";
 import { getDbFileNames } from "../utils/fs-utils";
-import { s3 } from "../utils/storage-utils";
+import { downloadObjects, s3 } from "../utils/storage-utils";
+import { compact } from "lodash";
 
 const main = async () => {
     const { Contents: objects = [] } = await s3.listObjectsV2({
@@ -26,36 +26,12 @@ const main = async () => {
     const endLabel = `Downloaded ${count} partial databases`;
     console.time(endLabel);
 
-    await downloadObjects(missingObjects);
+    const missingObjectKeys = compact(
+        missingObjects.map((object) => object.Key)
+    );
+    await downloadObjects(missingObjectKeys, SNAPSHOT_DB_BUCKET_NAME);
 
     console.timeEnd(endLabel);
-};
-
-const downloadObjects = async (objects: _Object[]) =>
-    Promise.all(objects.map(downloadObject));
-
-const downloadObject = async (object: _Object) => {
-    const key = object.Key;
-    if (key === undefined) {
-        return;
-    }
-
-    const result = await s3.getObject({
-        Bucket: SNAPSHOT_DB_BUCKET_NAME,
-        Key: key,
-    });
-    const objectStream = result.Body?.transformToWebStream();
-    if (objectStream === undefined) {
-        return;
-    }
-
-    const fileStream = createWriteStream(key);
-    const writableStream = new WritableStream({
-        write: (chunk) => {
-            fileStream.write(chunk);
-        },
-    });
-    await objectStream.pipeTo(writableStream);
 };
 
 main();
