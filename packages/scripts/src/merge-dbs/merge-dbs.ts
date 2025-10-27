@@ -25,33 +25,14 @@ import type { SQLStatement } from "../types";
 
 const CHUNK_SIZE = 100000;
 
-interface Options {
+interface MergeDbsOptions {
     skipCheckpointAsBase: boolean;
     skipIndexes: boolean;
     useRangeFilename: boolean;
 }
 
-program.option(
-    "--skip-checkpoint-as-base",
-    "Skip using the largest partial database as the base to merge onto",
-    false
-);
-program.option(
-    "--skip-indexes",
-    "Skip creating indexes after merging partial databases",
-    false
-);
-program.option(
-    "--use-range-filename",
-    `Set the name of the merged file to the start and end timestamps instead of '${MERGED_DB_NAME}'`,
-    false
-);
-
-program.parse();
-const { skipCheckpointAsBase, skipIndexes, useRangeFilename } =
-    program.opts<Options>();
-
-const main = async () => {
+const mergeDbs = async (options: MergeDbsOptions) => {
+    const { skipCheckpointAsBase, skipIndexes, useRangeFilename } = options;
     let mergedDbName = MERGED_DB_NAME;
     let sourceDbFileNames = await getDbFileNames();
 
@@ -239,4 +220,5 @@ const generateInsertArtistSnapshotStatement = (
     ];
 };
 
-main();
+export type { MergeDbsOptions };
+export { mergeDbs };
