@@ -3,6 +3,7 @@ import {
     countRows,
     createArtistSnapshotsTable,
     flushStatements,
+    getSnapshotDbFilename,
     openDb,
     openSnapshotDb,
 } from "../utils/db-utils";
@@ -39,10 +40,15 @@ interface SyncOptions {
 const sync = async (options: SyncOptions) => {
     const { timestamp } = options;
 
+    const filename = getSnapshotDbFilename(timestamp);
     const db = await openSnapshotDb(timestamp);
     await createArtistSnapshotsTable(db);
 
     const artistIds = await getArtistIds();
+
+    console.log(`Retrieving snapshots for ${artistIds.length} artists...`);
+    const snapshotLabel = `Retrieved snapshots for ${artistIds.length} artists`;
+    console.time(snapshotLabel);
 
     const artistIdChunks = chunk(artistIds, MAX_ARTIST_IDS_PER_REQUEST);
 
@@ -56,6 +62,11 @@ const sync = async (options: SyncOptions) => {
             )
         )
     );
+    console.timeEnd(snapshotLabel);
+
+    console.log(`Inserting ${statements.length} snapshots to ${filename}...`);
+    const insertLabel = `Inserted ${statements.length} snapshots to ${filename}`;
+    console.time(insertLabel);
 
     const statementChunks = chunk(statements, BULK_INSERTION_CHUNK_SIZE);
     await Promise.all(
@@ -63,6 +74,7 @@ const sync = async (options: SyncOptions) => {
             flushStatements(db, statementChunk)
         )
     );
+    console.timeEnd(insertLabel);
 };
 
 const getArtistIds = async (): Promise<string[]> => {
