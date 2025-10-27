@@ -11,7 +11,7 @@
 # journalctl -xeu arthistory-cron-service.service
 
 # View service logs
-# sudo journalctl -u arthistory-cron-service.service
+# sudo journalctl -f -u arthistory-cron-service.service
 
 # To edit environment variables
 # sudo systemctl edit arthistory-cron-service.service
