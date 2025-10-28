@@ -4,15 +4,12 @@ import { copyFile, stat } from "fs/promises";
 import type { ArtistSnapshotRow } from "@repo/common";
 import { compact, first, last, sortBy } from "lodash";
 import {
-    MERGED_DB_NAME,
-    ARTIST_SNAPSHOTS_TABLE_NAME,
-    ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME,
     BULK_INSERTION_CHUNK_SIZE,
+    DatabaseName,
+    TableName,
 } from "../constants/storage";
 import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
-import { program } from "commander";
 import {
-    countRows,
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
@@ -34,7 +31,7 @@ interface MergeDbsOptions {
 
 const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     const { skipCheckpointAsBase, skipIndexes, useRangeFilename } = options;
-    let mergedDbName = MERGED_DB_NAME;
+    let mergedDbName: string = DatabaseName.Merged;
     let sourceDbFileNames = await getDbFileNames();
 
     if (useRangeFilename) {
@@ -87,7 +84,7 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
         const sourceDb = await openDb(sourceDbFileName);
         await paginateRows<ArtistSnapshotRow>(
             sourceDb,
-            ARTIST_SNAPSHOTS_TABLE_NAME,
+            TableName.ArtistSnapshots,
             CHUNK_SIZE,
             async (rows) => {
                 statements = [
@@ -148,26 +145,26 @@ const maybeDropArtistSnapshotsConstraint = async (
     // Check to see if the table actually has a unique index before doing extra work to transfer records
     // to a new table that definitely does not have the index
     const hasUniqueIndex =
-        (await db.get(`PRAGMA index_list(${ARTIST_SNAPSHOTS_TABLE_NAME});`)) !==
+        (await db.get(`PRAGMA index_list(${TableName.ArtistSnapshots});`)) !==
         undefined;
 
     if (!hasUniqueIndex) {
         console.log(
-            `No unique index found, creating ${ARTIST_SNAPSHOTS_TABLE_NAME} if it does not exist...`
+            `No unique index found, creating ${TableName.ArtistSnapshots} if it does not exist...`
         );
         await createArtistSnapshotsTable(db);
         return;
     }
 
-    const label = `Created '${ARTIST_SNAPSHOTS_TABLE_NAME}'`;
+    const label = `Created '${TableName.ArtistSnapshots}'`;
     console.log(
-        `Creating '${ARTIST_SNAPSHOTS_TABLE_NAME}' without unique constraint...`
+        `Creating '${TableName.ArtistSnapshots}' without unique constraint...`
     );
     console.time(label);
     await db.exec(`
     PRAGMA foreign_keys=off;
 
-    CREATE TABLE IF NOT EXISTS ${ARTIST_SNAPSHOTS_TABLE_NAME} (
+    CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
         id TEXT,
         timestamp NUMERIC,
         followers NUMERIC,
@@ -177,20 +174,20 @@ const maybeDropArtistSnapshotsConstraint = async (
 
     BEGIN TRANSACTION;
 
-    ALTER TABLE ${ARTIST_SNAPSHOTS_TABLE_NAME} RENAME TO ${ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME};
+    ALTER TABLE ${TableName.ArtistSnapshots} RENAME TO ${TableName.ArtistSnapshotsWithConstraint};
 
-    CREATE TABLE IF NOT EXISTS ${ARTIST_SNAPSHOTS_TABLE_NAME} (
+    CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
         id TEXT,
         timestamp NUMERIC,
         followers NUMERIC,
         popularity NUMERIC
     );
 
-    INSERT INTO ${ARTIST_SNAPSHOTS_TABLE_NAME} SELECT * FROM ${ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME};
+    INSERT INTO ${TableName.ArtistSnapshots} SELECT * FROM ${TableName.ArtistSnapshotsWithConstraint};
 
     COMMIT;
 
-    DROP TABLE IF EXISTS ${ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME};
+    DROP TABLE IF EXISTS ${TableName.ArtistSnapshotsWithConstraint};
     VACUUM;
 
     PRAGMA foreign_keys=on;`);
@@ -201,8 +198,8 @@ const createArtistSnapshotsIndexes = async (
     db: Database<sqlite3.Database, sqlite3.Statement>
 ) =>
     db.exec(`
-    CREATE INDEX ${ARTIST_SNAPSHOTS_TABLE_NAME}_id ON ${ARTIST_SNAPSHOTS_TABLE_NAME} (id);
-    CREATE INDEX ${ARTIST_SNAPSHOTS_TABLE_NAME}_timestamp ON ${ARTIST_SNAPSHOTS_TABLE_NAME} (timestamp);
+    CREATE INDEX ${TableName.ArtistSnapshots}_id ON ${TableName.ArtistSnapshots} (id);
+    CREATE INDEX ${TableName.ArtistSnapshots}_timestamp ON ${TableName.ArtistSnapshots} (timestamp);
 `);
 
 const generateInsertArtistSnapshotStatements = (
@@ -222,7 +219,7 @@ const generateInsertArtistSnapshotStatement = (
     ];
 
     return [
-        `INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME} (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);`,
+        `INSERT OR IGNORE INTO ${TableName.ArtistSnapshots} (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);`,
         values,
     ];
 };

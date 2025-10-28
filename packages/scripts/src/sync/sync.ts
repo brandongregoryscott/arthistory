@@ -14,11 +14,7 @@ import {
 } from "../utils/spotify-utils";
 import type { SQLStatement } from "../types";
 import { getCurrentHourIndex } from "../utils/date-utils";
-import {
-    ARTIST_IDS_TABLE_NAME,
-    ARTIST_SNAPSHOTS_TABLE_NAME,
-    BULK_INSERTION_CHUNK_SIZE,
-} from "../constants/storage";
+import { TableName, BULK_INSERTION_CHUNK_SIZE } from "../constants/storage";
 import type { Entity } from "@repo/common";
 import { chunk, flatten } from "lodash";
 import { sleep } from "../utils/core-utils";
@@ -79,14 +75,14 @@ const sync = async (options: SyncOptions) => {
 
 const getArtistIds = async (): Promise<string[]> => {
     const artistIdsDb = await openDb("artist_ids.db");
-    const total = await countRows(artistIdsDb, ARTIST_IDS_TABLE_NAME);
+    const total = await countRows(artistIdsDb, TableName.ArtistIds);
     const chunkSize = Math.floor(total / 24);
     const currentHourIndex = getCurrentHourIndex();
     const limit = chunkSize;
     const offset = chunkSize * currentHourIndex;
 
     const rows = await artistIdsDb.all<Entity[]>(
-        `SELECT id FROM ${ARTIST_IDS_TABLE_NAME} LIMIT ${limit} OFFSET ${offset};`
+        `SELECT id FROM ${TableName.ArtistIds} LIMIT ${limit} OFFSET ${offset};`
     );
     const ids = rows.map((row) => row.id);
 
@@ -132,7 +128,7 @@ const buildInsertStatement = (
     const followers = artist.followers.total;
 
     return `
-        INSERT OR IGNORE INTO ${ARTIST_SNAPSHOTS_TABLE_NAME}
+        INSERT OR IGNORE INTO ${TableName.ArtistSnapshots}
             (id, timestamp, popularity, followers)
         VALUES
             ('${id}', ${timestamp}, ${popularity}, ${followers});`;
