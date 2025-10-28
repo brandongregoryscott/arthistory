@@ -1,7 +1,7 @@
 import { program } from "commander";
 import "./merge-dbs";
 import { mergeDbs, type MergeDbsOptions } from "./merge-dbs";
-import { MERGED_DB_NAME } from "../constants/storage";
+import { DatabaseName } from "../constants/storage";
 
 program.option(
     "--skip-checkpoint-as-base",
@@ -15,7 +15,7 @@ program.option(
 );
 program.option(
     "--use-range-filename",
-    `Set the name of the merged file to the start and end timestamps instead of '${MERGED_DB_NAME}'`,
+    `Set the name of the merged file to the start and end timestamps instead of '${DatabaseName.Merged}'`,
     false
 );
 
