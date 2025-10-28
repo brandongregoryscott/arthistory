@@ -12,7 +12,7 @@ const downloadDb = async (options: DownloadDbOptions) => {
     const label = `Downloaded '${key}'`;
     console.time(label);
 
-    await downloadObject(key, bucket);
+    await downloadObject({ key, bucket });
 
     console.timeEnd(label);
 };

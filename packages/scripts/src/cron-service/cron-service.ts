@@ -15,7 +15,10 @@ CronJob.from({
     cronTime: "34 * * * *",
     onTick: async () => {
         if (!existsSync(DatabaseName.ArtistIds)) {
-            await downloadObject(DatabaseName.ArtistIds, BucketName.Snapshots);
+            await downloadObject({
+                key: DatabaseName.ArtistIds,
+                bucket: BucketName.Snapshots,
+            });
         }
 
         const timestamp = getRoundedTimestamp();
