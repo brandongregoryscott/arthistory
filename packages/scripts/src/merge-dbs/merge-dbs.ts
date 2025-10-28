@@ -16,6 +16,7 @@ import {
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
+    getMergedSnapshotDbFilename,
     openDb,
     paginateRows,
     setPerformancePragmas,
@@ -31,7 +32,7 @@ interface MergeDbsOptions {
     useRangeFilename: boolean;
 }
 
-const mergeDbs = async (options: MergeDbsOptions) => {
+const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     const { skipCheckpointAsBase, skipIndexes, useRangeFilename } = options;
     let mergedDbName = MERGED_DB_NAME;
     let sourceDbFileNames = await getDbFileNames();
@@ -44,7 +45,11 @@ const mergeDbs = async (options: MergeDbsOptions) => {
         const start = first(timestamps);
         const end = last(timestamps);
         if (start !== undefined && end !== undefined) {
-            mergedDbName = MERGED_DB_NAME.replace(".db", `_${start}-${end}.db`);
+            mergedDbName = getMergedSnapshotDbFilename({
+                start,
+                end,
+                useRangeFilename,
+            });
         }
     }
 
@@ -115,6 +120,8 @@ const mergeDbs = async (options: MergeDbsOptions) => {
     }
 
     console.timeEnd(endLabel);
+
+    return mergedDbName;
 };
 
 const findCheckpointDb = async (): Promise<string | undefined> => {

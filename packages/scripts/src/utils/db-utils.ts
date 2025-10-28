@@ -2,7 +2,10 @@ import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { isEmpty } from "lodash";
 import type { Database, SQLStatement } from "../types";
-import { ARTIST_SNAPSHOTS_TABLE_NAME } from "../constants/storage";
+import {
+    ARTIST_SNAPSHOTS_TABLE_NAME,
+    MERGED_DB_NAME,
+} from "../constants/storage";
 
 const createArtistSnapshotsTable = (db: Database) =>
     db.exec(`
@@ -95,6 +98,28 @@ const paginateRows = async <T>(
 const getSnapshotDbFilename = (timestamp: number) =>
     `spotify-data_${timestamp}.db`;
 
+type GetMergedSnapshotDbFilenameOptions =
+    | {
+          end: number;
+          start: number;
+          useRangeFilename: true;
+      }
+    | {
+          useRangeFilename: false;
+      };
+
+const getMergedSnapshotDbFilename = (
+    options: GetMergedSnapshotDbFilenameOptions
+): string => {
+    const { useRangeFilename } = options;
+    if (useRangeFilename) {
+        const { start, end } = options;
+        return MERGED_DB_NAME.replace(".db", `_${start}-${end}.db`);
+    }
+
+    return MERGED_DB_NAME;
+};
+
 const openDb = async (fileName: string): Promise<Database> =>
     open({
         filename: fileName,
@@ -109,6 +134,7 @@ export {
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
+    getMergedSnapshotDbFilename,
     getSnapshotDbFilename,
     openDb,
     openSnapshotDb,

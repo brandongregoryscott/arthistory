@@ -7,7 +7,7 @@ import { getDbFileNames } from "../utils/fs-utils";
 import { downloadObjects, listObjects } from "../utils/storage-utils";
 import { compact } from "lodash";
 
-const main = async () => {
+const downloadDbs = async () => {
     const objects = await listObjects({
         bucket: SNAPSHOT_DB_BUCKET_NAME,
         prefix: PARTIAL_DB_PREFIX,
@@ -34,4 +34,4 @@ const main = async () => {
     console.timeEnd(endLabel);
 };
 
-main();
+export { downloadDbs };
