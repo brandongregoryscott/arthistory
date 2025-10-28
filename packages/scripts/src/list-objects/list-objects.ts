@@ -1,14 +1,10 @@
 import { bytesToMb } from "../utils/fs-utils";
-import { listObjects } from "../utils/storage-utils";
+import type { ListObjectsOptions } from "../utils/storage-utils";
+import { listObjects as _listObjects } from "../utils/storage-utils";
 
-interface ListDbsOptions {
-    bucket: string;
-    prefix?: string;
-}
-
-const listDbs = async (options: ListDbsOptions) => {
+const listObjects = async (options: ListObjectsOptions) => {
     const { bucket, prefix } = options;
-    const objects = await listObjects({ prefix, bucket });
+    const objects = await _listObjects({ prefix, bucket });
 
     console.log("| Key | LastModified | Size |");
     console.log("| -- | -- | -- |");
@@ -22,5 +18,4 @@ const listDbs = async (options: ListDbsOptions) => {
     );
 };
 
-export type { ListDbsOptions };
-export { listDbs };
+export { listObjects };

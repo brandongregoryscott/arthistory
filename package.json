@@ -32,7 +32,7 @@
         "download-dbs": "tsx packages/scripts/src/download-dbs",
         "format": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
         "lint": "turbo lint",
-        "list-dbs": "tsx packages/scripts/src/list-dbs",
+        "list-objects": "tsx packages/scripts/src/list-objects",
         "merge-dbs": "tsx packages/scripts/src/merge-dbs",
         "prepare": "husky || exit 0",
         "purge-merged-dbs": "tsx packages/scripts/src/purge-merged-dbs",

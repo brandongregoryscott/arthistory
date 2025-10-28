@@ -81,5 +81,5 @@ const listObjects = async (options: ListObjectsOptions): Promise<_Object[]> => {
     return objects;
 };
 
-export type { DownloadObjectOptions };
+export type { DownloadObjectOptions, ListObjectsOptions };
 export { downloadObject, downloadObjects, listObjects, logUploadProgress, s3 };
