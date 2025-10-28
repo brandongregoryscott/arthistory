@@ -3,24 +3,15 @@ import { getDbFileNames } from "../utils/fs-utils";
 import { listObjects, s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { program } from "commander";
 
-interface Options {
+interface PurgeMergedDbsOptions {
     skipConfirmation: boolean;
 }
 
-program.option(
-    "--skip-confirmation",
-    "Skips the confirmation prompt before deleting",
-    false
-);
-
-program.parse();
-const { skipConfirmation } = program.opts<Options>();
-
 const readlineInterface = readline.createInterface({ input, output });
 
-const main = async () => {
+const purgeMergedDbs = async (options: PurgeMergedDbsOptions) => {
+    const { skipConfirmation } = options;
     const localDbFileNames = await getDbFileNames();
     console.log(`Found ${localDbFileNames.length} dbs locally`);
 
@@ -66,4 +57,5 @@ const main = async () => {
     console.timeEnd(label);
 };
 
-main();
+export type { PurgeMergedDbsOptions };
+export { purgeMergedDbs };
