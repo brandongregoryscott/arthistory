@@ -28,6 +28,7 @@
         "copy-object": "tsx packages/scripts/src/copy-object",
         "cron-service": "tsx packages/scripts/src/cron-service",
         "dev": "turbo dev",
+        "download-db": "tsx packages/scripts/src/download-db",
         "download-dbs": "tsx packages/scripts/src/download-dbs",
         "format": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
         "lint": "turbo lint",
