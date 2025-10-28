@@ -2,6 +2,8 @@ const MERGED_DB_NAME = "merged-spotify-data.db";
 
 const SNAPSHOT_DB_BUCKET_NAME = "spotify-data";
 
+const SNAPSHOT_DB_BACKUP_BUCKET_NAME = "spotify-data-backups";
+
 const PARTIAL_DB_PREFIX = "spotify-data_";
 
 const PARTIAL_DB_PATTERN = `${PARTIAL_DB_PREFIX}*.db`;
@@ -28,5 +30,6 @@ export {
     MERGED_DB_NAME,
     PARTIAL_DB_PATTERN,
     PARTIAL_DB_PREFIX,
+    SNAPSHOT_DB_BACKUP_BUCKET_NAME,
     SNAPSHOT_DB_BUCKET_NAME,
 };
