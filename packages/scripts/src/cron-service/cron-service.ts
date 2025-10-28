@@ -2,7 +2,7 @@ import { CronJob } from "cron";
 import { getRoundedTimestamp } from "../utils/date-utils";
 import { sync } from "../sync/sync";
 import { getSnapshotDbFilename } from "../utils/db-utils";
-import { uploadObject } from "../upload-db/upload-object";
+import { uploadObject } from "../upload-object/upload-object";
 import { BucketName, DatabaseName } from "../constants/storage";
 import { existsSync } from "node:fs";
 import { downloadObject } from "../utils/storage-utils";

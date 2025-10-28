@@ -1,7 +1,7 @@
 import { program, Option } from "commander";
 import { BucketName } from "../constants/storage";
 import type { ListObjectsOptions } from "../utils/storage-utils";
-import { listObjects } from "./list-dbs";
+import { listObjects } from "./list-objects";
 
 program.option("--prefix <prefix>", "Object prefix to filter results by");
 
