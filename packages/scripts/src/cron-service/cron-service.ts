@@ -2,7 +2,7 @@ import { CronJob } from "cron";
 import { getRoundedTimestamp } from "../utils/date-utils";
 import { sync } from "../sync/sync";
 import { getSnapshotDbFilename } from "../utils/db-utils";
-import { uploadDb } from "../upload-db/upload-db";
+import { uploadObject } from "../upload-db/upload-object";
 import { BucketName, DatabaseName } from "../constants/storage";
 import { existsSync } from "node:fs";
 import { downloadObject } from "../utils/storage-utils";
@@ -24,7 +24,7 @@ CronJob.from({
         const timestamp = getRoundedTimestamp();
         const dbFilename = getSnapshotDbFilename(timestamp);
         await sync({ timestamp });
-        await uploadDb({
+        await uploadObject({
             filename: dbFilename,
             bucket: BucketName.Snapshots,
         });
@@ -43,7 +43,7 @@ CronJob.from({
             skipIndexes: true,
             skipCheckpointAsBase: false,
         });
-        await uploadDb({
+        await uploadObject({
             filename: mergedDbFilename,
             bucket: BucketName.SnapshotBackups,
         });

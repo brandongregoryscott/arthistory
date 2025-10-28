@@ -8,19 +8,19 @@ import { Upload } from "@aws-sdk/lib-storage";
  */
 const PART_SIZE = 50 * Math.pow(1024, 2);
 
-interface UploadDbOptions {
+interface UploadObjectOptions {
     bucket: string;
     filename: string;
 }
 
-const uploadDb = async (options: UploadDbOptions) => {
+const uploadObject = async (options: UploadObjectOptions) => {
     const { filename, bucket } = options;
     if (!existsSync(filename)) {
         console.error(`File '${filename}' not found.`);
         process.exit(1);
     }
 
-    console.log(`Starting upload for ${filename}...`);
+    console.log(`Starting upload for '${filename}'...`);
     const label = `Uploaded '${filename}'`;
     console.time(label);
     const readStream = createReadStream(filename);
@@ -41,5 +41,5 @@ const uploadDb = async (options: UploadDbOptions) => {
     console.timeEnd(label);
 };
 
-export type { UploadDbOptions };
-export { uploadDb };
+export type { UploadObjectOptions };
+export { uploadObject };
