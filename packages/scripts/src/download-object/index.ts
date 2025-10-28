@@ -1,9 +1,7 @@
 import { program, Option } from "commander";
 import { BucketName } from "../constants/storage";
-import type { DownloadDbOptions } from "./download-db";
-import { downloadDb } from "./download-db";
-
-program.option("--prefix <prefix>", "Object prefix to filter dbs by");
+import type { DownloadObjectOptions } from "../utils/storage-utils";
+import { downloadObject } from "./download-object";
 
 program.addOption(
     new Option(
@@ -17,10 +15,10 @@ program.addOption(
 program.requiredOption("--key <key>", "Key of the object to download");
 
 program.parse();
-const { bucket, key } = program.opts<DownloadDbOptions>();
+const { bucket, key } = program.opts<DownloadObjectOptions>();
 
 const main = async () => {
-    await downloadDb({ bucket, key });
+    await downloadObject({ bucket, key });
 };
 
 main();
