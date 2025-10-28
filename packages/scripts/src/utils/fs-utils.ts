@@ -1,10 +1,10 @@
 import { glob } from "fs/promises";
-import { PARTIAL_DB_PATTERN } from "../constants/storage";
+import { DatabaseName } from "../constants/storage";
 import { last } from "lodash";
 
 const getDbFileNames = async (): Promise<string[]> => {
     const fileNames: string[] = [];
-    for await (const fileName of glob(PARTIAL_DB_PATTERN)) {
+    for await (const fileName of glob(DatabaseName.PartialSnapshotPattern)) {
         fileNames.push(fileName);
     }
 

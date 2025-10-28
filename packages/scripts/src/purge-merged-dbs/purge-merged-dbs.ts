@@ -1,9 +1,6 @@
-import {
-    PARTIAL_DB_PREFIX,
-    SNAPSHOT_DB_BUCKET_NAME,
-} from "../constants/storage";
+import { BucketName, DatabaseName } from "../constants/storage";
 import { getDbFileNames } from "../utils/fs-utils";
-import { s3 } from "../utils/storage-utils";
+import { listObjects, s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { program } from "commander";
@@ -27,9 +24,9 @@ const main = async () => {
     const localDbFileNames = await getDbFileNames();
     console.log(`Found ${localDbFileNames.length} dbs locally`);
 
-    const { Contents: remoteDbObjects = [] } = await s3.listObjectsV2({
-        Bucket: SNAPSHOT_DB_BUCKET_NAME,
-        Prefix: PARTIAL_DB_PREFIX,
+    const remoteDbObjects = await listObjects({
+        bucket: BucketName.Snapshots,
+        prefix: DatabaseName.PartialSnapshotPrefix,
     });
 
     console.log(`Found ${remoteDbObjects.length} dbs remotely`);
@@ -44,7 +41,7 @@ const main = async () => {
 
     if (!skipConfirmation) {
         const answer = await readlineInterface.question(
-            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${SNAPSHOT_DB_BUCKET_NAME}'? [y/N] `
+            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${BucketName.Snapshots}'? [y/N] `
         );
 
         if (answer.toLowerCase().trim() !== "y") {
@@ -58,7 +55,7 @@ const main = async () => {
     console.time(label);
 
     await s3.deleteObjects({
-        Bucket: SNAPSHOT_DB_BUCKET_NAME,
+        Bucket: BucketName.Snapshots,
         Delete: {
             Objects: remoteDbObjectsToDelete.map((object) => ({
                 Key: object.Key,
