@@ -1,11 +1,7 @@
 import { program } from "commander";
-import { SNAPSHOT_DB_BUCKET_NAME } from "../constants/storage";
+import { BucketName } from "../constants/storage";
+import type { UploadDbOptions } from "./upload-db";
 import { uploadDb } from "./upload-db";
-
-interface Options {
-    bucket: string;
-    filename: string;
-}
 
 program.requiredOption(
     "--filename <filename>",
@@ -15,11 +11,11 @@ program.requiredOption(
 program.requiredOption(
     "--bucket <bucket>",
     "Name of the bucket to upload to",
-    SNAPSHOT_DB_BUCKET_NAME
+    BucketName.Snapshots
 );
 
 program.parse();
-const { filename, bucket } = program.opts<Options>();
+const { filename, bucket } = program.opts<UploadDbOptions>();
 
 const main = async () => {
     await uploadDb({ filename, bucket });

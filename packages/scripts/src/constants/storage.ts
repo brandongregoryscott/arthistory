@@ -1,29 +1,22 @@
-const MERGED_DB_NAME = "merged-spotify-data.db";
-
-const SNAPSHOT_DB_BUCKET_NAME = "spotify-data";
-
-const PARTIAL_DB_PREFIX = "spotify-data_";
-
-const PARTIAL_DB_PATTERN = `${PARTIAL_DB_PREFIX}*.db`;
-
-const ARTIST_SNAPSHOTS_TABLE_NAME = "artist_snapshots";
-
-const ARTIST_IDS_TABLE_NAME = "artist_ids";
-
-const ARTIST_IDS_DB_NAME = "artist_ids.db";
-
-const ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME = `${ARTIST_SNAPSHOTS_TABLE_NAME}_with_constraint`;
-
 const BULK_INSERTION_CHUNK_SIZE = 250000;
 
-export {
-    ARTIST_IDS_DB_NAME,
-    ARTIST_IDS_TABLE_NAME,
-    ARTIST_SNAPSHOTS_TABLE_NAME,
-    ARTIST_SNAPSHOTS_TABLE_WITH_CONSTRAINT_NAME,
-    BULK_INSERTION_CHUNK_SIZE,
-    MERGED_DB_NAME,
-    PARTIAL_DB_PATTERN,
-    PARTIAL_DB_PREFIX,
-    SNAPSHOT_DB_BUCKET_NAME,
-};
+const DatabaseName = {
+    ArtistIds: "artist_ids.db",
+    Merged: "merged-spotify-data.db",
+    PartialSnapshotPrefix: "spotify-data_",
+    PartialSnapshotPattern: "spotify-data_*.db",
+} as const;
+
+const BucketName = {
+    ArtistIds: "artist-ids",
+    Snapshots: "spotify-data",
+    SnapshotBackups: "spotify-data-backups",
+} as const;
+
+const TableName = {
+    ArtistSnapshots: "artist_snapshots",
+    ArtistSnapshotsWithConstraint: "artist_snapshots_with_constraint",
+    ArtistIds: "artist_ids",
+} as const;
+
+export { BucketName, BULK_INSERTION_CHUNK_SIZE, DatabaseName, TableName };

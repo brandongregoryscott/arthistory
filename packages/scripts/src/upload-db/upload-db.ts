@@ -41,4 +41,5 @@ const uploadDb = async (options: UploadDbOptions) => {
     console.timeEnd(label);
 };
 
+export type { UploadDbOptions };
 export { uploadDb };

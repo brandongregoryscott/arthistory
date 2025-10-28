@@ -22,4 +22,5 @@ const listDbs = async (options: ListDbsOptions) => {
     );
 };
 
+export type { ListDbsOptions };
 export { listDbs };

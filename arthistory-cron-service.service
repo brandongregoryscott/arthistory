@@ -24,7 +24,7 @@ Description=Cron service for syncing data and uploading snapshots to S3
 After=network.target
 
 [Service]
-Type=forking
+Type=exec
 User=brandon
 Restart=always
 RestartSec=3s
