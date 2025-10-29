@@ -16,7 +16,7 @@ import type { SQLStatement } from "../types";
 import { getCurrentHourIndex } from "../utils/date-utils";
 import { TableName, BULK_INSERTION_CHUNK_SIZE } from "../constants/storage";
 import type { Entity } from "@repo/common";
-import { chunk, flatten } from "lodash";
+import { chunk, flatten, isObject } from "lodash";
 import { sleep } from "../utils/core-utils";
 
 /**
@@ -120,9 +120,9 @@ const getArtistSnapshotStatements = async (
             error,
             JSON.stringify(error)
         );
-        if ("cause" in error) {
+        if (isObject(error) && "cause" in error) {
             console.log("cause", error.cause);
-            if (typeof error.cause === "object" && error.cause !== null) {
+            if (isObject(error.cause)) {
                 if ("code" in error.cause) {
                     console.log("code", error.cause.code);
                 }
