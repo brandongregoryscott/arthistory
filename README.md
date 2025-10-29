@@ -94,7 +94,8 @@ List all logs (service-level start/stop/restart events, and stdout/stderr)
 sudo journalctl -xu arthistory-cron-service.service
 ```
 
-List last 1000 lines from the logs and follows the logs live (service-level start/stop/restart events, and stdout/stderr) See [manpage: journalctl > PAGER CONTROL OPTIONS](https://www.man7.org/linux/man-pages/man1/journalctl.1.html#PAGER_CONTROL_OPTIONS)
+List last 1000 lines from the logs and follows the logs live (service-level start/stop/restart events, and stdout/stderr)
+See [manpage: journalctl > PAGER CONTROL OPTIONS](https://www.man7.org/linux/man-pages/man1/journalctl.1.html#PAGER_CONTROL_OPTIONS)
 
 ```sh
 sudo journalctl -xfeu arthistory-cron-service.service
