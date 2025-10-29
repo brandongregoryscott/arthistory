@@ -5,6 +5,7 @@ const DatabaseName = {
     Merged: "merged-spotify-data.db",
     PartialSnapshotPrefix: "spotify-data_",
     PartialSnapshotPattern: "spotify-data_*.db",
+    Production: "_spotify-data.db",
 } as const;
 
 const BucketName = {
