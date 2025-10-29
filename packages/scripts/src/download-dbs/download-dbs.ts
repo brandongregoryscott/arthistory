@@ -26,7 +26,10 @@ const downloadDbs = async () => {
     const missingObjectKeys = compact(
         missingObjects.map((object) => object.Key)
     );
-    await downloadObjects(missingObjectKeys, BucketName.Snapshots);
+    await downloadObjects({
+        keys: missingObjectKeys,
+        bucket: BucketName.Snapshots,
+    });
 
     console.timeEnd(endLabel);
 };

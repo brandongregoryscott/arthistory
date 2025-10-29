@@ -1,37 +1,12 @@
-import { program } from "commander";
 import { logUploadProgress, s3 } from "../utils/storage-utils";
 import { Upload } from "@aws-sdk/lib-storage";
-import { bytesToMb } from "../utils/fs-utils";
 
-interface Options {
-    sourceFilename: string;
+interface CopyObjectOptions {
     sourceBucket: string;
-    targetFilename: string;
+    sourceKey: string;
     targetBucket: string;
+    targetKey: string;
 }
-
-program.requiredOption(
-    "--source-filename <filename>",
-    "Name of the source object to copy"
-);
-
-program.requiredOption(
-    "--source-bucket <filename>",
-    "Name of the bucket the source object is in"
-);
-
-program.option("--target-filename <filename>", "Name of the target object");
-
-program.requiredOption(
-    "--target-bucket <filename>",
-    "Name of the bucket to copy the object to"
-);
-
-program.parse();
-
-const options = program.opts<Options>();
-const { sourceBucket, sourceFilename, targetBucket } = options;
-const targetFilename = options.targetFilename ?? sourceFilename;
 
 /**
  * Upload parts 50 MB at a time to reduce API usage
@@ -45,23 +20,24 @@ const PART_SIZE = 50 * Math.pow(1024, 2);
  */
 const MAX_COPY_OBJECT_SIZE_IN_BYTES = 5 * Math.pow(1024, 3);
 
-const main = async () => {
-    const copySource = `${sourceBucket}/${sourceFilename}`;
-    const target = `${targetBucket}/${targetFilename}`;
+const copyObject = async (options: CopyObjectOptions) => {
+    const { sourceKey, targetKey, sourceBucket, targetBucket } = options;
+    const copySource = `${sourceBucket}/${sourceKey}`;
+    const target = `${targetBucket}/${targetKey}`;
 
     console.log(`Copying ${copySource} to ${target}...`);
     const label = `Copied ${copySource} to ${target}`;
     console.time(label);
 
     const { ContentLength: size } = await s3.headObject({
-        Key: sourceFilename,
+        Key: sourceKey,
         Bucket: sourceBucket,
     });
 
     if (size !== undefined && size < MAX_COPY_OBJECT_SIZE_IN_BYTES) {
         await s3.copyObject({
             Bucket: targetBucket,
-            Key: targetFilename,
+            Key: targetKey,
             CopySource: copySource,
         });
         console.timeEnd(label);
@@ -69,7 +45,7 @@ const main = async () => {
     }
 
     const sourceObject = await s3.getObject({
-        Key: sourceFilename,
+        Key: sourceKey,
         Bucket: sourceBucket,
     });
 
@@ -83,7 +59,7 @@ const main = async () => {
         partSize: PART_SIZE,
         params: {
             Bucket: targetBucket,
-            Key: targetFilename,
+            Key: targetKey,
             Body: sourceObjectStream,
         },
     });
@@ -94,4 +70,5 @@ const main = async () => {
     console.timeEnd(label);
 };
 
-main();
+export type { CopyObjectOptions };
+export { copyObject };

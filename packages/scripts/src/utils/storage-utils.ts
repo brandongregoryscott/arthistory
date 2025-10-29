@@ -31,10 +31,23 @@ const logUploadProgress = (progress: Progress) => {
     );
 };
 
-const downloadObjects = async (keys: string[], bucket: string) =>
-    Promise.all(keys.map((key) => downloadObject(key, bucket)));
+interface DownloadObjectsOptions {
+    keys: string[];
+    bucket: string;
+}
 
-const downloadObject = async (key: string, bucket: string) => {
+const downloadObjects = async (options: DownloadObjectsOptions) => {
+    const { keys, bucket } = options;
+    return Promise.all(keys.map((key) => downloadObject({ key, bucket })));
+};
+
+interface DownloadObjectOptions {
+    key: string;
+    bucket: string;
+}
+
+const downloadObject = async (options: DownloadObjectOptions) => {
+    const { key, bucket } = options;
     const result = await s3.getObject({
         Bucket: bucket,
         Key: key,
@@ -68,4 +81,5 @@ const listObjects = async (options: ListObjectsOptions): Promise<_Object[]> => {
     return objects;
 };
 
+export type { DownloadObjectOptions, ListObjectsOptions };
 export { downloadObject, downloadObjects, listObjects, logUploadProgress, s3 };
