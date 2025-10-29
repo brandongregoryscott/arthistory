@@ -71,6 +71,7 @@ const ArtistService = {
                     snapshots,
                     getQuarter
                 );
+            default:
             case "monthly":
                 return intersectionByNormalizedTimestamp(
                     ids.length,
@@ -84,7 +85,6 @@ const ArtistService = {
                     getDayOfYear
                 );
             case "weekly":
-            default:
                 return intersectionByNormalizedTimestamp(
                     ids.length,
                     snapshots,
@@ -116,7 +116,8 @@ const intersectionByNormalizedTimestamp = (
         snapshots.filter(
             (snapshot) => countByTimestamp[snapshot.timestamp] === count
         ),
-        (snapshot) => `${snapshot.id}_${getInterval(snapshot.timestamp)}`
+        (snapshot) =>
+            `${snapshot.id}_${getYear(snapshot.timestamp)}_${getInterval(snapshot.timestamp)}`
     );
 };
 
