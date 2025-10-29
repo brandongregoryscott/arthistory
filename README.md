@@ -70,22 +70,38 @@ If you would like to see a feature, and it isn't [already documented](https://gi
 
 ## Debugging server setup
 
+Install the service
+
 ```sh
-# Installs the service
 sudo systemctl enable /home/brandon/arthistory/arthistory-cron-service.service
+```
 
-# Starts the service
+Start the service
+
+```sh
 sudo systemctl start arthistory-cron-service.service
+```
 
-# Shows the service status (active, memory, cpu)
+Show the service status (active, memory, cpu)
+
+```sh
 sudo systemctl status arthistory-cron-service.service
+```
 
-# Lists all logs (service-level start/stop/restart events, and stdout/stderr)
+List all logs (service-level start/stop/restart events, and stdout/stderr)
+
+```sh
 sudo journalctl -xu arthistory-cron-service.service
+```
 
-# Lists last 1000 lines from the logs and follows the logs live (service-level start/stop/restart events, and stdout/stderr) - see https://www.man7.org/linux/man-pages/man1/journalctl.1.html#PAGER_CONTROL_OPTIONS
+List last 1000 lines from the logs and follows the logs live (service-level start/stop/restart events, and stdout/stderr) See [manpage: journalctl > PAGER CONTROL OPTIONS](https://www.man7.org/linux/man-pages/man1/journalctl.1.html#PAGER_CONTROL_OPTIONS)
+
+```sh
 sudo journalctl -xfeu arthistory-cron-service.service
+```
 
-# Restart the service daemon & service
+Restart the service daemon & service
+
+```sh
 sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
 ```
