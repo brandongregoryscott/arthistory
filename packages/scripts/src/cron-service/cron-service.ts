@@ -75,7 +75,7 @@ CronJob.from({
         await rename(mergedDbFilename, checkpointFilename);
 
         // Copy to the production db file path
-        await copyFile(checkpointFilename, "_spotify-data.db");
+        await copyFile(checkpointFilename, DatabaseName.Production);
     },
     start: true,
     timeZone: TIME_ZONE,
