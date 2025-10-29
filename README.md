@@ -67,3 +67,25 @@ npm run dev
 If you find a bug, feel free to [open up an issue](https://github.com/brandongregoryscott/arthistory/issues/new) and try to describe it in detail with reproduction steps if possible.
 
 If you would like to see a feature, and it isn't [already documented](https://github.com/brandongregoryscott/arthistory/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement), feel free to open up a new issue and describe the desired behavior.
+
+## Debugging server setup
+
+```sh
+# Installs the service
+sudo systemctl enable /home/brandon/arthistory/arthistory-cron-service.service
+
+# Starts the service
+sudo systemctl start arthistory-cron-service.service
+
+# Shows the service status (active, memory, cpu)
+sudo systemctl status arthistory-cron-service.service
+
+# Lists all logs (service-level start/stop/restart events, and stdout/stderr)
+sudo journalctl -xu arthistory-cron-service.service
+
+# Lists last 1000 lines from the logs and follows the logs live (service-level start/stop/restart events, and stdout/stderr) - see https://www.man7.org/linux/man-pages/man1/journalctl.1.html#PAGER_CONTROL_OPTIONS
+sudo journalctl -xfeu arthistory-cron-service.service
+
+# Restart the service daemon & service
+sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
+```
