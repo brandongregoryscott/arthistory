@@ -16,7 +16,7 @@ import type { SQLStatement } from "../types";
 import { getCurrentHourIndex } from "../utils/date-utils";
 import { TableName, BULK_INSERTION_CHUNK_SIZE } from "../constants/storage";
 import type { Entity } from "@repo/common";
-import { chunk, flatten } from "lodash";
+import { chunk, flatten, isObject } from "lodash";
 import { sleep } from "../utils/core-utils";
 
 /**
@@ -27,7 +27,7 @@ const MAX_ARTIST_IDS_PER_REQUEST = 50;
 /**
  * Maximum number of attempts to retry a request before giving up.
  */
-const MAX_RETRY_ATTEMPTS = 10;
+const MAX_RETRY_ATTEMPTS = 20;
 
 interface SyncOptions {
     timestamp: number;
@@ -115,7 +115,34 @@ const getArtistSnapshotStatements = async (
             });
         }
 
-        console.error("Unexpected error retrieving artists", error);
+        console.error(
+            "Unexpected error retrieving artists",
+            error,
+            JSON.stringify(error)
+        );
+        if (isObject(error) && "cause" in error) {
+            console.log("cause", error.cause);
+            if (isObject(error.cause)) {
+                if ("code" in error.cause) {
+                    console.log("code", error.cause.code);
+                }
+
+                if ("errors" in error.cause) {
+                    console.log("errors", error.cause.errors);
+                }
+            }
+        }
+
+        if (attempt < MAX_RETRY_ATTEMPTS) {
+            const secondsToSleep = Math.pow(2, attempt);
+            await sleep(secondsToSleep * 1000);
+            return getArtistSnapshotStatements({
+                timestamp,
+                artistIds,
+                attempt: attempt + 1,
+            });
+        }
+
         return [];
     }
 };

@@ -1,18 +1,3 @@
-# Installs the service
-# sudo systemctl enable /home/brandon/arthistory/arthistory-api-tunnel.service
-
-# Starts the service
-# sudo systemctl start arthistory-api-tunnel.service
-
-# Check the service status
-# sudo systemctl status arthistory-api-tunnel.service
-
-# To edit environment variables
-# sudo systemctl edit arthistory-api-tunnel.service
-
-# To restart the system daemon & service
-sudo systemctl daemon-reload && sudo systemctl restart arthistory-api-tunnel.service
-
 [Unit]
 Description=SSH tunnel for bscott-arthistory-api.tuns.sh
 After=network.target
