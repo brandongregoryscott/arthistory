@@ -38,16 +38,16 @@ const sync = async (options: SyncOptions) => {
 
     const artistIdChunks = chunk(artistIds, MAX_ARTIST_IDS_PER_REQUEST);
 
-    const statements = flatten(
-        await Promise.all(
-            artistIdChunks.map(async (artistIdChunk) =>
-                getArtistSnapshotStatements({
-                    artistIds: artistIdChunk,
-                    timestamp,
-                })
-            )
-        )
-    );
+    const statements: SQLStatement[] = [];
+    for (const artistIdChunk of artistIdChunks) {
+        statements.push(
+            ...(await getArtistSnapshotStatements({
+                artistIds: artistIdChunk,
+                timestamp,
+            }))
+        );
+    }
+
     console.timeEnd(snapshotLabel);
 
     console.log(`Inserting ${statements.length} snapshots to ${filename}...`);

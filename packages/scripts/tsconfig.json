@@ -3,7 +3,6 @@
     "include": ["."],
     "exclude": ["dist", "build", "node_modules"],
     "compilerOptions": {
-        "noEmit": true,
-        "module": "preserve"
+        "noEmit": true
     }
 }

@@ -55,7 +55,7 @@ class SpotifyClient {
 
     private async _getArtists(
         ids: string[],
-        attempt: number = 0
+        attempt: number = 1
     ): Promise<Artist[]> {
         try {
             const artists = await this.client.artists.get(ids);
