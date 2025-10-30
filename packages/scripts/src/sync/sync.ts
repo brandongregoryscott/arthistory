@@ -7,27 +7,17 @@ import {
     openDb,
     openSnapshotDb,
 } from "../utils/db-utils";
-import {
-    buildCurrentSpotifyClient,
-    buildRandomSpotifyClient,
-    isRateLimitError,
-} from "../utils/spotify-utils";
+import { SpotifyClient } from "../utils/spotify";
 import type { SQLStatement } from "../types";
 import { getCurrentHourIndex } from "../utils/date-utils";
 import { TableName, BULK_INSERTION_CHUNK_SIZE } from "../constants/storage";
 import type { Entity } from "@repo/common";
-import { chunk, flatten, isObject } from "lodash";
-import { sleep } from "../utils/core-utils";
+import { chunk, flatten } from "lodash";
 
 /**
  * The maximum number of artist ids that can be requested at once via the Spotify API.
  */
 const MAX_ARTIST_IDS_PER_REQUEST = 50;
-
-/**
- * Maximum number of attempts to retry a request before giving up.
- */
-const MAX_RETRY_ATTEMPTS = 20;
 
 interface SyncOptions {
     timestamp: number;
@@ -91,60 +81,16 @@ const getArtistIds = async (): Promise<string[]> => {
 
 interface GetArtistSnapshotStatementsOptions {
     artistIds: string[];
-    attempt?: number;
     timestamp: number;
 }
 
 const getArtistSnapshotStatements = async (
     options: GetArtistSnapshotStatementsOptions
 ): Promise<SQLStatement[]> => {
-    const { timestamp, artistIds, attempt = 0 } = options;
-    const spotify =
-        attempt < 5 ? buildCurrentSpotifyClient() : buildRandomSpotifyClient();
-    try {
-        const artists = await spotify.artists.get(artistIds);
-        return artists.map((artist) => buildInsertStatement(artist, timestamp));
-    } catch (error) {
-        if (isRateLimitError(error) && attempt < MAX_RETRY_ATTEMPTS) {
-            const secondsToSleep = Math.pow(2, attempt);
-            await sleep(secondsToSleep * 1000);
-            return getArtistSnapshotStatements({
-                timestamp,
-                artistIds,
-                attempt: attempt + 1,
-            });
-        }
-
-        console.error(
-            "Unexpected error retrieving artists",
-            error,
-            JSON.stringify(error)
-        );
-        if (isObject(error) && "cause" in error) {
-            console.log("cause", error.cause);
-            if (isObject(error.cause)) {
-                if ("code" in error.cause) {
-                    console.log("code", error.cause.code);
-                }
-
-                if ("errors" in error.cause) {
-                    console.log("errors", error.cause.errors);
-                }
-            }
-        }
-
-        if (attempt < MAX_RETRY_ATTEMPTS) {
-            const secondsToSleep = Math.pow(2, attempt);
-            await sleep(secondsToSleep * 1000);
-            return getArtistSnapshotStatements({
-                timestamp,
-                artistIds,
-                attempt: attempt + 1,
-            });
-        }
-
-        return [];
-    }
+    const { timestamp, artistIds } = options;
+    const client = SpotifyClient.buildByCurrentPair();
+    const artists = await client.getArtists(artistIds);
+    return artists.map((artist) => buildInsertStatement(artist, timestamp));
 };
 
 const buildInsertStatement = (

@@ -32,8 +32,8 @@ const logUploadProgress = (progress: Progress) => {
 };
 
 interface DownloadObjectsOptions {
-    keys: string[];
     bucket: string;
+    keys: string[];
 }
 
 const downloadObjects = async (options: DownloadObjectsOptions) => {
@@ -42,8 +42,8 @@ const downloadObjects = async (options: DownloadObjectsOptions) => {
 };
 
 interface DownloadObjectOptions {
-    key: string;
     bucket: string;
+    key: string;
 }
 
 const downloadObject = async (options: DownloadObjectOptions) => {
