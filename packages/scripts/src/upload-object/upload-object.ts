@@ -18,7 +18,7 @@ interface UploadObjectOptions {
 const uploadObject = async (options: UploadObjectOptions) => {
     const { filename, bucket, key } = options;
     if (!existsSync(filename)) {
-        logger.error({ filename }, "File not found on filesystem");
+        logger.error({ filename, key, bucket }, "File not found on filesystem");
         process.exit(1);
     }
 

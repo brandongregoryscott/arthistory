@@ -12,4 +12,15 @@ const normalizeTimestamp = (unixTimestampInSeconds: number): string => {
     return startOfDay(fromUnixTime(unixTimestampInSeconds)).toISOString();
 };
 
-export { normalizeTimestamp, parseDate };
+const formatTimeSpanFromMilliseconds = (milliseconds: number) => {
+    const date = new Date(milliseconds);
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+    const seconds = date.getUTCSeconds();
+
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+};
+
+const pad = (num: number) => num.toString().padStart(2, "0");
+
+export { formatTimeSpanFromMilliseconds, normalizeTimestamp, parseDate };
