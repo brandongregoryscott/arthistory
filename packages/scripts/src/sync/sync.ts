@@ -27,6 +27,7 @@ interface SyncOptions {
 const sync = async (options: SyncOptions) => {
     const { timestamp } = options;
 
+    const client = SpotifyClient.buildByCurrentPair();
     const filename = getSnapshotDbFilename(timestamp);
     const db = await openSnapshotDb(timestamp);
     await createArtistSnapshotsTable(db);
@@ -45,6 +46,7 @@ const sync = async (options: SyncOptions) => {
     for (const artistIdChunk of artistIdChunks) {
         statements.push(
             ...(await getArtistSnapshotStatements({
+                client,
                 artistIds: artistIdChunk,
                 timestamp,
             }))
@@ -85,6 +87,7 @@ const getArtistIds = async (): Promise<string[]> => {
 };
 
 interface GetArtistSnapshotStatementsOptions {
+    client: SpotifyClient;
     artistIds: string[];
     timestamp: number;
 }
@@ -92,8 +95,7 @@ interface GetArtistSnapshotStatementsOptions {
 const getArtistSnapshotStatements = async (
     options: GetArtistSnapshotStatementsOptions
 ): Promise<SQLStatement[]> => {
-    const { timestamp, artistIds } = options;
-    const client = SpotifyClient.buildByCurrentPair();
+    const { client, timestamp, artistIds } = options;
     const artists = await client.getArtists(artistIds);
     return compact(artists).map((artist) =>
         buildInsertStatement(artist, timestamp)
