@@ -1,16 +1,18 @@
+import { createTimerLogger } from "../utils/logger";
 import type { DownloadObjectOptions } from "../utils/storage-utils";
 import { downloadObject as _downloadObject } from "../utils/storage-utils";
 
 const downloadObject = async (options: DownloadObjectOptions) => {
     const { key, bucket } = options;
-    console.log(`Downloading '${key}'...`);
 
-    const label = `Downloaded '${key}'`;
-    console.time(label);
+    const stopDownloadTimer = createTimerLogger(
+        { key, bucket },
+        "Downloading object"
+    );
 
     await _downloadObject({ key, bucket });
 
-    console.timeEnd(label);
+    stopDownloadTimer();
 };
 
 export { downloadObject };
