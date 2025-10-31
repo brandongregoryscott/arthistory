@@ -10,6 +10,7 @@ const DatabaseName = {
 
 const BucketName = {
     ArtistIds: "artist-ids",
+    Logs: "logs",
     Snapshots: "spotify-data",
     SnapshotBackups: "spotify-data-backups",
 } as const;

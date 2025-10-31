@@ -11,10 +11,11 @@ const PART_SIZE = 50 * Math.pow(1024, 2);
 interface UploadObjectOptions {
     bucket: string;
     filename: string;
+    key?: string;
 }
 
 const uploadObject = async (options: UploadObjectOptions) => {
-    const { filename, bucket } = options;
+    const { filename, bucket, key } = options;
     if (!existsSync(filename)) {
         console.error(`File '${filename}' not found.`);
         process.exit(1);
@@ -30,7 +31,7 @@ const uploadObject = async (options: UploadObjectOptions) => {
         partSize: PART_SIZE,
         params: {
             Bucket: bucket,
-            Key: filename,
+            Key: key ?? filename,
             Body: readStream,
         },
     });
