@@ -8,6 +8,7 @@ import {
     AWS_SECRET_ACCESS_KEY,
 } from "../config";
 import { createWriteStream } from "node:fs";
+import { logger } from "./logger";
 
 const s3 = new S3({
     endpoint: AWS_S3_ENDPOINT,
@@ -22,12 +23,22 @@ const logUploadProgress = (progress: Progress) => {
     const { part } = progress;
     const loaded = progress.loaded ?? 1;
     const total = progress.total ?? 1;
+    const loadedInMb = bytesToMb(loaded);
+    const totalInMb = bytesToMb(total);
     const hasTotal = progress.total !== undefined;
 
     const percentage = ((loaded / total) * 100).toFixed(2);
 
-    console.log(
-        `Part ${part} - ${bytesToMb(loaded)} / ${hasTotal ? bytesToMb(total) : "unknown"} - ${hasTotal ? percentage : "unknown"}% complete`
+    logger.info(
+        {
+            part,
+            loaded,
+            total,
+            loadedInMb,
+            totalInMb,
+            percentage: hasTotal ? percentage : "unknown",
+        },
+        "Upload progress"
     );
 };
 
