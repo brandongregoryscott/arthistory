@@ -3,6 +3,7 @@ import { getDbFileNames } from "../utils/fs-utils";
 import { listObjects, s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import { createTimerLogger, logger } from "../utils/logger";
 
 interface PurgeMergedDbsOptions {
     skipConfirmation: boolean;
@@ -12,22 +13,27 @@ const readlineInterface = readline.createInterface({ input, output });
 
 const purgeMergedDbs = async (options: PurgeMergedDbsOptions) => {
     const { skipConfirmation } = options;
-    const localDbFileNames = await getDbFileNames();
-    console.log(`Found ${localDbFileNames.length} dbs locally`);
+    const localDbFilenames = await getDbFileNames();
+    logger.info(
+        { localDbFilenameCount: localDbFilenames.length },
+        "Found local databases"
+    );
 
     const remoteDbObjects = await listObjects({
         bucket: BucketName.Snapshots,
         prefix: DatabaseName.PartialSnapshotPrefix,
     });
 
-    console.log(`Found ${remoteDbObjects.length} dbs remotely`);
+    const remoteDbCount = remoteDbObjects.length;
+    logger.info({ remoteDbCount }, "Found remote databases");
 
     const remoteDbObjectsToDelete = remoteDbObjects.filter((object) =>
-        localDbFileNames.includes(object.Key ?? "")
+        localDbFilenames.includes(object.Key ?? "")
     );
 
-    console.log(
-        `Remote dbs slated for deletion:\n${remoteDbObjectsToDelete.map((object, index) => `[${index + 1}] ${object.Key}`).join("\n")}`
+    logger.info(
+        { remoteDbObjectsToDelete },
+        "Remote databases slated for deletion"
     );
 
     if (!skipConfirmation) {
@@ -42,8 +48,10 @@ const purgeMergedDbs = async (options: PurgeMergedDbsOptions) => {
 
     readlineInterface.close();
 
-    const label = `Deleted ${remoteDbObjectsToDelete.length} objects`;
-    console.time(label);
+    const stopDeleteTimer = createTimerLogger(
+        { remoteDbCount },
+        "Deleted remote databases"
+    );
 
     await s3.deleteObjects({
         Bucket: BucketName.Snapshots,
@@ -54,7 +62,7 @@ const purgeMergedDbs = async (options: PurgeMergedDbsOptions) => {
         },
     });
 
-    console.timeEnd(label);
+    stopDeleteTimer();
 };
 
 export type { PurgeMergedDbsOptions };
