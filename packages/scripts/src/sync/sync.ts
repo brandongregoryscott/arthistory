@@ -12,7 +12,8 @@ import type { SQLStatement } from "../types";
 import { getCurrentHourIndex } from "../utils/date-utils";
 import { TableName, BULK_INSERTION_CHUNK_SIZE } from "../constants/storage";
 import type { Entity } from "@repo/common";
-import { chunk, flatten } from "lodash";
+import { chunk, compact } from "lodash";
+import { createTimerLogger } from "../utils/logger";
 
 /**
  * The maximum number of artist ids that can be requested at once via the Spotify API.
@@ -31,10 +32,12 @@ const sync = async (options: SyncOptions) => {
     await createArtistSnapshotsTable(db);
 
     const artistIds = await getArtistIds();
+    const artistCount = artistIds.length;
 
-    console.log(`Retrieving snapshots for ${artistIds.length} artists...`);
-    const snapshotLabel = `Retrieved snapshots for ${artistIds.length} artists`;
-    console.time(snapshotLabel);
+    const stopSnapshotTimer = createTimerLogger(
+        { artistCount },
+        `Retrieving ${artistCount} snapshots for artists`
+    );
 
     const artistIdChunks = chunk(artistIds, MAX_ARTIST_IDS_PER_REQUEST);
 
@@ -48,11 +51,13 @@ const sync = async (options: SyncOptions) => {
         );
     }
 
-    console.timeEnd(snapshotLabel);
+    stopSnapshotTimer();
 
-    console.log(`Inserting ${statements.length} snapshots to ${filename}...`);
-    const insertLabel = `Inserted ${statements.length} snapshots to ${filename}`;
-    console.time(insertLabel);
+    const statementCount = statements.length;
+    const stopInsertionTimer = createTimerLogger(
+        { statementCount },
+        `Inserting ${statements.length} snapshots to ${filename}`
+    );
 
     const statementChunks = chunk(statements, BULK_INSERTION_CHUNK_SIZE);
     await Promise.all(
@@ -60,7 +65,7 @@ const sync = async (options: SyncOptions) => {
             flushStatements(db, statementChunk)
         )
     );
-    console.timeEnd(insertLabel);
+    stopInsertionTimer();
 };
 
 const getArtistIds = async (): Promise<string[]> => {
@@ -90,7 +95,9 @@ const getArtistSnapshotStatements = async (
     const { timestamp, artistIds } = options;
     const client = SpotifyClient.buildByCurrentPair();
     const artists = await client.getArtists(artistIds);
-    return artists.map((artist) => buildInsertStatement(artist, timestamp));
+    return compact(artists).map((artist) =>
+        buildInsertStatement(artist, timestamp)
+    );
 };
 
 const buildInsertStatement = (
