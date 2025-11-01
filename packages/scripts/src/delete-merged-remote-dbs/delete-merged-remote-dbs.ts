@@ -5,13 +5,13 @@ import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { createTimerLogger, logger } from "../utils/logger";
 
-interface PurgeMergedDbsOptions {
+interface DeleteMergedRemoteDbsOptions {
     skipConfirmation: boolean;
 }
 
 const readlineInterface = readline.createInterface({ input, output });
 
-const purgeMergedDbs = async (options: PurgeMergedDbsOptions) => {
+const deleteMergedRemoteDbs = async (options: DeleteMergedRemoteDbsOptions) => {
     const { skipConfirmation } = options;
     const localDbFilenames = await getDbFilenames();
     logger.info(
@@ -65,5 +65,5 @@ const purgeMergedDbs = async (options: PurgeMergedDbsOptions) => {
     stopDeleteTimer();
 };
 
-export type { PurgeMergedDbsOptions };
-export { purgeMergedDbs };
+export type { DeleteMergedRemoteDbsOptions };
+export { deleteMergedRemoteDbs };
