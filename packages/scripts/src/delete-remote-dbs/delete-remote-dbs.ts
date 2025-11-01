@@ -6,14 +6,14 @@ import { stdin as input, stdout as output } from "node:process";
 import { createTimerLogger, logger } from "../utils/logger";
 import { compact } from "lodash";
 
-interface DeleteMergedRemoteDbsOptions {
+interface DeleteRemoteDbsOptions {
     dry: boolean;
     skipConfirmation: boolean;
 }
 
 const readlineInterface = readline.createInterface({ input, output });
 
-const deleteMergedRemoteDbs = async (options: DeleteMergedRemoteDbsOptions) => {
+const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
     const { skipConfirmation, dry } = options;
     const bucket = BucketName.Snapshots;
     const localDbFilenames = await getDbFilenames();
@@ -88,5 +88,5 @@ const deleteMergedRemoteDbs = async (options: DeleteMergedRemoteDbsOptions) => {
     });
 };
 
-export type { DeleteMergedRemoteDbsOptions };
-export { deleteMergedRemoteDbs };
+export type { DeleteRemoteDbsOptions };
+export { deleteRemoteDbs };
