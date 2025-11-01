@@ -10,6 +10,7 @@ import {
 } from "../constants/storage";
 import { getDbFileNames } from "../utils/fs-utils";
 import {
+    createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
@@ -175,14 +176,6 @@ const maybeDropArtistSnapshotsConstraint = async (
     PRAGMA foreign_keys=on;`);
     stopUniqueConstraintTimer();
 };
-
-const createArtistSnapshotsIndexes = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>
-) =>
-    db.exec(`
-    CREATE INDEX ${TableName.ArtistSnapshots}_id ON ${TableName.ArtistSnapshots} (id);
-    CREATE INDEX ${TableName.ArtistSnapshots}_timestamp ON ${TableName.ArtistSnapshots} (timestamp);
-`);
 
 const generateInsertArtistSnapshotStatements = (
     snapshots: ArtistSnapshotRow[]

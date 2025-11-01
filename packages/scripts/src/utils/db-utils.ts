@@ -7,22 +7,28 @@ import { createTimerLogger } from "./logger";
 
 const createArtistSnapshotsTable = (db: Database) =>
     db.exec(`
-    CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
-        id TEXT,
-        timestamp NUMERIC,
-        followers NUMERIC,
-        popularity NUMERIC
-    );
+        CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
+            id TEXT,
+            timestamp NUMERIC,
+            followers NUMERIC,
+            popularity NUMERIC
+        );
  `);
+
+const createArtistSnapshotsIndexes = async (db: Database) =>
+    db.exec(`
+        CREATE INDEX ${TableName.ArtistSnapshots}_id ON ${TableName.ArtistSnapshots} (id);
+        CREATE INDEX ${TableName.ArtistSnapshots}_timestamp ON ${TableName.ArtistSnapshots} (timestamp);
+`);
 
 /**
  * @see https://stackoverflow.com/a/58547438
  */
 const setPerformancePragmas = async (db: Database) =>
     db.exec(`
-    PRAGMA synchronous = OFF;
-    PRAGMA locking_mode = EXCLUSIVE;
-    PRAGMA journal_mode = OFF;
+        PRAGMA synchronous = OFF;
+        PRAGMA locking_mode = EXCLUSIVE;
+        PRAGMA journal_mode = OFF;
  `);
 
 const countRows = async (db: Database, table: string): Promise<number> => {
@@ -109,6 +115,7 @@ const openSnapshotDb = async (timestamp: number) =>
 
 export {
     countRows,
+    createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
