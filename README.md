@@ -27,7 +27,7 @@ The Spotify API provides the current follower count and a popularity score for a
 
 ## How it works
 
-Artist data is synced and pushed to a SQLite database stored on S3 with scripts from the [spotify-data-scripts](https://github.com/brandongregoryscott/spotify-data-scripts) repo. This database is pulled down and bundled with the API server on build.
+Artist data is synced and pushed to a SQLite database stored on S3 with scripts from the [scripts](https://github.com/brandongregoryscott/arthistory/blob/main/packages/scripts/src/sync/sync.ts) package in the repo. This database is pulled down and bundled with the API server on build.
 
 Not every artist on Spotify is tracked, but new artists can be requested through the web UI.
 
@@ -73,7 +73,6 @@ If you would like to see a feature, and it isn't [already documented](https://gi
 <details>
 
 <summary>Install the service</summary>
-
 
 ```sh
 sudo systemctl enable /home/brandon/arthistory/arthistory-cron-service.service
