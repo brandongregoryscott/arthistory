@@ -8,7 +8,7 @@ import {
     AWS_SECRET_ACCESS_KEY,
 } from "../config";
 import { createWriteStream } from "node:fs";
-import { logger } from "./logger";
+import { createTimerLogger, logger } from "./logger";
 
 const s3 = new S3({
     endpoint: AWS_S3_ENDPOINT,
@@ -59,6 +59,11 @@ interface DownloadObjectOptions {
 
 const downloadObject = async (options: DownloadObjectOptions) => {
     const { key, bucket } = options;
+    const stopDownloadTimer = createTimerLogger(
+        { key, bucket },
+        "Downloading object"
+    );
+
     const result = await s3.getObject({
         Bucket: bucket,
         Key: key,
@@ -75,6 +80,7 @@ const downloadObject = async (options: DownloadObjectOptions) => {
         },
     });
     await objectStream.pipeTo(writableStream);
+    stopDownloadTimer();
 };
 
 interface ListObjectsOptions {

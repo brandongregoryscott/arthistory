@@ -5,7 +5,7 @@ import { getSnapshotDbFilename } from "../utils/db-utils";
 import { uploadObject } from "../upload-object/upload-object";
 import { BucketName, DatabaseName } from "../constants/storage";
 import { existsSync } from "node:fs";
-import { downloadObject } from "../download-object/download-object";
+import { downloadObject } from "../utils/storage-utils";
 
 const TIME_ZONE = "America/New_York";
 
