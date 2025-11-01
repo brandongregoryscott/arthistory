@@ -43,7 +43,7 @@ const dropArtistSnapshotsConstraintIfExists = async (db: Database) => {
     }
 
     const stopUniqueConstraintTimer = createTimerLogger(
-        `Created '${TableName.ArtistSnapshots}' without unique constraint`
+        `Creating '${TableName.ArtistSnapshots}' without unique constraint`
     );
     await db.exec(`
         PRAGMA foreign_keys=off;

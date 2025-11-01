@@ -38,7 +38,7 @@ const logUploadProgress = (progress: Progress) => {
             totalInMb,
             percentage: hasTotal ? percentage : "unknown",
         },
-        "Upload progress"
+        "Uploading part"
     );
 };
 

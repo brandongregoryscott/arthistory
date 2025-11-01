@@ -43,7 +43,7 @@ const deleteLocalDbs = async (options: DeleteLocalDbsOptions) => {
 
     const stopDeleteTimer = createTimerLogger(
         { localDbCount, ...options },
-        "Deleted local databases"
+        "Deleting local databases"
     );
 
     await Promise.all(localDbFilenames.map((filename) => rm(filename)));

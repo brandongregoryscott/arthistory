@@ -78,7 +78,7 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
             remoteDbsToDeleteCount,
             ...options,
         },
-        "Deleted remote databases"
+        "Deleting remote databases"
     );
 
     const { Deleted: deletedObjects } = await s3.deleteObjects({

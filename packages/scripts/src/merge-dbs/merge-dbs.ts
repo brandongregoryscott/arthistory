@@ -60,7 +60,7 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     const sourceDatabaseCount = sourceDbFileNames.length;
     const stopMergeTimer = createTimerLogger(
         { sourceDatabaseCount },
-        "Merged partial databases"
+        "Merging partial databases"
     );
 
     let statements: SQLStatement[] = [];
@@ -95,7 +95,7 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     statements = [];
 
     if (!skipIndexes) {
-        const stopIndexTimer = createTimerLogger("Created indexes");
+        const stopIndexTimer = createTimerLogger("Creating indexes");
         await createArtistSnapshotsIndexes(targetDb);
         stopIndexTimer();
     }
