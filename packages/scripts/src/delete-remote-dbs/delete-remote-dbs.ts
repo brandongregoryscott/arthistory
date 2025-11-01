@@ -76,6 +76,7 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
             remoteDbCount,
             remoteDbObjectsToDelete,
             remoteDbsToDeleteCount,
+            ...options,
         },
         "Deleted remote databases"
     );
@@ -94,6 +95,7 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
     stopDeleteTimer({
         deletedObjects: deletedObjectKeys,
         deletedCount: deletedObjectKeys.length,
+        ...options,
     });
 };
 
