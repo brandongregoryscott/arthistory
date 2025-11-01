@@ -1,5 +1,5 @@
 import { BucketName, DatabaseName } from "../constants/storage";
-import { getDbFileNames } from "../utils/fs-utils";
+import { getDbFilenames } from "../utils/fs-utils";
 import { listObjects, s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
@@ -13,7 +13,7 @@ const readlineInterface = readline.createInterface({ input, output });
 
 const purgeMergedDbs = async (options: PurgeMergedDbsOptions) => {
     const { skipConfirmation } = options;
-    const localDbFilenames = await getDbFileNames();
+    const localDbFilenames = await getDbFilenames();
     logger.info(
         { localDbFilenameCount: localDbFilenames.length },
         "Found local databases"

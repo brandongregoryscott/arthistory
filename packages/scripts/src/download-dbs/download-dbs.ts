@@ -1,6 +1,6 @@
 import type { _Object } from "@aws-sdk/client-s3";
 import { BucketName, DatabaseName } from "../constants/storage";
-import { getDbFileNames } from "../utils/fs-utils";
+import { getDbFilenames } from "../utils/fs-utils";
 import { downloadObjects, listObjects } from "../utils/storage-utils";
 import { compact } from "lodash";
 import { createTimerLogger } from "../utils/logger";
@@ -11,7 +11,7 @@ const downloadDbs = async () => {
         prefix: DatabaseName.PartialSnapshotPrefix,
     });
 
-    const localDbs = await getDbFileNames();
+    const localDbs = await getDbFilenames();
     const total = objects.length;
     const missingObjects = objects.filter(
         (object) => !localDbs.includes(object.Key ?? "")

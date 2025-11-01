@@ -1,9 +1,11 @@
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { isEmpty } from "lodash";
+import { first, isEmpty, sortBy } from "lodash";
 import type { Database, SQLStatement } from "../types";
 import { TableName } from "../constants/storage";
 import { createTimerLogger } from "./logger";
+import { getDbFilenames } from "./fs-utils";
+import { stat } from "fs/promises";
 
 const createArtistSnapshotsTable = (db: Database) =>
     db.exec(`
@@ -104,6 +106,24 @@ const paginateRows = async <T>(
 const getSnapshotDbFilename = (timestamp: number) =>
     `spotify-data_${timestamp}.db`;
 
+const findCheckpointDbFilename = async (): Promise<string | undefined> => {
+    const dbFileNames = await getDbFilenames();
+    const dbFileSizes = await Promise.all(
+        dbFileNames.map(async (fileName) => {
+            const { size } = await stat(fileName);
+            return { fileName, size };
+        })
+    );
+    const dbFilesBySize = sortBy(dbFileSizes, ({ size }) => size).reverse();
+    const largestDb = first(dbFilesBySize);
+    // The checkpoint db should very likely be several GB at this point of tracking, so throw out anything smaller
+    if (largestDb !== undefined && largestDb.size >= Math.pow(1024, 3)) {
+        return largestDb.fileName;
+    }
+
+    return undefined;
+};
+
 const openDb = async (fileName: string): Promise<Database> =>
     open({
         filename: fileName,
@@ -117,6 +137,7 @@ export {
     countRows,
     createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
+    findCheckpointDbFilename,
     flushStatements,
     flushStatementsIfNeeded,
     getSnapshotDbFilename,

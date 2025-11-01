@@ -8,10 +8,11 @@ import {
     DatabaseName,
     TableName,
 } from "../constants/storage";
-import { getDbFileNames } from "../utils/fs-utils";
+import { getDbFilenames } from "../utils/fs-utils";
 import {
     createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
+    findCheckpointDbFilename,
     flushStatements,
     flushStatementsIfNeeded,
     openDb,
@@ -36,11 +37,11 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
         skipIndexes,
         filename = DatabaseName.Merged,
     } = options;
-    let sourceDbFileNames = await getDbFileNames();
+    let sourceDbFileNames = await getDbFilenames();
 
     // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
     // over to a new, empty database. Just copy it with a new filename and move on
-    const checkpointFileName = await findCheckpointDb();
+    const checkpointFileName = await findCheckpointDbFilename();
     if (checkpointFileName !== undefined && !skipCheckpointAsBase) {
         logger.info(
             { checkpointFileName, filename },
@@ -104,24 +105,6 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     stopMergeTimer();
 
     return filename;
-};
-
-const findCheckpointDb = async (): Promise<string | undefined> => {
-    const dbFileNames = await getDbFileNames();
-    const dbFileSizes = await Promise.all(
-        dbFileNames.map(async (fileName) => {
-            const { size } = await stat(fileName);
-            return { fileName, size };
-        })
-    );
-    const dbFilesBySize = sortBy(dbFileSizes, ({ size }) => size).reverse();
-    const largestDb = first(dbFilesBySize);
-    // The checkpoint db should very likely be several GB at this point of tracking, so throw out anything smaller
-    if (largestDb !== undefined && largestDb.size >= Math.pow(1024, 3)) {
-        return largestDb.fileName;
-    }
-
-    return undefined;
 };
 
 const maybeDropArtistSnapshotsConstraint = async (
