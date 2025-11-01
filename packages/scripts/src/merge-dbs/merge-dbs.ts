@@ -2,85 +2,71 @@ import type sqlite3 from "sqlite3";
 import type { Database } from "sqlite";
 import { copyFile, stat } from "fs/promises";
 import type { ArtistSnapshotRow } from "@repo/common";
-import { compact, first, last, sortBy } from "lodash";
+import { first, sortBy } from "lodash";
 import {
     BULK_INSERTION_CHUNK_SIZE,
     DatabaseName,
     TableName,
 } from "../constants/storage";
-import { getDbFileNames, parseTimestamp } from "../utils/fs-utils";
+import { getDbFileNames } from "../utils/fs-utils";
 import {
     createArtistSnapshotsTable,
     flushStatements,
     flushStatementsIfNeeded,
-    getMergedSnapshotDbFilename,
     openDb,
     paginateRows,
     setPerformancePragmas,
 } from "../utils/db-utils";
 import { toUnixTimestampInSeconds } from "../utils/date-utils";
 import type { SQLStatement } from "../types";
+import { createTimerLogger, logger } from "../utils/logger";
 
 const CHUNK_SIZE = 100000;
 
 interface MergeDbsOptions {
+    filename?: string;
     skipCheckpointAsBase: boolean;
     skipIndexes: boolean;
-    useRangeFilename: boolean;
 }
 
 const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
-    const { skipCheckpointAsBase, skipIndexes, useRangeFilename } = options;
-    let mergedDbName: string = DatabaseName.Merged;
+    const {
+        skipCheckpointAsBase,
+        skipIndexes,
+        filename = DatabaseName.Merged,
+    } = options;
     let sourceDbFileNames = await getDbFileNames();
-
-    if (useRangeFilename) {
-        const timestamps = sortBy(
-            compact(sourceDbFileNames.map(parseTimestamp))
-        ).reverse();
-
-        const start = first(timestamps);
-        const end = last(timestamps);
-        if (start !== undefined && end !== undefined) {
-            mergedDbName = getMergedSnapshotDbFilename({
-                start,
-                end,
-                useRangeFilename,
-            });
-        }
-    }
 
     // The original database from the git-based tracking is ~6GB, there's no point in wasting time copying rows
     // over to a new, empty database. Just copy it with a new filename and move on
-    const checkpointDb = await findCheckpointDb();
-    if (checkpointDb !== undefined && !skipCheckpointAsBase) {
-        console.log(
-            `Found checkpoint db '${checkpointDb}', copying to '${mergedDbName}' to use as base...`
+    const checkpointFileName = await findCheckpointDb();
+    if (checkpointFileName !== undefined && !skipCheckpointAsBase) {
+        logger.info(
+            { checkpointFileName, filename },
+            "Found checkpoint database, copying to use as base"
         );
-        await copyFile(checkpointDb, mergedDbName);
+        await copyFile(checkpointFileName, filename);
 
         // Filter out the checkpoint db so we don't try to merge it into the copied base
         sourceDbFileNames = sourceDbFileNames.filter(
-            (sourceDbFileName) => sourceDbFileName !== checkpointDb
+            (sourceDbFileName) => sourceDbFileName !== checkpointFileName
         );
     }
 
-    const targetDb = await openDb(mergedDbName);
+    const targetDb = await openDb(filename);
     await maybeDropArtistSnapshotsConstraint(targetDb);
     await setPerformancePragmas(targetDb);
 
-    const startLabel = `Merging ${sourceDbFileNames.length} partial databases...`;
-    console.log(startLabel);
-
-    const endLabel = `Merged ${sourceDbFileNames.length} partial databases`;
-    console.time(endLabel);
+    const sourceDatabaseCount = sourceDbFileNames.length;
+    const stopMergeTimer = createTimerLogger(
+        { sourceDatabaseCount },
+        "Merged partial databases"
+    );
 
     let statements: SQLStatement[] = [];
     for (const sourceDbFileName of sourceDbFileNames) {
         const index = sourceDbFileNames.indexOf(sourceDbFileName);
-        console.log(
-            `Reading rows from ${sourceDbFileName} (${index + 1}/${sourceDbFileNames.length})...`
-        );
+        logger.info({ sourceDbFileName, index }, "Reading rows");
         const sourceDb = await openDb(sourceDbFileName);
         await paginateRows<ArtistSnapshotRow>(
             sourceDb,
@@ -109,16 +95,14 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     statements = [];
 
     if (!skipIndexes) {
-        console.log("Creating indexes...");
-        const createdIndexLabel = "Created indexes";
-        console.time(createdIndexLabel);
+        const stopIndexTimer = createTimerLogger("Created indexes");
         await createArtistSnapshotsIndexes(targetDb);
-        console.timeEnd(createdIndexLabel);
+        stopIndexTimer();
     }
 
-    console.timeEnd(endLabel);
+    stopMergeTimer();
 
-    return mergedDbName;
+    return filename;
 };
 
 const findCheckpointDb = async (): Promise<string | undefined> => {
@@ -149,18 +133,16 @@ const maybeDropArtistSnapshotsConstraint = async (
         undefined;
 
     if (!hasUniqueIndex) {
-        console.log(
-            `No unique index found, creating ${TableName.ArtistSnapshots} if it does not exist...`
+        logger.info(
+            `No unique index found, creating ${TableName.ArtistSnapshots} if it does not exist`
         );
         await createArtistSnapshotsTable(db);
         return;
     }
 
-    const label = `Created '${TableName.ArtistSnapshots}'`;
-    console.log(
-        `Creating '${TableName.ArtistSnapshots}' without unique constraint...`
+    const stopUniqueConstraintTimer = createTimerLogger(
+        `Created '${TableName.ArtistSnapshots}' without unique constraint`
     );
-    console.time(label);
     await db.exec(`
     PRAGMA foreign_keys=off;
 
@@ -191,7 +173,7 @@ const maybeDropArtistSnapshotsConstraint = async (
     VACUUM;
 
     PRAGMA foreign_keys=on;`);
-    console.timeEnd(label);
+    stopUniqueConstraintTimer();
 };
 
 const createArtistSnapshotsIndexes = async (

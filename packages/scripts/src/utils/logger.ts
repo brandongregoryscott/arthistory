@@ -18,7 +18,7 @@ type CreateTimerLoggerWithDataOptions = [
     message: string,
     level?: LogLevel,
 ];
-type CreateTimerLoggerMessageOptions = [message: string, level: LogLevel];
+type CreateTimerLoggerMessageOptions = [message: string, level?: LogLevel];
 
 type CreateTimerOptions =
     | CreateTimerLoggerMessageOptions
