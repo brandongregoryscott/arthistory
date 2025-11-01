@@ -112,3 +112,14 @@ Restart the service daemon & service
 ```sh
 sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
 ```
+
+<details>
+
+<summary>Updating API key permissions to include additional buckets (`403 Access Denied` error when trying to upload objects)
+</summary>
+
+-   Go to the R2 Overview page: https://dash.cloudflare.com/{accountId}/r2/overview
+-   Click on the **Manage** button under the **Account Details** > **API Tokens** section on the right to land on
+-   Land on https://dash.cloudflare.com/{accountId}/r2/api-tokens and choose the API token to add additional buckets/permissions to
+
+</details>
