@@ -1,3 +1,4 @@
+import { createTimerLogger } from "../utils/logger";
 import { logUploadProgress, s3 } from "../utils/storage-utils";
 import { Upload } from "@aws-sdk/lib-storage";
 
@@ -25,9 +26,10 @@ const copyObject = async (options: CopyObjectOptions) => {
     const copySource = `${sourceBucket}/${sourceKey}`;
     const target = `${targetBucket}/${targetKey}`;
 
-    console.log(`Copying ${copySource} to ${target}...`);
-    const label = `Copied ${copySource} to ${target}`;
-    console.time(label);
+    const stopCopyTimer = createTimerLogger(
+        { copySource, target },
+        "Copying object"
+    );
 
     const { ContentLength: size } = await s3.headObject({
         Key: sourceKey,
@@ -40,7 +42,7 @@ const copyObject = async (options: CopyObjectOptions) => {
             Key: targetKey,
             CopySource: copySource,
         });
-        console.timeEnd(label);
+        stopCopyTimer();
         return;
     }
 
@@ -67,7 +69,7 @@ const copyObject = async (options: CopyObjectOptions) => {
     upload.on("httpUploadProgress", logUploadProgress);
     await upload.done();
 
-    console.timeEnd(label);
+    stopCopyTimer();
 };
 
 export type { CopyObjectOptions };

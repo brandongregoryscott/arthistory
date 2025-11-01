@@ -3,6 +3,7 @@ import { BucketName, DatabaseName } from "../constants/storage";
 import { getDbFileNames } from "../utils/fs-utils";
 import { downloadObjects, listObjects } from "../utils/storage-utils";
 import { compact } from "lodash";
+import { createTimerLogger } from "../utils/logger";
 
 const downloadDbs = async () => {
     const objects = await listObjects({
@@ -17,11 +18,10 @@ const downloadDbs = async () => {
     );
     const count = missingObjects.length;
 
-    const startLabel = `Downloading ${count} partial databases (${total - count} found locally)...`;
-    console.log(startLabel);
-
-    const endLabel = `Downloaded ${count} partial databases`;
-    console.time(endLabel);
+    const stopDownloadTimer = createTimerLogger(
+        { count, total, localCount: total - count },
+        "Downloading partial databases"
+    );
 
     const missingObjectKeys = compact(
         missingObjects.map((object) => object.Key)
@@ -31,7 +31,7 @@ const downloadDbs = async () => {
         bucket: BucketName.Snapshots,
     });
 
-    console.timeEnd(endLabel);
+    stopDownloadTimer();
 };
 
 export { downloadDbs };

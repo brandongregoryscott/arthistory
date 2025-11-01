@@ -88,17 +88,23 @@ Show the service status (active, memory, cpu)
 sudo systemctl status arthistory-cron-service.service
 ```
 
-List all logs (service-level start/stop/restart events, and stdout/stderr)
+List service logs with service-level start/stop/restart events, and stdout/stderr
 
 ```sh
-sudo journalctl -xu arthistory-cron-service.service
+sudo journalctl --catalog --unit arthistory-cron-service.service
 ```
 
-List last 1000 lines from the logs and follows the logs live (service-level start/stop/restart events, and stdout/stderr)
+List service stdout/stderr logs
+
+```sh
+sudo journalctl --no-pager --unit arthistory-cron-service.service
+```
+
+List last 1000 lines from the logs and follows the logs
 See [manpage: journalctl > PAGER CONTROL OPTIONS](https://www.man7.org/linux/man-pages/man1/journalctl.1.html#PAGER_CONTROL_OPTIONS)
 
 ```sh
-sudo journalctl -xfeu arthistory-cron-service.service
+sudo journalctl --pager-end --follow --unit arthistory-cron-service.service
 ```
 
 Restart the service daemon & service

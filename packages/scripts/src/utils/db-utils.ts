@@ -3,6 +3,7 @@ import sqlite3 from "sqlite3";
 import { isEmpty } from "lodash";
 import type { Database, SQLStatement } from "../types";
 import { DatabaseName, TableName } from "../constants/storage";
+import { createTimerLogger } from "./logger";
 
 const createArtistSnapshotsTable = (db: Database) =>
     db.exec(`
@@ -54,9 +55,11 @@ const flushStatements = async (
             return;
         }
 
-        console.log(`Flushing ${statements.length} statements...`);
-        const label = `Flushed ${statements.length} statements`;
-        console.time(label);
+        const statementCount = statements.length;
+        const stopFlushTimer = createTimerLogger(
+            { statementCount },
+            "Flushing statements"
+        );
         const dbInstance = db.getDatabaseInstance();
         dbInstance.serialize(() => {
             dbInstance.run("BEGIN TRANSACTION");
@@ -69,7 +72,7 @@ const flushStatements = async (
                 dbInstance.run(statement);
             });
             dbInstance.run("COMMIT", () => {
-                console.timeEnd(label);
+                stopFlushTimer();
                 resolve();
             });
         });

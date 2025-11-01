@@ -36,8 +36,8 @@ const sync = async (options: SyncOptions) => {
     const artistCount = artistIds.length;
 
     const stopSnapshotTimer = createTimerLogger(
-        { artistCount },
-        `Retrieving ${artistCount} snapshots for artists`
+        { artistCount, filename },
+        "Retrieving snapshots for artists"
     );
 
     const artistIdChunks = chunk(artistIds, MAX_ARTIST_IDS_PER_REQUEST);
@@ -58,7 +58,7 @@ const sync = async (options: SyncOptions) => {
     const statementCount = statements.length;
     const stopInsertionTimer = createTimerLogger(
         { statementCount },
-        `Inserting ${statements.length} snapshots to ${filename}`
+        "Inserting snapshots to database"
     );
 
     const statementChunks = chunk(statements, BULK_INSERTION_CHUNK_SIZE);
@@ -87,8 +87,8 @@ const getArtistIds = async (): Promise<string[]> => {
 };
 
 interface GetArtistSnapshotStatementsOptions {
-    client: SpotifyClient;
     artistIds: string[];
+    client: SpotifyClient;
     timestamp: number;
 }
 
