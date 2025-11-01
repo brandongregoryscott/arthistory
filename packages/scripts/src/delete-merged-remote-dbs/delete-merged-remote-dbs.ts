@@ -4,18 +4,22 @@ import { listObjects, s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { createTimerLogger, logger } from "../utils/logger";
+import { compact } from "lodash";
 
 interface DeleteMergedRemoteDbsOptions {
+    dry: boolean;
     skipConfirmation: boolean;
 }
 
 const readlineInterface = readline.createInterface({ input, output });
 
 const deleteMergedRemoteDbs = async (options: DeleteMergedRemoteDbsOptions) => {
-    const { skipConfirmation } = options;
+    const { skipConfirmation, dry } = options;
+    const bucket = BucketName.Snapshots;
     const localDbFilenames = await getDbFilenames();
+    const localDbCount = localDbFilenames.length;
     logger.info(
-        { localDbFilenameCount: localDbFilenames.length },
+        { localDbFilenameCount: localDbCount, ...options },
         "Found local databases"
     );
 
@@ -25,20 +29,36 @@ const deleteMergedRemoteDbs = async (options: DeleteMergedRemoteDbsOptions) => {
     });
 
     const remoteDbCount = remoteDbObjects.length;
-    logger.info({ remoteDbCount }, "Found remote databases");
+    logger.info({ remoteDbCount, ...options }, "Found remote databases");
 
     const remoteDbObjectsToDelete = remoteDbObjects.filter((object) =>
         localDbFilenames.includes(object.Key ?? "")
     );
 
     logger.info(
-        { remoteDbObjectsToDelete },
+        { remoteDbObjectsToDelete, ...options },
         "Remote databases slated for deletion"
     );
 
+    if (dry) {
+        logger.info(
+            {
+                bucket,
+                localDbFilenames,
+                localDbCount,
+                remoteDbObjects,
+                remoteDbCount,
+                remoteDbObjectsToDelete,
+                ...options,
+            },
+            "Returning early and not deleting objects from bucket"
+        );
+        return;
+    }
+
     if (!skipConfirmation) {
         const answer = await readlineInterface.question(
-            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${BucketName.Snapshots}'? [y/N] `
+            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${bucket}'? [y/N] `
         );
 
         if (answer.toLowerCase().trim() !== "y") {
@@ -53,7 +73,7 @@ const deleteMergedRemoteDbs = async (options: DeleteMergedRemoteDbsOptions) => {
         "Deleted remote databases"
     );
 
-    await s3.deleteObjects({
+    const { Deleted: deletedObjects } = await s3.deleteObjects({
         Bucket: BucketName.Snapshots,
         Delete: {
             Objects: remoteDbObjectsToDelete.map((object) => ({
@@ -62,7 +82,10 @@ const deleteMergedRemoteDbs = async (options: DeleteMergedRemoteDbsOptions) => {
         },
     });
 
-    stopDeleteTimer();
+    stopDeleteTimer({
+        deletedObjects:
+            compact(deletedObjects?.map((object) => object.Key)) ?? [],
+    });
 };
 
 export type { DeleteMergedRemoteDbsOptions };
