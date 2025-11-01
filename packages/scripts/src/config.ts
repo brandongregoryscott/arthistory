@@ -1,6 +1,9 @@
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({
+    debug: process.env.DEBUG?.toLowerCase() === true.toString(),
+    quiet: true,
+});
 
 const AWS_S3_ENDPOINT = process.env.AWS_S3_ENDPOINT as string;
 const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID as string;
