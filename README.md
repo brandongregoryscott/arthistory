@@ -68,50 +68,82 @@ If you find a bug, feel free to [open up an issue](https://github.com/brandongre
 
 If you would like to see a feature, and it isn't [already documented](https://github.com/brandongregoryscott/arthistory/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement), feel free to open up a new issue and describe the desired behavior.
 
-## Debugging server setup
+## Debugging and server maintenance
 
-Install the service
+<details>
+
+<summary>Install the service</summary>
+
 
 ```sh
 sudo systemctl enable /home/brandon/arthistory/arthistory-cron-service.service
 ```
 
-Start the service
+</details>
+
+<details>
+
+<summary>Start the service</summary>
 
 ```sh
 sudo systemctl start arthistory-cron-service.service
 ```
 
-Show the service status (active, memory, cpu)
+</details>
+
+<details>
+
+<summary>Show the service status (active, memory, cpu)</summary>
+
 
 ```sh
 sudo systemctl status arthistory-cron-service.service
 ```
 
-List service logs with service-level start/stop/restart events, and stdout/stderr
+</details>
+
+<details>
+
+<summary>List service logs with service-level start/stop/restart events, and stdout/stderr</summary>
+
 
 ```sh
 sudo journalctl --catalog --unit arthistory-cron-service.service
 ```
 
-List service stdout/stderr logs
+</details>
+
+<details>
+
+<summary>List service stdout/stderr logs</summary>
 
 ```sh
 sudo journalctl --no-pager --unit arthistory-cron-service.service
 ```
 
-List last 1000 lines from the logs and follows the logs
+</details>
+
+<details>
+
+<summary>List last 1000 lines from the logs and follows the logs</summary>
+
 See [manpage: journalctl > PAGER CONTROL OPTIONS](https://www.man7.org/linux/man-pages/man1/journalctl.1.html#PAGER_CONTROL_OPTIONS)
 
 ```sh
 sudo journalctl --pager-end --follow --unit arthistory-cron-service.service
 ```
 
-Restart the service daemon & service
+</details>
+
+<details>
+
+<summary>Restart the service daemon & service</summary>
 
 ```sh
 sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
 ```
+
+</details>
 
 <details>
 
@@ -158,7 +190,7 @@ pm2 start arthistory-api
 
 <details>
 
-<summary>Updating API key permissions to include additional buckets (`403 Access Denied` error when trying to upload objects)
+<summary>Updating API key permissions to include additional buckets (<code>403 Access Denied</code> error when trying to upload objects)
 </summary>
 
 -   Go to the R2 Overview page: https://dash.cloudflare.com/{accountId}/r2/overview
