@@ -47,7 +47,7 @@ const createTimerLogger = (...options: CreateTimerOptions) => {
                 elapsed,
                 ...endData,
             },
-            `${message}: DONE ${formatTimeSpanFromMilliseconds(elapsed)}`
+            `${message}: [DONE] in ${formatTimeSpanFromMilliseconds(elapsed)}`
         );
     };
 

@@ -1,28 +1,93 @@
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { isEmpty } from "lodash";
+import { first, isEmpty, sortBy } from "lodash";
 import type { Database, SQLStatement } from "../types";
-import { DatabaseName, TableName } from "../constants/storage";
-import { createTimerLogger } from "./logger";
+import { TableName } from "../constants/storage";
+import { createTimerLogger, logger } from "./logger";
+import { getDbFilenames } from "./fs-utils";
+import { stat } from "fs/promises";
+import type { ArtistSnapshotRow } from "@repo/common";
 
 const createArtistSnapshotsTable = (db: Database) =>
+    db.exec(createArtistSnapshotsTableSql());
+
+const createArtistSnapshotsTableSql = (uniqueConstraint: boolean = false) => `
+        CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
+            id TEXT,
+            timestamp NUMERIC,
+            followers NUMERIC,
+            popularity NUMERIC
+            ${uniqueConstraint ? ",UNIQUE (id, timestamp)" : ""}
+        );
+ `;
+
+const createArtistSnapshotsIndexes = async (db: Database) =>
     db.exec(`
-    CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
-        id TEXT,
-        timestamp NUMERIC,
-        followers NUMERIC,
-        popularity NUMERIC
+        CREATE INDEX ${TableName.ArtistSnapshots}_id ON ${TableName.ArtistSnapshots} (id);
+        CREATE INDEX ${TableName.ArtistSnapshots}_timestamp ON ${TableName.ArtistSnapshots} (timestamp);
+`);
+
+const dropArtistSnapshotsConstraintIfExists = async (db: Database) => {
+    // Check to see if the table actually has a unique index before doing extra work to transfer records
+    // to a new table that definitely does not have the index
+    const hasUniqueIndex =
+        (await db.get(`PRAGMA index_list(${TableName.ArtistSnapshots});`)) !==
+        undefined;
+
+    if (!hasUniqueIndex) {
+        logger.info(
+            `No unique index found, creating ${TableName.ArtistSnapshots} if it does not exist`
+        );
+        await createArtistSnapshotsTable(db);
+        return;
+    }
+
+    const stopUniqueConstraintTimer = createTimerLogger(
+        `Creating '${TableName.ArtistSnapshots}' without unique constraint`
     );
- `);
+    await db.exec(`
+        PRAGMA foreign_keys=off;
+
+        ${createArtistSnapshotsTableSql(true)}
+
+        BEGIN TRANSACTION;
+
+        ALTER TABLE ${TableName.ArtistSnapshots} RENAME TO ${TableName.ArtistSnapshotsWithConstraint};
+
+        ${createArtistSnapshotsTableSql()}
+
+        INSERT INTO ${TableName.ArtistSnapshots} SELECT * FROM ${TableName.ArtistSnapshotsWithConstraint};
+
+        COMMIT;
+
+        DROP TABLE IF EXISTS ${TableName.ArtistSnapshotsWithConstraint};
+        VACUUM;
+
+        PRAGMA foreign_keys=on;
+`);
+    stopUniqueConstraintTimer();
+};
+
+const buildInsertArtistSnapshotStatement = (
+    row: ArtistSnapshotRow
+): SQLStatement => {
+    const { id, popularity, followers, timestamp } = row;
+
+    return `
+        INSERT OR IGNORE INTO ${TableName.ArtistSnapshots}
+            (id, timestamp, popularity, followers)
+        VALUES
+            ('${id}', ${timestamp}, ${popularity}, ${followers});`;
+};
 
 /**
  * @see https://stackoverflow.com/a/58547438
  */
 const setPerformancePragmas = async (db: Database) =>
     db.exec(`
-    PRAGMA synchronous = OFF;
-    PRAGMA locking_mode = EXCLUSIVE;
-    PRAGMA journal_mode = OFF;
+        PRAGMA synchronous = OFF;
+        PRAGMA locking_mode = EXCLUSIVE;
+        PRAGMA journal_mode = OFF;
  `);
 
 const countRows = async (db: Database, table: string): Promise<number> => {
@@ -98,26 +163,22 @@ const paginateRows = async <T>(
 const getSnapshotDbFilename = (timestamp: number) =>
     `spotify-data_${timestamp}.db`;
 
-type GetMergedSnapshotDbFilenameOptions =
-    | {
-          end: number;
-          start: number;
-          useRangeFilename: true;
-      }
-    | {
-          useRangeFilename: false;
-      };
-
-const getMergedSnapshotDbFilename = (
-    options: GetMergedSnapshotDbFilenameOptions
-): string => {
-    const { useRangeFilename } = options;
-    if (useRangeFilename) {
-        const { start, end } = options;
-        return DatabaseName.Merged.replace(".db", `_${start}-${end}.db`);
+const findCheckpointDbFilename = async (): Promise<string | undefined> => {
+    const dbFileNames = await getDbFilenames();
+    const dbFileSizes = await Promise.all(
+        dbFileNames.map(async (fileName) => {
+            const { size } = await stat(fileName);
+            return { fileName, size };
+        })
+    );
+    const dbFilesBySize = sortBy(dbFileSizes, ({ size }) => size).reverse();
+    const largestDb = first(dbFilesBySize);
+    // The checkpoint db should very likely be several GB at this point of tracking, so throw out anything smaller
+    if (largestDb !== undefined && largestDb.size >= Math.pow(1024, 3)) {
+        return largestDb.fileName;
     }
 
-    return DatabaseName.Merged;
+    return undefined;
 };
 
 const openDb = async (fileName: string): Promise<Database> =>
@@ -130,11 +191,14 @@ const openSnapshotDb = async (timestamp: number) =>
     openDb(getSnapshotDbFilename(timestamp));
 
 export {
+    buildInsertArtistSnapshotStatement,
     countRows,
+    createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
+    dropArtistSnapshotsConstraintIfExists,
+    findCheckpointDbFilename,
     flushStatements,
     flushStatementsIfNeeded,
-    getMergedSnapshotDbFilename,
     getSnapshotDbFilename,
     openDb,
     openSnapshotDb,

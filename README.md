@@ -112,3 +112,57 @@ Restart the service daemon & service
 ```sh
 sudo systemctl daemon-reload && sudo systemctl restart arthistory-cron-service.service
 ```
+
+<details>
+
+<summary>Updating the production database
+</summary>
+
+Ensure you're using the correct node version
+
+```sh
+nvm use
+```
+
+Download all of the working snapshots from the `spotify-data` bucket
+
+```sh
+npm run download-dbs
+```
+
+Merge all of the working snapshots into one file
+
+```sh
+npm run merge-dbs
+```
+
+Stop the NodeJS process manager running the API instances - if the database file is replaced while it is running, it will crash loop
+
+```sh
+pm2 stop arthistory-api
+```
+
+Move the merged database file to the production filename
+
+```sh
+mv merged-spotify-data.db _spotify-data.db
+```
+
+Start the NodeJS process manager running the API instances
+
+```sh
+pm2 start arthistory-api
+```
+
+</details>
+
+<details>
+
+<summary>Updating API key permissions to include additional buckets (`403 Access Denied` error when trying to upload objects)
+</summary>
+
+-   Go to the R2 Overview page: https://dash.cloudflare.com/{accountId}/r2/overview
+-   Click on the **Manage** button under the **Account Details** > **API Tokens** section on the right to land on
+-   Land on https://dash.cloudflare.com/{accountId}/r2/api-tokens and choose the API token to add additional buckets/permissions to
+
+</details>

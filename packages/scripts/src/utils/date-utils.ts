@@ -28,7 +28,7 @@ const formatTimeSpanFromMilliseconds = (milliseconds: number) => {
     const minutes = date.getUTCMinutes();
     const seconds = date.getUTCSeconds();
 
-    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    return `${pad(hours)}h:${pad(minutes)}h:${pad(seconds)}s`;
 };
 
 const pad = (num: number) => num.toString().padStart(2, "0");

@@ -5,7 +5,11 @@ import { getSnapshotDbFilename } from "../utils/db-utils";
 import { uploadObject } from "../upload-object/upload-object";
 import { BucketName, DatabaseName } from "../constants/storage";
 import { existsSync } from "node:fs";
-import { downloadObject } from "../download-object/download-object";
+import { downloadObject } from "../utils/storage-utils";
+import { downloadDbs } from "../download-dbs/download-dbs";
+import { mergeDbs } from "../merge-dbs/merge-dbs";
+import { deleteLocalDbs } from "../delete-local-dbs/delete-local-dbs";
+import { deleteRemoteDbs } from "../delete-remote-dbs/delete-remote-dbs";
 
 const TIME_ZONE = "America/New_York";
 
@@ -34,7 +38,22 @@ CronJob.from({
 CronJob.from({
     // This can be reduced once we know it works
     cronTime: "0 0 * * *",
-    onTick: async () => {},
+    onTick: async () => {
+        await downloadDbs();
+        const timestamp = getRoundedTimestamp();
+        const dbFilename = `merged-${DatabaseName.PartialSnapshotPrefix}${timestamp}.db`;
+        await mergeDbs({
+            filename: dbFilename,
+            skipCheckpointAsBase: false,
+            skipIndexes: true,
+        });
+        await uploadObject({
+            filename: dbFilename,
+            bucket: BucketName.SnapshotBackups,
+        });
+        await deleteLocalDbs({ dry: true, skipConfirmation: true });
+        await deleteRemoteDbs({ dry: true, skipConfirmation: true });
+    },
     start: true,
     timeZone: TIME_ZONE,
 });

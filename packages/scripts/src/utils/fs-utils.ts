@@ -2,13 +2,13 @@ import { glob } from "fs/promises";
 import { DatabaseName } from "../constants/storage";
 import { last } from "lodash";
 
-const getDbFileNames = async (): Promise<string[]> => {
-    const fileNames: string[] = [];
+const getDbFilenames = async (): Promise<string[]> => {
+    const filenames: string[] = [];
     for await (const fileName of glob(DatabaseName.PartialSnapshotPattern)) {
-        fileNames.push(fileName);
+        filenames.push(fileName);
     }
 
-    return fileNames;
+    return filenames;
 };
 
 const parseTimestamp = (fileName: string): number | undefined => {
@@ -32,4 +32,4 @@ const parseTimestamp = (fileName: string): number | undefined => {
 const bytesToMb = (bytes: number): string =>
     `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 
-export { bytesToMb, getDbFileNames, parseTimestamp };
+export { bytesToMb, getDbFilenames, parseTimestamp };
