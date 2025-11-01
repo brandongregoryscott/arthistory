@@ -18,10 +18,7 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
     const bucket = BucketName.Snapshots;
     const localDbFilenames = await getDbFilenames();
     const localDbCount = localDbFilenames.length;
-    logger.info(
-        { localDbFilenameCount: localDbCount, ...options },
-        "Found local databases"
-    );
+    logger.info({ localDbCount, ...options }, "Found local databases");
 
     const remoteDbObjects = await listObjects({
         bucket: BucketName.Snapshots,
@@ -35,8 +32,10 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
         localDbFilenames.includes(object.Key ?? "")
     );
 
+    const remoteDbsToDeleteCount = remoteDbObjectsToDelete.length;
+
     logger.info(
-        { remoteDbObjectsToDelete, ...options },
+        { remoteDbObjectsToDelete, remoteDbsToDeleteCount, ...options },
         "Remote databases slated for deletion"
     );
 
@@ -49,6 +48,7 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
                 remoteDbObjects,
                 remoteDbCount,
                 remoteDbObjectsToDelete,
+                remoteDbsToDeleteCount,
                 ...options,
             },
             "Returning early and not deleting objects from bucket"
@@ -58,7 +58,7 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
 
     if (!skipConfirmation) {
         const answer = await readlineInterface.question(
-            `Delete ${remoteDbObjectsToDelete.length} objects from bucket '${bucket}'? [y/N] `
+            `Delete ${remoteDbsToDeleteCount} objects from bucket '${bucket}'? [y/N] `
         );
 
         if (answer.toLowerCase().trim() !== "y") {
@@ -69,7 +69,14 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
     readlineInterface.close();
 
     const stopDeleteTimer = createTimerLogger(
-        { remoteDbCount },
+        {
+            localDbFilenames,
+            localDbCount,
+            remoteDbObjects,
+            remoteDbCount,
+            remoteDbObjectsToDelete,
+            remoteDbsToDeleteCount,
+        },
         "Deleted remote databases"
     );
 
@@ -82,9 +89,11 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
         },
     });
 
+    const deletedObjectKeys =
+        compact(deletedObjects?.map((object) => object.Key)) ?? [];
     stopDeleteTimer({
-        deletedObjects:
-            compact(deletedObjects?.map((object) => object.Key)) ?? [],
+        deletedObjects: deletedObjectKeys,
+        deletedCount: deletedObjectKeys.length,
     });
 };
 
