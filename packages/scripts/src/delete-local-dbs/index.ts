@@ -15,6 +15,7 @@ const { skipConfirmation, dry } = program.opts<DeleteLocalDbsOptions>();
 
 const main = async () => {
     await deleteLocalDbs({ skipConfirmation, dry });
+    process.exit(0);
 };
 
 main();

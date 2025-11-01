@@ -15,6 +15,7 @@ const { skipConfirmation, dry } = program.opts<DeleteRemoteDbsOptions>();
 
 const main = async () => {
     await deleteRemoteDbs({ skipConfirmation, dry });
+    process.exit(0);
 };
 
 main();
