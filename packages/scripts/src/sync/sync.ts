@@ -1,5 +1,6 @@
 import type { Artist } from "@spotify/web-api-ts-sdk";
 import {
+    buildInsertArtistSnapshotStatement,
     countRows,
     createArtistSnapshotsTable,
     flushStatements,
@@ -98,22 +99,13 @@ const getArtistSnapshotStatements = async (
     const { client, timestamp, artistIds } = options;
     const artists = await client.getArtists(artistIds);
     return compact(artists).map((artist) =>
-        buildInsertStatement(artist, timestamp)
+        buildInsertArtistSnapshotStatement({
+            id: artist.id,
+            followers: artist.followers.total,
+            popularity: artist.popularity,
+            timestamp,
+        })
     );
-};
-
-const buildInsertStatement = (
-    artist: Artist,
-    timestamp: number
-): SQLStatement => {
-    const { id, popularity } = artist;
-    const followers = artist.followers.total;
-
-    return `
-        INSERT OR IGNORE INTO ${TableName.ArtistSnapshots}
-            (id, timestamp, popularity, followers)
-        VALUES
-            ('${id}', ${timestamp}, ${popularity}, ${followers});`;
 };
 
 export { sync };

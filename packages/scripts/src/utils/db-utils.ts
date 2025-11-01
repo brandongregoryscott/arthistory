@@ -6,6 +6,7 @@ import { TableName } from "../constants/storage";
 import { createTimerLogger, logger } from "./logger";
 import { getDbFilenames } from "./fs-utils";
 import { stat } from "fs/promises";
+import type { ArtistSnapshotRow } from "@repo/common";
 
 const createArtistSnapshotsTable = (db: Database) =>
     db.exec(createArtistSnapshotsTableSql());
@@ -65,6 +66,18 @@ const dropArtistSnapshotsConstraintIfExists = async (db: Database) => {
         PRAGMA foreign_keys=on;
 `);
     stopUniqueConstraintTimer();
+};
+
+const buildInsertArtistSnapshotStatement = (
+    row: ArtistSnapshotRow
+): SQLStatement => {
+    const { id, popularity, followers, timestamp } = row;
+
+    return `
+        INSERT OR IGNORE INTO ${TableName.ArtistSnapshots}
+            (id, timestamp, popularity, followers)
+        VALUES
+            ('${id}', ${timestamp}, ${popularity}, ${followers});`;
 };
 
 /**
@@ -178,6 +191,7 @@ const openSnapshotDb = async (timestamp: number) =>
     openDb(getSnapshotDbFilename(timestamp));
 
 export {
+    buildInsertArtistSnapshotStatement,
     countRows,
     createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,

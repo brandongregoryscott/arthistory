@@ -1,8 +1,5 @@
-import type sqlite3 from "sqlite3";
-import type { Database } from "sqlite";
-import { copyFile, stat } from "fs/promises";
+import { copyFile } from "fs/promises";
 import type { ArtistSnapshotRow } from "@repo/common";
-import { first, sortBy } from "lodash";
 import {
     BULK_INSERTION_CHUNK_SIZE,
     DatabaseName,
@@ -10,8 +7,8 @@ import {
 } from "../constants/storage";
 import { getDbFilenames } from "../utils/fs-utils";
 import {
+    buildInsertArtistSnapshotStatement,
     createArtistSnapshotsIndexes,
-    createArtistSnapshotsTable,
     dropArtistSnapshotsConstraintIfExists,
     findCheckpointDbFilename,
     flushStatements,
@@ -24,7 +21,7 @@ import { toUnixTimestampInSeconds } from "../utils/date-utils";
 import type { SQLStatement } from "../types";
 import { createTimerLogger, logger } from "../utils/logger";
 
-const CHUNK_SIZE = 100000;
+const PAGE_SIZE = 100000;
 
 interface MergeDbsOptions {
     filename?: string;
@@ -74,11 +71,11 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
         await paginateRows<ArtistSnapshotRow>(
             sourceDb,
             TableName.ArtistSnapshots,
-            CHUNK_SIZE,
+            PAGE_SIZE,
             async (rows) => {
                 statements = [
                     ...statements,
-                    ...generateInsertArtistSnapshotStatements(rows),
+                    ...buildInsertArtistSnapshotStatements(rows),
                 ];
                 const flushed = await flushStatementsIfNeeded(
                     targetDb,
@@ -108,27 +105,20 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     return filename;
 };
 
-const generateInsertArtistSnapshotStatements = (
-    snapshots: ArtistSnapshotRow[]
-): SQLStatement[] => snapshots.map(generateInsertArtistSnapshotStatement);
+const buildInsertArtistSnapshotStatements = (
+    rows: ArtistSnapshotRow[]
+): SQLStatement[] =>
+    rows.map((row) => {
+        const { id, followers, popularity } = row;
+        const timestampInSeconds = toUnixTimestampInSeconds(row.timestamp);
 
-const generateInsertArtistSnapshotStatement = (
-    snapshot: ArtistSnapshotRow
-): SQLStatement => {
-    const timestampInSeconds = toUnixTimestampInSeconds(snapshot.timestamp);
-
-    const values = [
-        snapshot.id,
-        timestampInSeconds,
-        snapshot.popularity,
-        snapshot.followers,
-    ];
-
-    return [
-        `INSERT OR IGNORE INTO ${TableName.ArtistSnapshots} (id, timestamp, popularity, followers) VALUES (?, ?, ?, ?);`,
-        values,
-    ];
-};
+        return buildInsertArtistSnapshotStatement({
+            id,
+            followers,
+            popularity,
+            timestamp: timestampInSeconds,
+        });
+    });
 
 export type { MergeDbsOptions };
 export { mergeDbs };
