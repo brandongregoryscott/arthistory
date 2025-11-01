@@ -3,25 +3,69 @@ import sqlite3 from "sqlite3";
 import { first, isEmpty, sortBy } from "lodash";
 import type { Database, SQLStatement } from "../types";
 import { TableName } from "../constants/storage";
-import { createTimerLogger } from "./logger";
+import { createTimerLogger, logger } from "./logger";
 import { getDbFilenames } from "./fs-utils";
 import { stat } from "fs/promises";
 
 const createArtistSnapshotsTable = (db: Database) =>
-    db.exec(`
+    db.exec(createArtistSnapshotsTableSql());
+
+const createArtistSnapshotsTableSql = (uniqueConstraint: boolean = false) => `
         CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
             id TEXT,
             timestamp NUMERIC,
             followers NUMERIC,
             popularity NUMERIC
+            ${uniqueConstraint ? ",UNIQUE (id, timestamp)" : ""}
         );
- `);
+ `;
 
 const createArtistSnapshotsIndexes = async (db: Database) =>
     db.exec(`
         CREATE INDEX ${TableName.ArtistSnapshots}_id ON ${TableName.ArtistSnapshots} (id);
         CREATE INDEX ${TableName.ArtistSnapshots}_timestamp ON ${TableName.ArtistSnapshots} (timestamp);
 `);
+
+const dropArtistSnapshotsConstraintIfExists = async (db: Database) => {
+    // Check to see if the table actually has a unique index before doing extra work to transfer records
+    // to a new table that definitely does not have the index
+    const hasUniqueIndex =
+        (await db.get(`PRAGMA index_list(${TableName.ArtistSnapshots});`)) !==
+        undefined;
+
+    if (!hasUniqueIndex) {
+        logger.info(
+            `No unique index found, creating ${TableName.ArtistSnapshots} if it does not exist`
+        );
+        await createArtistSnapshotsTable(db);
+        return;
+    }
+
+    const stopUniqueConstraintTimer = createTimerLogger(
+        `Created '${TableName.ArtistSnapshots}' without unique constraint`
+    );
+    await db.exec(`
+        PRAGMA foreign_keys=off;
+
+        ${createArtistSnapshotsTableSql(true)}
+
+        BEGIN TRANSACTION;
+
+        ALTER TABLE ${TableName.ArtistSnapshots} RENAME TO ${TableName.ArtistSnapshotsWithConstraint};
+
+        ${createArtistSnapshotsTableSql()}
+
+        INSERT INTO ${TableName.ArtistSnapshots} SELECT * FROM ${TableName.ArtistSnapshotsWithConstraint};
+
+        COMMIT;
+
+        DROP TABLE IF EXISTS ${TableName.ArtistSnapshotsWithConstraint};
+        VACUUM;
+
+        PRAGMA foreign_keys=on;
+`);
+    stopUniqueConstraintTimer();
+};
 
 /**
  * @see https://stackoverflow.com/a/58547438
@@ -137,6 +181,7 @@ export {
     countRows,
     createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
+    dropArtistSnapshotsConstraintIfExists,
     findCheckpointDbFilename,
     flushStatements,
     flushStatementsIfNeeded,

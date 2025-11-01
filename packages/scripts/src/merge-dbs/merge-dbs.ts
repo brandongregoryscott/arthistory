@@ -12,6 +12,7 @@ import { getDbFilenames } from "../utils/fs-utils";
 import {
     createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
+    dropArtistSnapshotsConstraintIfExists,
     findCheckpointDbFilename,
     flushStatements,
     flushStatementsIfNeeded,
@@ -56,7 +57,7 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     }
 
     const targetDb = await openDb(filename);
-    await maybeDropArtistSnapshotsConstraint(targetDb);
+    await dropArtistSnapshotsConstraintIfExists(targetDb);
     await setPerformancePragmas(targetDb);
 
     const sourceDatabaseCount = sourceDbFileNames.length;
@@ -105,59 +106,6 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     stopMergeTimer();
 
     return filename;
-};
-
-const maybeDropArtistSnapshotsConstraint = async (
-    db: Database<sqlite3.Database, sqlite3.Statement>
-) => {
-    // Check to see if the table actually has a unique index before doing extra work to transfer records
-    // to a new table that definitely does not have the index
-    const hasUniqueIndex =
-        (await db.get(`PRAGMA index_list(${TableName.ArtistSnapshots});`)) !==
-        undefined;
-
-    if (!hasUniqueIndex) {
-        logger.info(
-            `No unique index found, creating ${TableName.ArtistSnapshots} if it does not exist`
-        );
-        await createArtistSnapshotsTable(db);
-        return;
-    }
-
-    const stopUniqueConstraintTimer = createTimerLogger(
-        `Created '${TableName.ArtistSnapshots}' without unique constraint`
-    );
-    await db.exec(`
-    PRAGMA foreign_keys=off;
-
-    CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
-        id TEXT,
-        timestamp NUMERIC,
-        followers NUMERIC,
-        popularity NUMERIC,
-        UNIQUE (id, timestamp)
-    );
-
-    BEGIN TRANSACTION;
-
-    ALTER TABLE ${TableName.ArtistSnapshots} RENAME TO ${TableName.ArtistSnapshotsWithConstraint};
-
-    CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
-        id TEXT,
-        timestamp NUMERIC,
-        followers NUMERIC,
-        popularity NUMERIC
-    );
-
-    INSERT INTO ${TableName.ArtistSnapshots} SELECT * FROM ${TableName.ArtistSnapshotsWithConstraint};
-
-    COMMIT;
-
-    DROP TABLE IF EXISTS ${TableName.ArtistSnapshotsWithConstraint};
-    VACUUM;
-
-    PRAGMA foreign_keys=on;`);
-    stopUniqueConstraintTimer();
 };
 
 const generateInsertArtistSnapshotStatements = (
