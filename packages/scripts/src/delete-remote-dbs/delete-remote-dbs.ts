@@ -1,10 +1,9 @@
 import { BucketName, DatabaseName } from "../constants/storage";
 import { getDbFilenames } from "../utils/fs-utils";
-import { listObjects, s3 } from "../utils/storage-utils";
+import { getObjectKeys, listObjects, s3 } from "../utils/storage-utils";
 import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { createTimerLogger, logger } from "../utils/logger";
-import { compact } from "lodash";
 
 interface DeleteRemoteDbsOptions {
     dry: boolean;
@@ -20,22 +19,28 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
     const localDbCount = localDbFilenames.length;
     logger.info({ localDbCount, ...options }, "Found local databases");
 
-    const remoteDbObjects = await listObjects({
-        bucket: BucketName.Snapshots,
-        prefix: DatabaseName.PartialSnapshotPrefix,
-    });
-
-    const remoteDbCount = remoteDbObjects.length;
-    logger.info({ remoteDbCount, ...options }, "Found remote databases");
-
-    const remoteDbObjectsToDelete = remoteDbObjects.filter((object) =>
-        localDbFilenames.includes(object.Key ?? "")
+    const remoteDbObjectKeys = getObjectKeys(
+        await listObjects({
+            bucket: BucketName.Snapshots,
+            prefix: DatabaseName.PartialSnapshotPrefix,
+        })
     );
 
-    const remoteDbsToDeleteCount = remoteDbObjectsToDelete.length;
+    const remoteDbCount = remoteDbObjectKeys.length;
+    logger.info({ remoteDbCount, ...options }, "Found remote databases");
+
+    const remoteDbObjectKeysToDelete = remoteDbObjectKeys.filter((objectKey) =>
+        localDbFilenames.includes(objectKey)
+    );
+
+    const remoteDbsToDeleteCount = remoteDbObjectKeysToDelete.length;
 
     logger.info(
-        { remoteDbObjectsToDelete, remoteDbsToDeleteCount, ...options },
+        {
+            remoteDbObjectKeysToDelete,
+            remoteDbsToDeleteCount,
+            ...options,
+        },
         "Remote databases slated for deletion"
     );
 
@@ -45,9 +50,9 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
                 bucket,
                 localDbFilenames,
                 localDbCount,
-                remoteDbObjects,
+                remoteDbObjectKeys,
                 remoteDbCount,
-                remoteDbObjectsToDelete,
+                remoteDbObjectKeysToDelete,
                 remoteDbsToDeleteCount,
                 ...options,
             },
@@ -72,9 +77,9 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
         {
             localDbFilenames,
             localDbCount,
-            remoteDbObjects,
+            remoteDbObjectKeys,
             remoteDbCount,
-            remoteDbObjectsToDelete,
+            remoteDbObjectKeysToDelete,
             remoteDbsToDeleteCount,
             ...options,
         },
@@ -84,17 +89,17 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
     const { Deleted: deletedObjects } = await s3.deleteObjects({
         Bucket: BucketName.Snapshots,
         Delete: {
-            Objects: remoteDbObjectsToDelete.map((object) => ({
-                Key: object.Key,
+            Objects: remoteDbObjectKeysToDelete.map((objectKey) => ({
+                Key: objectKey,
             })),
         },
     });
 
-    const deletedObjectKeys =
-        compact(deletedObjects?.map((object) => object.Key)) ?? [];
+    const deletedObjectKeys = getObjectKeys(deletedObjects ?? []);
+    const deletedCount = deletedObjectKeys.length;
     stopDeleteTimer({
-        deletedObjects: deletedObjectKeys,
-        deletedCount: deletedObjectKeys.length,
+        deletedObjectKeys,
+        deletedCount,
         ...options,
     });
 };
