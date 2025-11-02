@@ -1,4 +1,3 @@
-import type { Artist } from "@spotify/web-api-ts-sdk";
 import {
     buildInsertArtistSnapshotStatement,
     countRows,
@@ -11,7 +10,11 @@ import {
 import { SpotifyClient } from "../utils/spotify";
 import type { SQLStatement } from "../types";
 import { getCurrentHourIndex } from "../utils/date-utils";
-import { TableName, BULK_INSERTION_CHUNK_SIZE } from "../constants/storage";
+import {
+    TableName,
+    BULK_INSERTION_CHUNK_SIZE,
+    DatabaseName,
+} from "../constants/storage";
 import type { Entity } from "@repo/common";
 import { chunk, compact } from "lodash";
 import { createTimerLogger } from "../utils/logger";
@@ -72,7 +75,7 @@ const sync = async (options: SyncOptions) => {
 };
 
 const getArtistIds = async (): Promise<string[]> => {
-    const artistIdsDb = await openDb("artist_ids.db");
+    const artistIdsDb = await openDb(DatabaseName.ArtistIds);
     const total = await countRows(artistIdsDb, TableName.ArtistIds);
     const chunkSize = Math.floor(total / 24);
     const currentHourIndex = getCurrentHourIndex();
