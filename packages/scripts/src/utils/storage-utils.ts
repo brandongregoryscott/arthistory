@@ -9,6 +9,7 @@ import {
 } from "../config";
 import { createWriteStream } from "node:fs";
 import { createTimerLogger, logger } from "./logger";
+import { compact } from "lodash";
 
 const s3 = new S3({
     endpoint: AWS_S3_ENDPOINT,
@@ -98,5 +99,15 @@ const listObjects = async (options: ListObjectsOptions): Promise<_Object[]> => {
     return objects;
 };
 
+const getObjectKeys = (objects: _Object[]): string[] =>
+    compact(objects.map((object) => object.Key));
+
 export type { DownloadObjectOptions, ListObjectsOptions };
-export { downloadObject, downloadObjects, listObjects, logUploadProgress, s3 };
+export {
+    downloadObject,
+    downloadObjects,
+    getObjectKeys,
+    listObjects,
+    logUploadProgress,
+    s3,
+};
