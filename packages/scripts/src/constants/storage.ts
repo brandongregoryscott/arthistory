@@ -1,7 +1,7 @@
 const BULK_INSERTION_CHUNK_SIZE = 250000;
 
 const DatabaseName = {
-    ArtistIds: "artist_ids.db",
+    ArtistIds: "artist-ids.db",
     Merged: "merged-spotify-data.db",
     PartialSnapshotPrefix: "spotify-data_",
     PartialSnapshotPattern: "spotify-data_*.db",

@@ -30,7 +30,7 @@ CronJob.from({
         if (!existsSync(DatabaseName.ArtistIds)) {
             await downloadObject({
                 key: DatabaseName.ArtistIds,
-                bucket: BucketName.Snapshots,
+                bucket: BucketName.ArtistIds,
             });
         }
 
