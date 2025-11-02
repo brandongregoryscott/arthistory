@@ -6,6 +6,7 @@ const DatabaseName = {
     PartialSnapshotPrefix: "spotify-data_",
     PartialSnapshotPattern: "spotify-data_*.db",
     Production: "_spotify-data.db",
+    Sample: "sample-spotify-data.db",
 } as const;
 
 const BucketName = {
