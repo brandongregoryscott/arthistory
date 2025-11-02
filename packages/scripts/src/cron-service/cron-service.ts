@@ -10,11 +10,22 @@ import { downloadDbs } from "../download-dbs/download-dbs";
 import { mergeDbs } from "../merge-dbs/merge-dbs";
 import { deleteLocalDbs } from "../delete-local-dbs/delete-local-dbs";
 import { deleteRemoteDbs } from "../delete-remote-dbs/delete-remote-dbs";
+import { rename } from "node:fs/promises";
 
 const TIME_ZONE = "America/New_York";
 
+/**
+ * @see https://crontab.guru/#34_*_*_*_*
+ */
+const SYNC_CRON_TIME = "34 * * * *";
+
+/**
+ * @see https://crontab.guru/#0_0_*_*_0
+ */
+const MERGE_AND_BACKUP_CRON_TIME = "0 0 * * 0";
+
 CronJob.from({
-    cronTime: "34 * * * *",
+    cronTime: SYNC_CRON_TIME,
     onTick: async () => {
         if (!existsSync(DatabaseName.ArtistIds)) {
             await downloadObject({
@@ -36,23 +47,25 @@ CronJob.from({
 });
 
 CronJob.from({
-    // This can be reduced once we know it works
-    cronTime: "0 0 * * *",
+    cronTime: MERGE_AND_BACKUP_CRON_TIME,
     onTick: async () => {
         await downloadDbs();
         const timestamp = getRoundedTimestamp();
-        const dbFilename = `merged-${DatabaseName.PartialSnapshotPrefix}${timestamp}.db`;
+        const mergedDbFilename = `merged-${getSnapshotDbFilename(timestamp)}`;
         await mergeDbs({
-            filename: dbFilename,
+            filename: mergedDbFilename,
             skipCheckpointAsBase: false,
             skipIndexes: true,
         });
         await uploadObject({
-            filename: dbFilename,
+            filename: mergedDbFilename,
             bucket: BucketName.SnapshotBackups,
         });
-        await deleteLocalDbs({ dry: true, skipConfirmation: true });
-        await deleteRemoteDbs({ dry: true, skipConfirmation: true });
+        await deleteLocalDbs({ dry: false, skipConfirmation: true });
+        await deleteRemoteDbs({ dry: false, skipConfirmation: true });
+
+        // Once we have deleted the merged dbs locally and remotely, use this merged version as the new checkpoint/base
+        await rename(mergedDbFilename, getSnapshotDbFilename(timestamp));
     },
     start: true,
     timeZone: TIME_ZONE,

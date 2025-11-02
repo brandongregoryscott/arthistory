@@ -2,7 +2,7 @@ import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { first, isEmpty, sortBy } from "lodash";
 import type { Database, SQLStatement } from "../types";
-import { TableName } from "../constants/storage";
+import { DatabaseName, TableName } from "../constants/storage";
 import { createTimerLogger, logger } from "./logger";
 import { getDbFilenames } from "./fs-utils";
 import { stat } from "fs/promises";
@@ -161,7 +161,7 @@ const paginateRows = async <T>(
 };
 
 const getSnapshotDbFilename = (timestamp: number) =>
-    `spotify-data_${timestamp}.db`;
+    `${DatabaseName.PartialSnapshotPrefix}${timestamp}.db`;
 
 const findCheckpointDbFilename = async (): Promise<string | undefined> => {
     const dbFileNames = await getDbFilenames();
