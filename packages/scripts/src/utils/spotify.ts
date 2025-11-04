@@ -5,6 +5,7 @@ import { CLIENT_IDS, CLIENT_SECRETS } from "../config";
 import { serializeError } from "serialize-error";
 import { logger } from "./logger";
 import { sleep } from "./core-utils";
+import { isError, isObject } from "lodash";
 
 interface SpotifyClientOptions {
     clientId: string;
@@ -61,17 +62,12 @@ class SpotifyClient {
             const artists = await this.client.artists.get(ids);
             return artists;
         } catch (error) {
-            const isCurrentHourSecretPair =
-                getCurrentSecretPair().clientId === this.clientId;
-
             if (attempt < this.maxRetryAttempts) {
-                logger.error(
+                this.maybeLogError(
+                    error,
                     {
                         error: serializeError(error),
                         attempt,
-                        clientSecret: this.clientSecret,
-                        clientId: this.clientId,
-                        isCurrentHourSecretPair,
                         ids,
                     },
                     "Attempting to retrieve artists again"
@@ -81,13 +77,11 @@ class SpotifyClient {
                 return this._getArtists(ids, attempt + 1);
             }
 
-            logger.error(
+            this.maybeLogError(
+                error,
                 {
                     error: serializeError(error),
                     attempt,
-                    clientSecret: this.clientSecret,
-                    clientId: this.clientId,
-                    isCurrentHourSecretPair,
                     ids,
                 },
                 "Failed to retrieve artist after max attempts, returning empty array"
@@ -95,6 +89,18 @@ class SpotifyClient {
 
             return [];
         }
+    }
+
+    private maybeLogError(
+        error: unknown,
+        context: Record<string, unknown>,
+        message: string
+    ) {
+        if (isBadGatewayError(error)) {
+            return;
+        }
+
+        logger.error(context, message);
     }
 }
 
@@ -116,6 +122,9 @@ const getSecretPairByIndex = (
 
     return { clientId, clientSecret };
 };
+
+const isBadGatewayError = (error: unknown): boolean =>
+    isError(error) && error.message.includes("502 - Bad Gateway");
 
 interface RandomIntegerOptions {
     max: number;
