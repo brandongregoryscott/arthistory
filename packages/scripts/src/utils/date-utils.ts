@@ -1,3 +1,5 @@
+import { isEmpty } from "lodash";
+
 /**
  * Returns the current unix timestamp rounded down to the nearest 15 minute interval
  */
@@ -28,10 +30,21 @@ const formatTimeSpanFromMilliseconds = (milliseconds: number) => {
     const minutes = date.getUTCMinutes();
     const seconds = date.getUTCSeconds();
 
-    return `${pad(hours)}h:${pad(minutes)}h:${pad(seconds)}s`;
-};
+    let timeSpan = hours > 0 ? `${hours}h` : "";
+    if (minutes > 0) {
+        timeSpan = `${timeSpan}${minutes}m`;
+    }
 
-const pad = (num: number) => num.toString().padStart(2, "0");
+    if (seconds > 0) {
+        timeSpan = `${timeSpan}${seconds}s`;
+    }
+
+    if (isEmpty(timeSpan)) {
+        return "0s";
+    }
+
+    return timeSpan;
+};
 
 /**
  * Returns the current hour as a 0-based index, i.e. 23 == 11 PM, 0 = 1 AM
