@@ -51,7 +51,8 @@ CronJob.from({
     onTick: async () => {
         await downloadDbs();
         const timestamp = getRoundedTimestamp();
-        const mergedDbFilename = `merged-${getSnapshotDbFilename(timestamp)}`;
+        const dbFilename = getSnapshotDbFilename(timestamp);
+        const mergedDbFilename = `merged-${dbFilename}`;
         await mergeDbs({
             filename: mergedDbFilename,
             skipCheckpointAsBase: false,
@@ -65,7 +66,7 @@ CronJob.from({
         await deleteRemoteDbs({ dry: false, skipConfirmation: true });
 
         // Once we have deleted the merged dbs locally and remotely, use this merged version as the new checkpoint/base
-        await rename(mergedDbFilename, getSnapshotDbFilename(timestamp));
+        await rename(mergedDbFilename, dbFilename);
     },
     start: true,
     timeZone: TIME_ZONE,

@@ -17,7 +17,8 @@
         "sqlite3": "5.1.7"
     },
     "devDependencies": {
-        "@types/lodash": "4.14.195"
+        "@types/lodash": "4.14.195",
+        "pino-pretty": "13.1.2"
     },
     "scripts": {
         "build": "tsc -p tsconfig.json"
