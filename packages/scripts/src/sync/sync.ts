@@ -8,7 +8,6 @@ import {
     openSnapshotDb,
 } from "../utils/db-utils";
 import { SpotifyClient } from "../utils/spotify";
-import type { SQLStatement } from "../types";
 import { getCurrentHourIndex } from "../utils/date-utils";
 import {
     TableName,
@@ -16,13 +15,8 @@ import {
     DatabaseName,
 } from "../constants/storage";
 import type { Entity } from "@repo/common";
-import { chunk, compact } from "lodash";
+import { chunk } from "lodash";
 import { createTimerLogger } from "../utils/logger";
-
-/**
- * The maximum number of artist ids that can be requested at once via the Spotify API.
- */
-const MAX_ARTIST_IDS_PER_REQUEST = 50;
 
 interface SyncOptions {
     timestamp: number;
@@ -44,18 +38,15 @@ const sync = async (options: SyncOptions) => {
         "Retrieving snapshots for artists"
     );
 
-    const artistIdChunks = chunk(artistIds, MAX_ARTIST_IDS_PER_REQUEST);
-
-    const statements: SQLStatement[] = [];
-    for (const artistIdChunk of artistIdChunks) {
-        statements.push(
-            ...(await getArtistSnapshotStatements({
-                client,
-                artistIds: artistIdChunk,
-                timestamp,
-            }))
-        );
-    }
+    const artists = await client.getArtists(artistIds);
+    const statements = artists.map((artist) =>
+        buildInsertArtistSnapshotStatement({
+            id: artist.id,
+            followers: artist.followers.total,
+            popularity: artist.popularity,
+            timestamp,
+        })
+    );
 
     stopSnapshotTimer();
 
@@ -88,27 +79,6 @@ const getArtistIds = async (): Promise<string[]> => {
     const ids = rows.map((row) => row.id);
 
     return ids;
-};
-
-interface GetArtistSnapshotStatementsOptions {
-    artistIds: string[];
-    client: SpotifyClient;
-    timestamp: number;
-}
-
-const getArtistSnapshotStatements = async (
-    options: GetArtistSnapshotStatementsOptions
-): Promise<SQLStatement[]> => {
-    const { client, timestamp, artistIds } = options;
-    const artists = await client.getArtists(artistIds);
-    return compact(artists).map((artist) =>
-        buildInsertArtistSnapshotStatement({
-            id: artist.id,
-            followers: artist.followers.total,
-            popularity: artist.popularity,
-            timestamp,
-        })
-    );
 };
 
 export { sync };

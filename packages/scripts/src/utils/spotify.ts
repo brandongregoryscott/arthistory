@@ -5,7 +5,7 @@ import { CLIENT_IDS, CLIENT_SECRETS } from "../config";
 import { serializeError } from "serialize-error";
 import { logger } from "./logger";
 import { sleep } from "./core-utils";
-import { isError, isObject } from "lodash";
+import { chunk, compact, isError, isObject } from "lodash";
 
 interface SpotifyClientOptions {
     clientId: string;
@@ -15,6 +15,11 @@ interface SpotifyClientOptions {
      */
     maxRetryAttempts?: number;
 }
+
+/**
+ * The maximum number of artist ids that can be requested at once via the Spotify API.
+ */
+const MAX_ARTIST_IDS_PER_REQUEST = 50;
 
 class SpotifyClient {
     public readonly clientId: string;
@@ -51,7 +56,14 @@ class SpotifyClient {
     }
 
     public async getArtists(ids: string[]): Promise<Artist[]> {
-        return this._getArtists(ids);
+        const artistIdChunks = chunk(ids, MAX_ARTIST_IDS_PER_REQUEST);
+        const artists: Artist[] = [];
+        for (const artistIdChunk of artistIdChunks) {
+            artists.push(...(await this._getArtists(artistIdChunk)));
+        }
+
+        // Sometimes the Spotify API returns `null` in this array, so filter those out defensively
+        return compact(artists);
     }
 
     private async _getArtists(
@@ -62,14 +74,11 @@ class SpotifyClient {
             const artists = await this.client.artists.get(ids);
             return artists;
         } catch (error) {
+            const context = { error: serializeError(error), attempt, ids };
             if (attempt < this.maxRetryAttempts) {
                 this.maybeLogError(
                     error,
-                    {
-                        error: serializeError(error),
-                        attempt,
-                        ids,
-                    },
+                    context,
                     "Attempting to retrieve artists again"
                 );
                 const secondsToSleep = Math.pow(2, attempt);
@@ -79,11 +88,7 @@ class SpotifyClient {
 
             this.maybeLogError(
                 error,
-                {
-                    error: serializeError(error),
-                    attempt,
-                    ids,
-                },
+                context,
                 "Failed to retrieve artist after max attempts, returning empty array"
             );
 
