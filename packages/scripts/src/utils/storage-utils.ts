@@ -30,7 +30,7 @@ const logUploadProgress = (progress: Progress) => {
 
     const percentage = ((loaded / total) * 100).toFixed(2);
 
-    logger.info(
+    logger.debug(
         {
             part,
             loaded,
