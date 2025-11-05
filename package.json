@@ -39,8 +39,9 @@
         "list-objects": "tsx packages/scripts/src/list-objects",
         "merge-dbs": "tsx packages/scripts/src/merge-dbs",
         "prepare": "husky || exit 0",
+        "pretty-print-logs": "sudo journalctl --pager-end --no-pager --lines 5000 --unit arthistory-cron-service.service | cut -c 37-10000 | pino-pretty --ignore pid,hostname",
         "sync": "tsx packages/scripts/src/sync",
-        "upload-logs": "sudo journalctl --no-pager --unit arthistory-cron-service.service > logs.txt && npm run upload-object -- --filename logs.txt --bucket logs --key logs-`node -e 'console.log(new Date().toISOString())'`.txt",
+        "upload-logs": "sudo journalctl --pager-end --no-pager --lines 5000 --unit arthistory-cron-service.service | cut -c 37-10000 > logs.txt && npm run upload-object -- --filename logs.txt --bucket logs --key logs-`node -e 'console.log(new Date().toISOString())'`.txt",
         "upload-object": "tsx packages/scripts/src/upload-object"
     },
     "version": "0.0.0-development",
