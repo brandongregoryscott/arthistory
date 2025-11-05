@@ -101,7 +101,7 @@ class SpotifyClient {
         context: Record<string, unknown>,
         message: string
     ) {
-        if (isBadGatewayError(error)) {
+        if (isBadGatewayError(error) || isFailedAccessTokenError(error)) {
             return;
         }
 
@@ -130,6 +130,9 @@ const getSecretPairByIndex = (
 
 const isBadGatewayError = (error: unknown): boolean =>
     isError(error) && error.message.includes("502 - Bad Gateway");
+
+const isFailedAccessTokenError = (error: unknown): boolean =>
+    isError(error) && error.message.includes("Failed to get access token");
 
 interface RandomIntegerOptions {
     max: number;
