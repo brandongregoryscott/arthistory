@@ -62,8 +62,8 @@ CronJob.from({
             filename: mergedDbFilename,
             bucket: BucketName.SnapshotBackups,
         });
-        await deleteLocalDbs({ dry: false, skipConfirmation: true });
         await deleteRemoteDbs({ dry: false, skipConfirmation: true });
+        await deleteLocalDbs({ dry: false, skipConfirmation: true });
 
         // Once we have deleted the merged dbs locally and remotely, use this merged version as the new checkpoint/base
         await rename(mergedDbFilename, dbFilename);
