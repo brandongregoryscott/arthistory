@@ -382,7 +382,11 @@ const HomePage: React.FC = () => {
                         alignItems: "center",
                     })}>
                     <BasicEmptyState
-                        description="One or more requests failed to load data"
+                        description={
+                            artistsError?.message ??
+                            snapshotsError?.message ??
+                            "One or more requests failed"
+                        }
                         graphic={
                             <Icon
                                 color={color.dark.icon.error.default}
