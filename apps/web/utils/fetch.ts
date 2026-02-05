@@ -1,5 +1,5 @@
 import { API_URL } from "@/utils/config";
-import { ApiError } from "@repo/common";
+import { ApiError, ApiErrorResponse, ApiSuccessResponse } from "@repo/common";
 
 const CONTENT_TYPE = "Content-Type";
 
@@ -11,11 +11,11 @@ const _fetch = async <T>(route: string, options?: RequestInit): Promise<T> => {
     const response = await fetch(`${API_URL}${route}`, options);
 
     if (!response.ok) {
-        const error = (await response.json()) as ApiError;
+        const { error } = (await response.json()) as ApiErrorResponse;
         throw error;
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as ApiSuccessResponse<T>;
     return result as T;
 };
 
