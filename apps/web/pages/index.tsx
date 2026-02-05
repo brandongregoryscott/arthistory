@@ -42,6 +42,7 @@ import { humanizeNumber } from "@/utils/number-utils";
 import { BasicEmptyState } from "@leafygreen-ui/empty-state";
 import Icon from "@leafygreen-ui/icon";
 import dynamic from "next/dynamic";
+
 /**
  * This component needs to be dynamically imported for the NextJS build to work with Node 24+
  */
@@ -82,10 +83,15 @@ const HomePage: React.FC = () => {
     );
     const { mutate: requestArtist } = useRequestArtist();
     const { data: latestMeta } = useGetLatestMeta();
-    const { data: artists = EMPTY_ARTISTS } = useListArtists({
-        ids: selectedArtistIds,
-    });
-    const { data: snapshots, isLoading } = useListArtistSnapshots({
+    const { data: artists = EMPTY_ARTISTS, error: artistsError } =
+        useListArtists({
+            ids: selectedArtistIds,
+        });
+    const {
+        data: snapshots,
+        isLoading,
+        error: snapshotsError,
+    } = useListArtistSnapshots({
         ids: selectedArtistIds,
     });
     const isLoadingRef = useRef<boolean>(isLoading);
@@ -357,6 +363,35 @@ const HomePage: React.FC = () => {
                         alignItems: "center",
                     })}>
                     <PageLoader description={loadingText} />
+                </Box>
+            </LeafyGreenProvider>
+        );
+    }
+
+    if (snapshotsError != null || artistsError != null) {
+        return (
+            <LeafyGreenProvider darkMode={darkMode}>
+                <Box
+                    className={css({
+                        backgroundColor,
+                        width: "100%",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                    })}>
+                    <BasicEmptyState
+                        description="One or more requests failed to load data"
+                        graphic={
+                            <Icon
+                                color={color.dark.icon.error.default}
+                                glyph="Warning"
+                                size={48}
+                            />
+                        }
+                        title="Error loading artists"
+                    />
                 </Box>
             </LeafyGreenProvider>
         );
