@@ -11,6 +11,7 @@
         "express-rate-limit": "6.8.1",
         "lodash": "4.17.21",
         "posthog-js": "1.144.2",
+        "serialize-error": "8.1.0",
         "sqlite": "5.1.1",
         "sqlite3": "5.1.7"
     },
