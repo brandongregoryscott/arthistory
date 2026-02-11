@@ -27,7 +27,7 @@ services:
     depends_on:
       - api
     volumes:
-      - ~/.ssh/id_ed25519:/root/.ssh/id_ed25519:ro
+      - /home/brandon/.ssh/id_ed25519:/root/.ssh/id_ed25519:ro
     restart: always
 
 volumes:
