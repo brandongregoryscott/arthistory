@@ -1,0 +1,25 @@
+FROM node:20
+
+WORKDIR /app
+
+# Copy workspace package.json files for dependency resolution
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY packages/common/package.json packages/common/
+COPY packages/scripts/package.json packages/scripts/
+COPY packages/typescript-config/package.json packages/typescript-config/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY packages/ui/package.json packages/ui/
+
+RUN npm ci
+
+# Copy only needed source packages
+COPY packages/scripts/ packages/scripts/
+COPY packages/common/ packages/common/
+COPY packages/typescript-config/ packages/typescript-config/
+COPY tsconfig.json ./
+
+WORKDIR /data
+
+CMD ["npx", "--prefix", "/app", "tsx", "/app/packages/scripts/src/cron-service"]
