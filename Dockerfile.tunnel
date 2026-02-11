@@ -1,0 +1,5 @@
+FROM alpine:3.21
+
+RUN apk add --no-cache autossh openssh-client
+
+ENTRYPOINT ["autossh", "-M", "0", "-o", "StrictHostKeyChecking=accept-new", "-R", "arthistory-api:80:api:3001", "tuns.sh"]

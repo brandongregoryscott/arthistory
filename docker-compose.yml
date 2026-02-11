@@ -20,5 +20,15 @@ services:
     volumes:
       - data:/data
 
+  tunnel:
+    build:
+      context: .
+      dockerfile: Dockerfile.tunnel
+    depends_on:
+      - api
+    volumes:
+      - ~/.ssh:/root/.ssh:ro
+    restart: always
+
 volumes:
   data:
