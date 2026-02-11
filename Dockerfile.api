@@ -29,6 +29,8 @@ FROM node:24-slim
 
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 # sqlite3's bindings package needs a package.json to locate the native addon
 RUN echo '{}' > package.json
 

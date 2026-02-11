@@ -9,8 +9,14 @@ services:
     environment:
       - PORT=3001
       - DATABASE_PATH=/data/_spotify-data.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     volumes:
-      - data:/data
+      - /home/brandon/arthistory/data:/data
 
   cron:
     build:
@@ -18,7 +24,7 @@ services:
       dockerfile: Dockerfile.cron
     env_file: .env
     volumes:
-      - data:/data
+      - /home/brandon/arthistory/data:/data
 
   tunnel:
     build:
