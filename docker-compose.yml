@@ -1,0 +1,34 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "3001:3001"
+    env_file: .env
+    environment:
+      - PORT=3001
+      - DATABASE_PATH=/data/_spotify-data.db
+    volumes:
+      - data:/data
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    env_file: .env
+    volumes:
+      - data:/data
+
+  tunnel:
+    build:
+      context: .
+      dockerfile: Dockerfile.tunnel
+    depends_on:
+      - api
+    volumes:
+      - ~/.ssh:/root/.ssh:ro
+    restart: always
+
+volumes:
+  data:

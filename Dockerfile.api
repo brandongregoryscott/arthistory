@@ -1,0 +1,40 @@
+# Build stage
+FROM node:24 AS build
+
+WORKDIR /app
+
+# Copy workspace package.json files for dependency resolution
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/
+COPY apps/web/package.json apps/web/
+COPY packages/common/package.json packages/common/
+COPY packages/scripts/package.json packages/scripts/
+COPY packages/typescript-config/package.json packages/typescript-config/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY packages/ui/package.json packages/ui/
+
+RUN npm ci
+
+# Copy source code
+COPY apps/api/ apps/api/
+COPY packages/common/ packages/common/
+COPY packages/typescript-config/ packages/typescript-config/
+COPY tsconfig.json ./
+
+# Build the API (esbuild bundle + sqlite3 native rebuild via postbuild)
+RUN npm run build --workspace=api
+
+# Runtime stage
+FROM node:24-slim
+
+WORKDIR /app
+
+# sqlite3's bindings package needs a package.json to locate the native addon
+RUN echo '{}' > package.json
+
+COPY --from=build /app/apps/api/dist/server.js dist/server.js
+COPY --from=build /app/apps/api/build/ build/
+
+EXPOSE 3001
+
+CMD ["node", "dist/server.js"]

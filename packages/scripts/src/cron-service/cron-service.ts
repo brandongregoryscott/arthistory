@@ -12,6 +12,8 @@ import { deleteLocalDbs } from "../delete-local-dbs/delete-local-dbs";
 import { deleteRemoteDbs } from "../delete-remote-dbs/delete-remote-dbs";
 import { rename } from "node:fs/promises";
 
+console.log("Starting cron service...");
+
 const TIME_ZONE = "America/New_York";
 
 /**

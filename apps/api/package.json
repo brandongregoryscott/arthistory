@@ -29,7 +29,7 @@
     "name": "api",
     "private": true,
     "scripts": {
-        "build": "esbuild src/server.ts --bundle --platform=node --target=node20 --outfile=dist/server.js",
+        "build": "esbuild src/server.ts --bundle --platform=node --target=node24 --outfile=dist/server.js",
         "clean": "rm -rf dist",
         "dev": "concurrently --names esbuild,nodemon \"npm run build -- --watch\" \"nodemon -q dist/server.js\"",
         "start": "node dist/server.js",
