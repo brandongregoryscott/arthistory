@@ -22,17 +22,13 @@ type SpotifyClientOptions = {
 const MAX_ARTIST_IDS_PER_REQUEST = 50;
 
 class SpotifyClient {
-    readonly clientId: string;
-    readonly clientSecret: string;
     readonly maxRetryAttempts: number;
     #client: SpotifyApi;
 
     constructor(options: SpotifyClientOptions) {
         const { clientId, clientSecret, maxRetryAttempts = 15 } = options;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
         this.maxRetryAttempts = maxRetryAttempts;
-        this.client = SpotifyApi.withClientCredentials(clientId, clientSecret);
+        this.#client = SpotifyApi.withClientCredentials(clientId, clientSecret);
     }
 
     /**
@@ -59,31 +55,31 @@ class SpotifyClient {
         const artistIdChunks = chunk(ids, MAX_ARTIST_IDS_PER_REQUEST);
         const artists: Artist[] = [];
         for (const artistIdChunk of artistIdChunks) {
-            artists.push(...(await this._getArtists(artistIdChunk)));
+            artists.push(...(await this.#getArtists(artistIdChunk)));
         }
 
         // Sometimes the Spotify API returns `null` in this array, so filter those out defensively
         return compact(artists);
     }
 
-    async #_getArtists(ids: string[], attempt: number = 1): Promise<Artist[]> {
+    async #getArtists(ids: string[], attempt: number = 1): Promise<Artist[]> {
         try {
-            const artists = await this.client.artists.get(ids);
+            const artists = await this.#client.artists.get(ids);
             return artists;
         } catch (error) {
             const context = { attempt, error: serializeError(error), ids };
             if (attempt < this.maxRetryAttempts) {
-                this.maybeLogError(
+                this.#maybeLogError(
                     error,
                     context,
                     "Attempting to retrieve artists again"
                 );
                 const secondsToSleep = Math.pow(2, attempt);
                 await sleep(secondsToSleep * 1000);
-                return this._getArtists(ids, attempt + 1);
+                return this.#getArtists(ids, attempt + 1);
             }
 
-            this.maybeLogError(
+            this.#maybeLogError(
                 error,
                 context,
                 "Failed to retrieve artist after max attempts, returning empty array"
