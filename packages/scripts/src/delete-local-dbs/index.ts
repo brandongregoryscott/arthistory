@@ -11,10 +11,10 @@ program.option(
 );
 
 program.parse();
-const { skipConfirmation, dry } = program.opts<DeleteLocalDbsOptions>();
+const { dry, skipConfirmation } = program.opts<DeleteLocalDbsOptions>();
 
 const main = async () => {
-    await deleteLocalDbs({ skipConfirmation, dry });
+    await deleteLocalDbs({ dry, skipConfirmation });
     process.exit(0);
 };
 

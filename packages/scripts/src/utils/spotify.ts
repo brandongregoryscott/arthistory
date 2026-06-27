@@ -1,20 +1,20 @@
 import type { Artist } from "@spotify/web-api-ts-sdk";
 import { SpotifyApi } from "@spotify/web-api-ts-sdk";
-import { getCurrentHourIndex } from "./date-utils";
-import { CLIENT_IDS, CLIENT_SECRETS } from "../config";
-import { serializeError } from "serialize-error";
-import { logger } from "./logger";
-import { sleep } from "./core-utils";
 import { chunk, compact, isError, isObject } from "lodash";
+import { serializeError } from "serialize-error";
+import { CLIENT_IDS, CLIENT_SECRETS } from "../config";
+import { sleep } from "./core-utils";
+import { getCurrentHourIndex } from "./date-utils";
+import { logger } from "./logger";
 
-interface SpotifyClientOptions {
+type SpotifyClientOptions = {
     clientId: string;
     clientSecret: string;
     /**
      * Maximum number of attempts to retry a request before giving up.
      */
     maxRetryAttempts?: number;
-}
+};
 
 /**
  * The maximum number of artist ids that can be requested at once via the Spotify API.
@@ -22,10 +22,10 @@ interface SpotifyClientOptions {
 const MAX_ARTIST_IDS_PER_REQUEST = 50;
 
 class SpotifyClient {
-    public readonly clientId: string;
-    public readonly clientSecret: string;
-    public readonly maxRetryAttempts: number;
-    private client: SpotifyApi;
+    readonly clientId: string;
+    readonly clientSecret: string;
+    readonly maxRetryAttempts: number;
+    #client: SpotifyApi;
 
     constructor(options: SpotifyClientOptions) {
         const { clientId, clientSecret, maxRetryAttempts = 15 } = options;
@@ -35,27 +35,27 @@ class SpotifyClient {
         this.client = SpotifyApi.withClientCredentials(clientId, clientSecret);
     }
 
-    public static buildBySecretPair(index: number): SpotifyClient {
-        return new SpotifyClient(getSecretPairByIndex(index));
-    }
-
     /**
      * Returns a Spotify client with the current hour's allocated client id/secret pair
      */
-    public static buildByCurrentPair(): SpotifyClient {
+    static buildByCurrentPair(): SpotifyClient {
         return new SpotifyClient(getCurrentSecretPair());
     }
 
     /**
      * Returns a Spotify client with a random client id/secret pair
      */
-    public static buildByRandomPair(): SpotifyClient {
+    static buildByRandomPair(): SpotifyClient {
         const max = CLIENT_IDS.length - 1;
-        const index = randomInteger({ min: 0, max });
+        const index = randomInteger({ max, min: 0 });
         return SpotifyClient.buildBySecretPair(index);
     }
 
-    public async getArtists(ids: string[]): Promise<Artist[]> {
+    static buildBySecretPair(index: number): SpotifyClient {
+        return new SpotifyClient(getSecretPairByIndex(index));
+    }
+
+    async getArtists(ids: string[]): Promise<Artist[]> {
         const artistIdChunks = chunk(ids, MAX_ARTIST_IDS_PER_REQUEST);
         const artists: Artist[] = [];
         for (const artistIdChunk of artistIdChunks) {
@@ -66,15 +66,12 @@ class SpotifyClient {
         return compact(artists);
     }
 
-    private async _getArtists(
-        ids: string[],
-        attempt: number = 1
-    ): Promise<Artist[]> {
+    async #_getArtists(ids: string[], attempt: number = 1): Promise<Artist[]> {
         try {
             const artists = await this.client.artists.get(ids);
             return artists;
         } catch (error) {
-            const context = { error: serializeError(error), attempt, ids };
+            const context = { attempt, error: serializeError(error), ids };
             if (attempt < this.maxRetryAttempts) {
                 this.maybeLogError(
                     error,
@@ -96,7 +93,7 @@ class SpotifyClient {
         }
     }
 
-    private maybeLogError(
+    #maybeLogError(
         error: unknown,
         context: Record<string, unknown>,
         message: string
@@ -134,13 +131,13 @@ const isBadGatewayError = (error: unknown): boolean =>
 const isFailedAccessTokenError = (error: unknown): boolean =>
     isError(error) && error.message.includes("Failed to get access token");
 
-interface RandomIntegerOptions {
+type RandomIntegerOptions = {
     max: number;
     min: number;
-}
+};
 
 const randomInteger = (options: RandomIntegerOptions): number => {
-    const { min, max } = options;
+    const { max, min } = options;
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 

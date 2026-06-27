@@ -1,6 +1,6 @@
 import { glob } from "fs/promises";
-import { DatabaseName } from "../constants/storage";
 import { last } from "lodash";
+import { DatabaseName } from "../constants/storage";
 
 const getDbFilenames = async (): Promise<string[]> => {
     const filenames: string[] = [];

@@ -24,14 +24,14 @@ type CreateTimerOptions =
     | CreateTimerLoggerMessageOptions
     | CreateTimerLoggerWithDataOptions;
 
-interface NormalizedCreateTimerOptions {
+type NormalizedCreateTimerOptions = {
     data: Record<string, unknown>;
     level: LogLevel;
     message: string;
-}
+};
 
 const createTimerLogger = (...options: CreateTimerOptions) => {
-    const { message, data, level } = normalizeCreateTimerLoggerOptions(
+    const { data, level, message } = normalizeCreateTimerLoggerOptions(
         ...options
     );
     const startTimestamp = Date.now();
@@ -42,9 +42,9 @@ const createTimerLogger = (...options: CreateTimerOptions) => {
         const elapsed = endTimestamp - startTimestamp;
         logger[level](
             {
-                startTimestamp,
-                endTimestamp,
                 elapsed,
+                endTimestamp,
+                startTimestamp,
                 ...endData,
             },
             `${message}: [DONE] in ${formatTimeSpanFromMilliseconds(elapsed)}`
@@ -57,9 +57,7 @@ const createTimerLogger = (...options: CreateTimerOptions) => {
 const normalizeCreateTimerLoggerOptions = (
     ...options: CreateTimerOptions
 ): NormalizedCreateTimerOptions => {
-    const messageOrData = options[0];
-    const messageOrLevel = options[1];
-    const maybeLevel = options[2];
+    const [messageOrData, messageOrLevel, maybeLevel] = options;
     const message = isObject(messageOrData)
         ? (messageOrLevel as string)
         : messageOrData;
@@ -69,7 +67,7 @@ const normalizeCreateTimerLoggerOptions = (
             ? maybeLevel
             : (messageOrLevel as LogLevel | undefined)) ?? "info";
 
-    return { message, data, level };
+    return { data, level, message };
 };
 
 export { createTimerLogger, logger };

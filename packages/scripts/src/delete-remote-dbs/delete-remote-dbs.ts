@@ -1,19 +1,19 @@
+import { stdin as input, stdout as output } from "node:process";
+import * as readline from "node:readline/promises";
 import { BucketName, DatabaseName } from "../constants/storage";
 import { getDbFilenames } from "../utils/fs-utils";
-import { getObjectKeys, listObjects, s3 } from "../utils/storage-utils";
-import * as readline from "node:readline/promises";
-import { stdin as input, stdout as output } from "node:process";
 import { createTimerLogger, logger } from "../utils/logger";
+import { getObjectKeys, listObjects, s3 } from "../utils/storage-utils";
 
-interface DeleteRemoteDbsOptions {
+type DeleteRemoteDbsOptions = {
     dry: boolean;
     skipConfirmation: boolean;
-}
+};
 
 const readlineInterface = readline.createInterface({ input, output });
 
 const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
-    const { skipConfirmation, dry } = options;
+    const { dry, skipConfirmation } = options;
     const bucket = BucketName.Snapshots;
     const localDbFilenames = await getDbFilenames();
     const localDbCount = localDbFilenames.length;
@@ -48,10 +48,10 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
         logger.info(
             {
                 bucket,
-                localDbFilenames,
                 localDbCount,
-                remoteDbObjectKeys,
+                localDbFilenames,
                 remoteDbCount,
+                remoteDbObjectKeys,
                 remoteDbObjectKeysToDelete,
                 remoteDbsToDeleteCount,
                 ...options,
@@ -75,10 +75,10 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
 
     const stopDeleteTimer = createTimerLogger(
         {
-            localDbFilenames,
             localDbCount,
-            remoteDbObjectKeys,
+            localDbFilenames,
             remoteDbCount,
+            remoteDbObjectKeys,
             remoteDbObjectKeysToDelete,
             remoteDbsToDeleteCount,
             ...options,
@@ -98,8 +98,8 @@ const deleteRemoteDbs = async (options: DeleteRemoteDbsOptions) => {
     const deletedObjectKeys = getObjectKeys(deletedObjects ?? []);
     const deletedCount = deletedObjectKeys.length;
     stopDeleteTimer({
-        deletedObjectKeys,
         deletedCount,
+        deletedObjectKeys,
         ...options,
     });
 };

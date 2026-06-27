@@ -1,23 +1,23 @@
 import type { _Object } from "@aws-sdk/client-s3";
-import { S3 } from "@aws-sdk/client-s3";
 import type { Progress } from "@aws-sdk/lib-storage";
-import { bytesToMb } from "./fs-utils";
+import { S3 } from "@aws-sdk/client-s3";
+import { compact } from "lodash";
+import { createWriteStream } from "node:fs";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_S3_ENDPOINT,
     AWS_SECRET_ACCESS_KEY,
 } from "../config";
-import { createWriteStream } from "node:fs";
+import { bytesToMb } from "./fs-utils";
 import { createTimerLogger, logger } from "./logger";
-import { compact } from "lodash";
 
 const s3 = new S3({
-    endpoint: AWS_S3_ENDPOINT,
-    region: "auto",
     credentials: {
         accessKeyId: AWS_ACCESS_KEY_ID,
         secretAccessKey: AWS_SECRET_ACCESS_KEY,
     },
+    endpoint: AWS_S3_ENDPOINT,
+    region: "auto",
 });
 
 const logUploadProgress = (progress: Progress) => {
@@ -32,36 +32,36 @@ const logUploadProgress = (progress: Progress) => {
 
     logger.debug(
         {
-            part,
             loaded,
-            total,
             loadedInMb,
-            totalInMb,
+            part,
             percentage: hasTotal ? percentage : "unknown",
+            total,
+            totalInMb,
         },
         "Uploading part"
     );
 };
 
-interface DownloadObjectsOptions {
+type DownloadObjectsOptions = {
     bucket: string;
     keys: string[];
-}
-
-const downloadObjects = async (options: DownloadObjectsOptions) => {
-    const { keys, bucket } = options;
-    return Promise.all(keys.map((key) => downloadObject({ key, bucket })));
 };
 
-interface DownloadObjectOptions {
+const downloadObjects = async (options: DownloadObjectsOptions) => {
+    const { bucket, keys } = options;
+    return Promise.all(keys.map((key) => downloadObject({ bucket, key })));
+};
+
+type DownloadObjectOptions = {
     bucket: string;
     key: string;
-}
+};
 
 const downloadObject = async (options: DownloadObjectOptions) => {
-    const { key, bucket } = options;
+    const { bucket, key } = options;
     const stopDownloadTimer = createTimerLogger(
-        { key, bucket },
+        { bucket, key },
         "Downloading object"
     );
 
@@ -84,10 +84,10 @@ const downloadObject = async (options: DownloadObjectOptions) => {
     stopDownloadTimer();
 };
 
-interface ListObjectsOptions {
+type ListObjectsOptions = {
     bucket: string;
     prefix?: string;
-}
+};
 
 const listObjects = async (options: ListObjectsOptions): Promise<_Object[]> => {
     const { bucket, prefix } = options;

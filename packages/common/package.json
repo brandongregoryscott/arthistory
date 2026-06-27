@@ -1,4 +1,6 @@
 {
+    "type": "commonjs",
+    "description": "Shared API types and utilities",
     "main": "index.ts",
     "name": "@repo/common",
     "private": true,

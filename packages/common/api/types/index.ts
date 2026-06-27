@@ -1,2 +1,2 @@
-export * from "./artist";
-export * from "./entity";
+export type * from "./artist";
+export type * from "./entity";

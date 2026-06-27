@@ -1,11 +1,12 @@
-import { copyFile } from "fs/promises";
 import type { ArtistSnapshotRow } from "@repo/common";
+import { copyFile } from "fs/promises";
+import type { SQLStatement } from "../types";
 import {
     BULK_INSERTION_CHUNK_SIZE,
     DatabaseName,
     TableName,
 } from "../constants/storage";
-import { getDbFilenames } from "../utils/fs-utils";
+import { toUnixTimestampInSeconds } from "../utils/date-utils";
 import {
     buildInsertArtistSnapshotStatement,
     createArtistSnapshotsIndexes,
@@ -17,23 +18,22 @@ import {
     paginateRows,
     setPerformancePragmas,
 } from "../utils/db-utils";
-import { toUnixTimestampInSeconds } from "../utils/date-utils";
-import type { SQLStatement } from "../types";
+import { getDbFilenames } from "../utils/fs-utils";
 import { createTimerLogger, logger } from "../utils/logger";
 
 const PAGE_SIZE = 100000;
 
-interface MergeDbsOptions {
+type MergeDbsOptions = {
     filename?: string;
     skipCheckpointAsBase: boolean;
     skipIndexes: boolean;
-}
+};
 
 const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     const {
+        filename = DatabaseName.Merged,
         skipCheckpointAsBase,
         skipIndexes,
-        filename = DatabaseName.Merged,
     } = options;
     let sourceDbFileNames = await getDbFilenames();
 
@@ -66,7 +66,7 @@ const mergeDbs = async (options: MergeDbsOptions): Promise<string> => {
     let statements: SQLStatement[] = [];
     for (const sourceDbFileName of sourceDbFileNames) {
         const index = sourceDbFileNames.indexOf(sourceDbFileName);
-        logger.info({ sourceDbFileName, index }, "Reading rows");
+        logger.info({ index, sourceDbFileName }, "Reading rows");
         const sourceDb = await openDb(sourceDbFileName);
         await paginateRows<ArtistSnapshotRow>(
             sourceDb,
@@ -109,12 +109,12 @@ const buildInsertArtistSnapshotStatements = (
     rows: ArtistSnapshotRow[]
 ): SQLStatement[] =>
     rows.map((row) => {
-        const { id, followers, popularity } = row;
+        const { followers, id, popularity } = row;
         const timestampInSeconds = toUnixTimestampInSeconds(row.timestamp);
 
         return buildInsertArtistSnapshotStatement({
-            id,
             followers,
+            id,
             popularity,
             timestamp: timestampInSeconds,
         });

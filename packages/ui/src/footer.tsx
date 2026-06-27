@@ -1,21 +1,20 @@
-import { css, cx } from "@leafygreen-ui/emotion";
+import type { SetStateAction } from "react";
 import Box from "@leafygreen-ui/box";
-// eslint-disable-next-line no-redeclare
-import { Body, Link } from "@leafygreen-ui/typography";
-import { color } from "@leafygreen-ui/tokens";
-import { SetStateAction } from "react";
-import IconButton from "@leafygreen-ui/icon-button";
+import { css, cx } from "@leafygreen-ui/emotion";
 import Icon from "@leafygreen-ui/icon";
+import IconButton from "@leafygreen-ui/icon-button";
+import { color } from "@leafygreen-ui/tokens";
+import { Body, Link } from "@leafygreen-ui/typography";
 
-interface FooterProps {
-    lastUpdated?: string;
+type FooterProps = {
+    breakpoint: "desktop" | "mobile";
     darkMode: boolean;
-    breakpoint: "mobile" | "desktop";
+    lastUpdated?: string;
     onThemeChange: (darkMode: boolean | SetStateAction<boolean>) => void;
-}
+};
 
 const Footer: React.FC<FooterProps> = (props) => {
-    const { darkMode, breakpoint, onThemeChange } = props;
+    const { breakpoint, darkMode, onThemeChange } = props;
     const flexClassName = cx(
         breakpoint === "mobile" && css({ display: "flex" })
     );
@@ -32,20 +31,20 @@ const Footer: React.FC<FooterProps> = (props) => {
     return (
         <Box
             className={css({
-                position: "fixed",
-                bottom: 0,
-                left: 0,
-                display: "flex",
-                flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "space-between",
                 backgroundColor: darkMode
                     ? color.dark.background.secondary.default
                     : color.light.background.secondary.default,
+                bottom: 0,
+                columnGap: 8,
+                display: "flex",
+                flexDirection: "row",
                 height: 32,
+                justifyContent: "space-between",
+                left: 0,
                 paddingLeft: 8,
                 paddingRight: 8,
-                columnGap: 8,
+                position: "fixed",
                 width: "100%",
             })}>
             <IconButton
@@ -62,10 +61,10 @@ const Footer: React.FC<FooterProps> = (props) => {
             )}
             <Box
                 className={css({
-                    display: "flex",
-                    flexDirection: "row",
                     alignItems: "center",
                     columnGap: 4,
+                    display: "flex",
+                    flexDirection: "row",
                 })}>
                 <Link
                     className={flexClassName}

@@ -1,9 +1,9 @@
 import type { _Object } from "@aws-sdk/client-s3";
+import { compact } from "lodash";
 import { BucketName, DatabaseName } from "../constants/storage";
 import { getDbFilenames } from "../utils/fs-utils";
-import { downloadObjects, listObjects } from "../utils/storage-utils";
-import { compact } from "lodash";
 import { createTimerLogger } from "../utils/logger";
+import { downloadObjects, listObjects } from "../utils/storage-utils";
 
 const downloadDbs = async () => {
     const objects = await listObjects({
@@ -19,7 +19,7 @@ const downloadDbs = async () => {
     const count = missingObjects.length;
 
     const stopDownloadTimer = createTimerLogger(
-        { count, total, localCount: total - count },
+        { count, localCount: total - count, total },
         "Downloading partial databases"
     );
 
@@ -27,8 +27,8 @@ const downloadDbs = async () => {
         missingObjects.map((object) => object.Key)
     );
     await downloadObjects({
-        keys: missingObjectKeys,
         bucket: BucketName.Snapshots,
+        keys: missingObjectKeys,
     });
 
     stopDownloadTimer();

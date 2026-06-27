@@ -1,6 +1,6 @@
 import { program, Option } from "commander";
-import { BucketName } from "../constants/storage";
 import type { UploadObjectOptions } from "./upload-object";
+import { BucketName } from "../constants/storage";
 import { uploadObject } from "./upload-object";
 
 program.requiredOption("--filename <filename>", "Name of the file to upload");
@@ -16,10 +16,10 @@ program.addOption(
 );
 
 program.parse();
-const { filename, bucket, key } = program.opts<UploadObjectOptions>();
+const { bucket, filename, key } = program.opts<UploadObjectOptions>();
 
 const main = async () => {
-    await uploadObject({ filename, bucket, key });
+    await uploadObject({ bucket, filename, key });
 };
 
 main();

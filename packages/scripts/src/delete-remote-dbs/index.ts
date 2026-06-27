@@ -11,10 +11,10 @@ program.option(
 );
 
 program.parse();
-const { skipConfirmation, dry } = program.opts<DeleteRemoteDbsOptions>();
+const { dry, skipConfirmation } = program.opts<DeleteRemoteDbsOptions>();
 
 const main = async () => {
-    await deleteRemoteDbs({ skipConfirmation, dry });
+    await deleteRemoteDbs({ dry, skipConfirmation });
     process.exit(0);
 };
 
