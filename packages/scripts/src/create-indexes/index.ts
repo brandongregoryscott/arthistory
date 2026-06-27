@@ -1,9 +1,9 @@
 import { program } from "commander";
 import { createArtistSnapshotsIndexes, openDb } from "../utils/db-utils";
 
-interface CreateIndexesOptions {
+type CreateIndexesOptions = {
     filename: string;
-}
+};
 
 program.requiredOption(
     "--filename <filename>",

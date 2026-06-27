@@ -6,11 +6,11 @@ const Header: React.FC = () => {
     return (
         <Box
             className={css({
+                alignItems: "center",
+                columnGap: 16,
                 display: "flex",
                 flexDirection: "row",
-                alignItems: "center",
                 justifyContent: "center",
-                columnGap: 16,
                 width: "100%",
             })}>
             <H3

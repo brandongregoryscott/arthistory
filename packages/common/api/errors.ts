@@ -1,7 +1,7 @@
-interface ApiError {
+type ApiError = {
     message: string;
     name: string;
-}
+};
 
 const ErrorName = {
     ERROR_NOT_FOUND: "ERROR_NOT_FOUND",

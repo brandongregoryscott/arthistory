@@ -1,13 +1,13 @@
+import { Upload } from "@aws-sdk/lib-storage";
 import { createTimerLogger } from "../utils/logger";
 import { logUploadProgress, s3 } from "../utils/storage-utils";
-import { Upload } from "@aws-sdk/lib-storage";
 
-interface CopyObjectOptions {
+type CopyObjectOptions = {
     sourceBucket: string;
     sourceKey: string;
     targetBucket: string;
     targetKey: string;
-}
+};
 
 /**
  * Upload parts 50 MB at a time to reduce API usage
@@ -22,7 +22,7 @@ const PART_SIZE = 50 * Math.pow(1024, 2);
 const MAX_COPY_OBJECT_SIZE_IN_BYTES = 5 * Math.pow(1024, 3);
 
 const copyObject = async (options: CopyObjectOptions) => {
-    const { sourceKey, targetKey, sourceBucket, targetBucket } = options;
+    const { sourceBucket, sourceKey, targetBucket, targetKey } = options;
     const copySource = `${sourceBucket}/${sourceKey}`;
     const target = `${targetBucket}/${targetKey}`;
 
@@ -32,23 +32,23 @@ const copyObject = async (options: CopyObjectOptions) => {
     );
 
     const { ContentLength: size } = await s3.headObject({
-        Key: sourceKey,
         Bucket: sourceBucket,
+        Key: sourceKey,
     });
 
     if (size !== undefined && size < MAX_COPY_OBJECT_SIZE_IN_BYTES) {
         await s3.copyObject({
             Bucket: targetBucket,
-            Key: targetKey,
             CopySource: copySource,
+            Key: targetKey,
         });
         stopCopyTimer();
         return;
     }
 
     const sourceObject = await s3.getObject({
-        Key: sourceKey,
         Bucket: sourceBucket,
+        Key: sourceKey,
     });
 
     const sourceObjectStream = sourceObject.Body?.transformToWebStream();
@@ -58,12 +58,12 @@ const copyObject = async (options: CopyObjectOptions) => {
 
     const upload = new Upload({
         client: s3,
-        partSize: PART_SIZE,
         params: {
+            Body: sourceObjectStream,
             Bucket: targetBucket,
             Key: targetKey,
-            Body: sourceObjectStream,
         },
+        partSize: PART_SIZE,
     });
 
     upload.on("httpUploadProgress", logUploadProgress);

@@ -1,11 +1,11 @@
-import { PropsWithChildren } from "react";
-import IconButton from "@leafygreen-ui/icon-button";
-import Icon from "@leafygreen-ui/icon";
+import type { PropsWithChildren } from "react";
 import Badge from "@leafygreen-ui/badge";
+import Icon from "@leafygreen-ui/icon";
+import IconButton from "@leafygreen-ui/icon-button";
 
-interface RemovableBadgeProps extends PropsWithChildren {
+type RemovableBadgeProps = {
     onRemove: () => void;
-}
+} & PropsWithChildren;
 
 const RemovableBadge: React.FC<RemovableBadgeProps> = (props) => {
     const { children, onRemove } = props;

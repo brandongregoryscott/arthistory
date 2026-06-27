@@ -1,24 +1,12 @@
 import type { Request, Response } from "express";
+import { isEmpty } from "lodash";
 import type { Resolution } from "../services/artist-service";
+import { artistRequested, searchQueryEntered } from "../analytics";
 import { ArtistService } from "../services/artist-service";
 import { SpotifyClient } from "../spotify";
 import { ok } from "../utilities/responses";
-import { artistRequested, searchQueryEntered } from "../analytics";
-import { isEmpty } from "lodash";
 
 const ArtistsController = {
-    listArtists: async (request: Request, response: Response) => {
-        const ids = (request.query.ids as string).split(",");
-        if (isEmpty(ids)) {
-            return ok(response, {});
-        }
-
-        const artists = await ArtistService.listArtists({
-            ids,
-        });
-
-        return ok(response, artists);
-    },
     getArtistSnapshots: async (
         request: Request,
         response: Response
@@ -32,6 +20,18 @@ const ArtistsController = {
         });
 
         return ok(response, snapshots);
+    },
+    listArtists: async (request: Request, response: Response) => {
+        const ids = (request.query.ids as string).split(",");
+        if (isEmpty(ids)) {
+            return ok(response, {});
+        }
+
+        const artists = await ArtistService.listArtists({
+            ids,
+        });
+
+        return ok(response, artists);
     },
     listArtistSnapshots: async (
         request: Request,

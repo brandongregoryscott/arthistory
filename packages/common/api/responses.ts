@@ -1,13 +1,13 @@
 import type { ApiError } from "./errors";
 
-interface ApiSuccessResponse<TData> {
+type ApiSuccessResponse<TData> = {
     data: TData;
     error: null;
-}
+};
 
-interface ApiErrorResponse {
+type ApiErrorResponse = {
     data: null;
     error: ApiError;
-}
+};
 
 export type { ApiErrorResponse, ApiSuccessResponse };

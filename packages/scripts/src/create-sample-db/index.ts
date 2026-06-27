@@ -1,5 +1,6 @@
 import { program } from "commander";
-import { createSampleDb, type CreateSampleDbOptions } from "./create-sample-db";
+import type { CreateSampleDbOptions } from "./create-sample-db";
+import { createSampleDb } from "./create-sample-db";
 
 program.requiredOption(
     "--input-filename <filename>",
@@ -25,10 +26,10 @@ program.option(
 program.parse();
 
 const options = program.opts<CreateSampleDbOptions>();
-const { ids, outputFilename, inputFilename, skipIndexes } = options;
+const { ids, inputFilename, outputFilename, skipIndexes } = options;
 
 const main = async () => {
-    await createSampleDb({ inputFilename, outputFilename, ids, skipIndexes });
+    await createSampleDb({ ids, inputFilename, outputFilename, skipIndexes });
 };
 
 main();

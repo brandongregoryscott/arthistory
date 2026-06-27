@@ -1,12 +1,12 @@
+import type { ArtistSnapshotRow } from "@repo/common";
+import { stat } from "fs/promises";
+import { first, isEmpty, sortBy } from "lodash";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { first, isEmpty, sortBy } from "lodash";
 import type { Database, SQLStatement } from "../types";
 import { DatabaseName, TableName } from "../constants/storage";
-import { createTimerLogger, logger } from "./logger";
 import { getDbFilenames } from "./fs-utils";
-import { stat } from "fs/promises";
-import type { ArtistSnapshotRow } from "@repo/common";
+import { createTimerLogger, logger } from "./logger";
 
 const createArtistSnapshotsTable = (db: Database) =>
     db.exec(createArtistSnapshotsTableSql());
@@ -71,7 +71,7 @@ const dropArtistSnapshotsConstraintIfExists = async (db: Database) => {
 const buildInsertArtistSnapshotStatement = (
     row: ArtistSnapshotRow
 ): SQLStatement => {
-    const { id, popularity, followers, timestamp } = row;
+    const { followers, id, popularity, timestamp } = row;
 
     return `
         INSERT OR IGNORE INTO ${TableName.ArtistSnapshots}
@@ -183,8 +183,8 @@ const findCheckpointDbFilename = async (): Promise<string | undefined> => {
 
 const openDb = async (fileName: string): Promise<Database> =>
     open({
-        filename: fileName,
         driver: sqlite3.cached.Database,
+        filename: fileName,
     });
 
 const openSnapshotDb = async (timestamp: number) =>

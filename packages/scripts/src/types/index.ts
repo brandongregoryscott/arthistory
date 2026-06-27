@@ -1,1 +1,1 @@
-export * from "./sqlite";
+export type * from "./sqlite";

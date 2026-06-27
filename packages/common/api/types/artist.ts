@@ -1,7 +1,7 @@
 /**
  * Structure returned for an artist from the Spotify API
  */
-interface Artist {
+type Artist = {
     external_urls: Record<string, string>;
     followers: {
         href: null;
@@ -13,34 +13,34 @@ interface Artist {
     name: string;
     popularity: number;
     uri: string;
-}
+};
 
 /**
  * Structure for the data captured on each sync for an individual artist
  */
-interface ArtistSnapshotRow {
+type ArtistSnapshotRow = {
     followers: number;
     id: string;
     popularity: number;
     timestamp: number;
-}
+};
 
 /**
  * Transfer object for returning data to the frontend
  */
-interface ArtistSnapshot {
+type ArtistSnapshot = {
     followers: number;
     id: string;
     popularity: number;
     timestamp: string;
-}
+};
 
 /**
  * Structure that includes a flag for whether the artist is currently being tracked/synced
  */
-interface ArtistWithTrackingStatus extends Artist {
+type ArtistWithTrackingStatus = {
     isTracked: boolean;
-}
+} & Artist;
 
 export type {
     Artist,

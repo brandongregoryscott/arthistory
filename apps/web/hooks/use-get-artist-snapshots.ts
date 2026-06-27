@@ -1,11 +1,11 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-    GET_ARTIST_SNAPSHOTS_ROUTE,
+import type {
     GetArtistSnapshotsOptions,
     GetArtistSnapshotsResult,
 } from "@repo/common";
-import { get } from "@/utils/fetch";
+import { GET_ARTIST_SNAPSHOTS_ROUTE } from "@repo/common";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { isEmpty } from "lodash";
+import { get } from "@/utils/fetch";
 
 const useGetArtistSnapshots = (options: GetArtistSnapshotsOptions) => {
     const { id } = options;

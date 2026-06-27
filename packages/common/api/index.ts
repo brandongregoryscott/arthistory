@@ -1,5 +1,5 @@
-export * from "./endpoints";
+export type * from "./endpoints";
 export * from "./errors";
-export * from "./responses";
+export type * from "./responses";
 export * from "./routes";
-export * from "./types";
+export type * from "./types";

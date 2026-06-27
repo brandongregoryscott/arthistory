@@ -1,16 +1,16 @@
 import { CronJob } from "cron";
-import { getRoundedTimestamp } from "../utils/date-utils";
-import { sync } from "../sync/sync";
-import { getSnapshotDbFilename } from "../utils/db-utils";
-import { uploadObject } from "../upload-object/upload-object";
-import { BucketName, DatabaseName } from "../constants/storage";
 import { existsSync } from "node:fs";
-import { downloadObject } from "../utils/storage-utils";
-import { downloadDbs } from "../download-dbs/download-dbs";
-import { mergeDbs } from "../merge-dbs/merge-dbs";
+import { rename } from "node:fs/promises";
+import { BucketName, DatabaseName } from "../constants/storage";
 import { deleteLocalDbs } from "../delete-local-dbs/delete-local-dbs";
 import { deleteRemoteDbs } from "../delete-remote-dbs/delete-remote-dbs";
-import { rename } from "node:fs/promises";
+import { downloadDbs } from "../download-dbs/download-dbs";
+import { mergeDbs } from "../merge-dbs/merge-dbs";
+import { sync } from "../sync/sync";
+import { uploadObject } from "../upload-object/upload-object";
+import { getRoundedTimestamp } from "../utils/date-utils";
+import { getSnapshotDbFilename } from "../utils/db-utils";
+import { downloadObject } from "../utils/storage-utils";
 
 console.log("Starting cron service...");
 
@@ -31,8 +31,8 @@ CronJob.from({
     onTick: async () => {
         if (!existsSync(DatabaseName.ArtistIds)) {
             await downloadObject({
-                key: DatabaseName.ArtistIds,
                 bucket: BucketName.ArtistIds,
+                key: DatabaseName.ArtistIds,
             });
         }
 
@@ -40,8 +40,8 @@ CronJob.from({
         const dbFilename = getSnapshotDbFilename(timestamp);
         await sync({ timestamp });
         await uploadObject({
-            filename: dbFilename,
             bucket: BucketName.Snapshots,
+            filename: dbFilename,
         });
     },
     start: true,
@@ -61,8 +61,8 @@ CronJob.from({
             skipIndexes: true,
         });
         await uploadObject({
-            filename: mergedDbFilename,
             bucket: BucketName.SnapshotBackups,
+            filename: mergedDbFilename,
         });
         await deleteRemoteDbs({ dry: false, skipConfirmation: true });
         await deleteLocalDbs({ dry: false, skipConfirmation: true });

@@ -14,4 +14,5 @@ const Document: React.FC = () => {
     );
 };
 
+// eslint-disable-next-line collation/no-default-export -- NextJS pages need to be default exported
 export default Document;

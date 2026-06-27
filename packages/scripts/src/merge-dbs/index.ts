@@ -1,6 +1,6 @@
 import { program } from "commander";
-import "./merge-dbs";
-import { mergeDbs, type MergeDbsOptions } from "./merge-dbs";
+import type { MergeDbsOptions } from "./merge-dbs";
+import { mergeDbs } from "./merge-dbs";
 
 program.option(
     "--skip-checkpoint-as-base",

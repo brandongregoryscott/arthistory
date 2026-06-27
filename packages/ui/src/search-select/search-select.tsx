@@ -1,36 +1,34 @@
-import {
-    SearchInput,
-    SearchResult,
-    SearchResultProps,
-} from "@leafygreen-ui/search-input";
-import { css } from "@leafygreen-ui/emotion";
+import type { SearchResultProps } from "@leafygreen-ui/search-input";
 import Box from "@leafygreen-ui/box";
-import { RemovableBadge, RemovableBadgeProps } from "./removable-badge";
+import { css } from "@leafygreen-ui/emotion";
+import { SearchInput, SearchResult } from "@leafygreen-ui/search-input";
+import type { RemovableBadgeProps } from "./removable-badge";
+import { RemovableBadge } from "./removable-badge";
 
-interface SearchSelectProps<TSearchResult extends { id: string }, TValue> {
+type SearchSelectProps<TSearchResult extends { id: string }, TValue> = {
+    getRemovableBadgeProps: (value: TValue) => RemovableBadgeProps;
+    getSearchResultProps: (result: TSearchResult) => SearchResultProps;
+    onChange: (value: string) => void;
+    results: TSearchResult[] | undefined;
+    selectedIds: string[];
     /**
      * Key-value map where the key is the id of a selected value to render a removable badge
      */
     selectedValueMap: Record<string, TValue>;
-    selectedIds: string[];
     value: string;
-    onChange: (value: string) => void;
-    results: TSearchResult[] | undefined;
-    getSearchResultProps: (result: TSearchResult) => SearchResultProps;
-    getRemovableBadgeProps: (value: TValue) => RemovableBadgeProps;
-}
+};
 
 const SearchSelect = <TSearchResult extends { id: string }, TValue>(
     props: SearchSelectProps<TSearchResult, TValue>
 ) => {
     const {
-        value,
+        getRemovableBadgeProps,
+        getSearchResultProps,
         onChange,
         results,
-        getSearchResultProps,
-        getRemovableBadgeProps,
         selectedIds,
         selectedValueMap,
+        value,
     } = props;
     return (
         <>
@@ -45,10 +43,10 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
             </SearchInput>
             <Box
                 className={css({
+                    columnGap: 8,
                     display: "flex",
                     flexDirection: "row",
                     flexWrap: "wrap",
-                    columnGap: 8,
                     rowGap: 8,
                 })}>
                 {selectedIds.map((id) => {
@@ -65,5 +63,5 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
     );
 };
 
-export type { SearchSelectProps, SearchResultProps };
+export type { SearchResultProps, SearchSelectProps };
 export { SearchSelect };

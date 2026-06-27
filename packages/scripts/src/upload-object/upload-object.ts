@@ -1,41 +1,40 @@
-import { existsSync } from "node:fs";
-import { logUploadProgress, s3 } from "../utils/storage-utils";
-import { createReadStream } from "node:fs";
 import { Upload } from "@aws-sdk/lib-storage";
+import { existsSync, createReadStream } from "node:fs";
 import { createTimerLogger, logger } from "../utils/logger";
+import { logUploadProgress, s3 } from "../utils/storage-utils";
 
 /**
  * Upload parts 50 MB at a time to reduce API usage
  */
 const PART_SIZE = 50 * Math.pow(1024, 2);
 
-interface UploadObjectOptions {
+type UploadObjectOptions = {
     bucket: string;
     filename: string;
     key?: string;
-}
+};
 
 const uploadObject = async (options: UploadObjectOptions) => {
-    const { filename, bucket, key } = options;
+    const { bucket, filename, key } = options;
     if (!existsSync(filename)) {
-        logger.error({ filename, key, bucket }, "File not found on filesystem");
+        logger.error({ bucket, filename, key }, "File not found on filesystem");
         process.exit(1);
     }
 
     const stopUploadTimer = createTimerLogger(
-        { filename, key, bucket },
+        { bucket, filename, key },
         "Uploading file"
     );
     const readStream = createReadStream(filename);
 
     const upload = new Upload({
         client: s3,
-        partSize: PART_SIZE,
         params: {
+            Body: readStream,
             Bucket: bucket,
             Key: key ?? filename,
-            Body: readStream,
         },
+        partSize: PART_SIZE,
     });
 
     upload.on("httpUploadProgress", logUploadProgress);

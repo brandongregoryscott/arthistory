@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
-import { badRequest, internalError, notFound } from "./utilities/responses";
 import { isNotFoundError, isValidationError } from "@repo/common";
+import { badRequest, internalError, notFound } from "./utilities/responses";
 
 /**
  * Global error handler for uncaught exceptions, which attempts to properly set the status code

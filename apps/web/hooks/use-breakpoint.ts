@@ -1,8 +1,8 @@
 import { createBreakpoint } from "react-use";
 
 const BREAKPOINTS = {
-    mobile: 576,
     desktop: 577,
+    mobile: 576,
 };
 
 type BreakpointName = keyof typeof BREAKPOINTS;

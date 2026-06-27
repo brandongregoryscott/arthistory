@@ -1,3 +1,5 @@
+import type { ArtistSnapshotRow } from "@repo/common";
+import { isEmpty } from "lodash";
 import { existsSync } from "node:fs";
 import { ArtistId, DatabaseName, TableName } from "../constants";
 import {
@@ -8,15 +10,13 @@ import {
     openDb,
 } from "../utils/db-utils";
 import { createTimerLogger, logger } from "../utils/logger";
-import { isEmpty } from "lodash";
-import type { ArtistSnapshotRow } from "@repo/common";
 
-interface CreateSampleDbOptions {
+type CreateSampleDbOptions = {
     ids?: string[];
     inputFilename: string;
     outputFilename?: string;
     skipIndexes: boolean;
-}
+};
 
 const DEFAULT_IDS = [ArtistId.AlexG, ArtistId.Duster];
 
@@ -29,7 +29,7 @@ const createSampleDb = async (options: CreateSampleDbOptions) => {
 
     const ids = isEmpty(options?.ids)
         ? DEFAULT_IDS
-        : options.ids?.slice(0, 50) ?? DEFAULT_IDS;
+        : (options.ids?.slice(0, 50) ?? DEFAULT_IDS);
 
     if (!existsSync(inputFilename)) {
         logger.error({ inputFilename }, "Input file not found on filesystem");

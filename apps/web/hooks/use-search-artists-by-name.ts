@@ -1,11 +1,11 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-    SEARCH_ARTISTS_BY_NAME_ROUTE,
+import type {
     SearchArtistByNameResult,
     SearchArtistsByNameOptions,
 } from "@repo/common";
-import { get } from "@/utils/fetch";
+import { SEARCH_ARTISTS_BY_NAME_ROUTE } from "@repo/common";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { isEmpty } from "lodash";
+import { get } from "@/utils/fetch";
 
 const useSearchArtistsByName = (options: SearchArtistsByNameOptions) => {
     const { name } = options;

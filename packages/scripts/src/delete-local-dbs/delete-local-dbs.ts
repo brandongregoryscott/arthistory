@@ -1,18 +1,18 @@
-import * as readline from "node:readline/promises";
-import { stdin as input, stdout as output } from "node:process";
-import { createTimerLogger, logger } from "../utils/logger";
-import { getDbFilenames } from "../utils/fs-utils";
 import { rm } from "node:fs/promises";
+import { stdin as input, stdout as output } from "node:process";
+import * as readline from "node:readline/promises";
+import { getDbFilenames } from "../utils/fs-utils";
+import { createTimerLogger, logger } from "../utils/logger";
 
-interface DeleteLocalDbsOptions {
+type DeleteLocalDbsOptions = {
     dry: boolean;
     skipConfirmation: boolean;
-}
+};
 
 const readlineInterface = readline.createInterface({ input, output });
 
 const deleteLocalDbs = async (options: DeleteLocalDbsOptions) => {
-    const { skipConfirmation, dry } = options;
+    const { dry, skipConfirmation } = options;
     const localDbFilenames = await getDbFilenames();
     const localDbCount = localDbFilenames.length;
     logger.info({ localDbCount, ...options }, "Found local databases");
@@ -20,8 +20,8 @@ const deleteLocalDbs = async (options: DeleteLocalDbsOptions) => {
     if (dry) {
         logger.info(
             {
-                localDbFilenames,
                 localDbCount,
+                localDbFilenames,
                 ...options,
             },
             "Returning early and not deleting files"

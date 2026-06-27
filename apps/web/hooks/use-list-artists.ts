@@ -1,11 +1,8 @@
+import type { ListArtistsOptions, ListArtistsResult } from "@repo/common";
+import { LIST_ARTISTS_ROUTE } from "@repo/common";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import {
-    LIST_ARTISTS_ROUTE,
-    ListArtistsOptions,
-    ListArtistsResult,
-} from "@repo/common";
-import { get } from "@/utils/fetch";
 import { isEmpty } from "lodash";
+import { get } from "@/utils/fetch";
 
 const useListArtists = (options: ListArtistsOptions) => {
     const { ids } = options;

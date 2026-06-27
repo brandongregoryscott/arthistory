@@ -1,9 +1,7 @@
 import { program, Option } from "commander";
+import type { DownloadObjectOptions } from "../utils/storage-utils";
 import { BucketName } from "../constants/storage";
-import {
-    downloadObject,
-    type DownloadObjectOptions,
-} from "../utils/storage-utils";
+import { downloadObject } from "../utils/storage-utils";
 
 program.addOption(
     new Option(

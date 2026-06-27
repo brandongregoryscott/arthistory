@@ -1,6 +1,6 @@
 import { program, Option } from "commander";
-import { BucketName } from "../constants";
 import type { CopyObjectOptions } from "./copy-object";
+import { BucketName } from "../constants";
 import { copyObject } from "./copy-object";
 
 program.requiredOption(

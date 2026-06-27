@@ -1,4 +1,5 @@
-import { GET_LATEST_META_ROUTE, GetLatestMetaResult } from "@repo/common";
+import type { GetLatestMetaResult } from "@repo/common";
+import { GET_LATEST_META_ROUTE } from "@repo/common";
 import { useQuery } from "@tanstack/react-query";
 import { get } from "@/utils/fetch";
 

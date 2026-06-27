@@ -9,39 +9,39 @@ type GetLatestMetaResult =
     | ApiErrorResponse
     | ApiSuccessResponse<Pick<ArtistSnapshot, "timestamp">>;
 
-interface GetArtistSnapshotsOptions {
+type GetArtistSnapshotsOptions = {
     id: string;
-}
+};
 
 type GetArtistSnapshotsResult =
     | ApiErrorResponse
     | ApiSuccessResponse<ArtistSnapshot[]>;
 
-interface ListArtistSnapshotsOptions {
+type ListArtistSnapshotsOptions = {
     ids: string[];
-}
+};
 
 type ListArtistSnapshotsResult =
     | ApiErrorResponse
     | ApiSuccessResponse<ArtistSnapshot[]>;
 
-interface ListArtistsOptions {
+type ListArtistsOptions = {
     ids: string[];
-}
+};
 
 type ListArtistsResult =
     | ApiErrorResponse
     | ApiSuccessResponse<Record<string, Artist>>;
 
-interface RequestArtistOptions {
+type RequestArtistOptions = {
     id: string;
-}
+};
 
 type RequestArtistResult = ApiErrorResponse | ApiSuccessResponse<true>;
 
-interface SearchArtistsByNameOptions {
+type SearchArtistsByNameOptions = {
     name: string;
-}
+};
 
 type SearchArtistByNameResult =
     | ApiErrorResponse

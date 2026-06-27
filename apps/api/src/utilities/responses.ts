@@ -1,5 +1,5 @@
-import type { Response } from "express";
 import type { ApiSuccessResponse, ApiErrorResponse } from "@repo/common";
+import type { Response } from "express";
 import { serializeError } from "serialize-error";
 
 const created = <T>(

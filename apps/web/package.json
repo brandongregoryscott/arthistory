@@ -1,12 +1,13 @@
 {
+    "type": "commonjs",
+    "description": "Web UI for the arthistory application",
     "name": "web",
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "dev": "next dev",
         "build": "next build",
-        "start": "next start",
-        "lint": "eslint . --max-warnings 0"
+        "dev": "next dev",
+        "start": "next start"
     },
     "dependencies": {
         "@repo/common": "*",
@@ -26,7 +27,6 @@
     },
     "devDependencies": {
         "@next/eslint-plugin-next": "14.1.1",
-        "@repo/eslint-config": "*",
         "@repo/typescript-config": "*",
         "@types/eslint": "8.56.5",
         "@types/lodash": "4.17.4",

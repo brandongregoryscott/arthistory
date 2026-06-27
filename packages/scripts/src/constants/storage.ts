@@ -3,8 +3,8 @@ const BULK_INSERTION_CHUNK_SIZE = 250000;
 const DatabaseName = {
     ArtistIds: "artist-ids.db",
     Merged: "merged-spotify-data.db",
-    PartialSnapshotPrefix: "spotify-data_",
     PartialSnapshotPattern: "spotify-data_*.db",
+    PartialSnapshotPrefix: "spotify-data_",
     Production: "_spotify-data.db",
     Sample: "sample-spotify-data.db",
 } as const;
@@ -12,14 +12,14 @@ const DatabaseName = {
 const BucketName = {
     ArtistIds: "artist-ids",
     Logs: "logs",
-    Snapshots: "spotify-data",
     SnapshotBackups: "spotify-data-backups",
+    Snapshots: "spotify-data",
 } as const;
 
 const TableName = {
+    ArtistIds: "artist_ids",
     ArtistSnapshots: "artist_snapshots",
     ArtistSnapshotsWithConstraint: "artist_snapshots_with_constraint",
-    ArtistIds: "artist_ids",
 } as const;
 
 export { BucketName, BULK_INSERTION_CHUNK_SIZE, DatabaseName, TableName };

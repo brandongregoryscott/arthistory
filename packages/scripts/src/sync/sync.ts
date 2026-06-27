@@ -1,3 +1,11 @@
+import type { Entity } from "@repo/common";
+import { chunk } from "lodash";
+import {
+    TableName,
+    BULK_INSERTION_CHUNK_SIZE,
+    DatabaseName,
+} from "../constants/storage";
+import { getCurrentHourIndex } from "../utils/date-utils";
 import {
     buildInsertArtistSnapshotStatement,
     countRows,
@@ -7,20 +15,12 @@ import {
     openDb,
     openSnapshotDb,
 } from "../utils/db-utils";
-import { SpotifyClient } from "../utils/spotify";
-import { getCurrentHourIndex } from "../utils/date-utils";
-import {
-    TableName,
-    BULK_INSERTION_CHUNK_SIZE,
-    DatabaseName,
-} from "../constants/storage";
-import type { Entity } from "@repo/common";
-import { chunk } from "lodash";
 import { createTimerLogger } from "../utils/logger";
+import { SpotifyClient } from "../utils/spotify";
 
-interface SyncOptions {
+type SyncOptions = {
     timestamp: number;
-}
+};
 
 const sync = async (options: SyncOptions) => {
     const { timestamp } = options;
@@ -41,8 +41,8 @@ const sync = async (options: SyncOptions) => {
     const artists = await client.getArtists(artistIds);
     const statements = artists.map((artist) =>
         buildInsertArtistSnapshotStatement({
-            id: artist.id,
             followers: artist.followers.total,
+            id: artist.id,
             popularity: artist.popularity,
             timestamp,
         })
