@@ -38,7 +38,11 @@ const ArtistService = {
     ): Promise<Record<string, Artist>> => {
         const { ids } = options;
 
-        const artists = await SpotifyClient.artists.get(ids);
+        // Spotify removed the batch Get Several Artists endpoint (GET /v1/artists?ids=...)
+        // for apps created after Feb 11, 2026. Use individual artist fetches instead.
+        const artists = await Promise.all(
+            ids.map((id) => SpotifyClient.artists.get(id))
+        );
 
         const result: Record<string, Artist> = artists.reduce(
             (accumulated, artist) => ({ ...accumulated, [artist.id]: artist }),
