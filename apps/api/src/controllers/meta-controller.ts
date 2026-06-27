@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { notFound, ok } from "../utilities/responses";
 import { MetaService } from "../services/meta-service";
+import { notFound, ok } from "../utilities/responses";
 
 const MetaController = {
     latest: async (

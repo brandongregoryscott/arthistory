@@ -1,12 +1,15 @@
 {
+    "type": "commonjs",
+    "description": "Web UI for the arthistory application",
     "name": "web",
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "dev": "next dev",
         "build": "next build",
-        "start": "next start",
-        "lint": "eslint . --max-warnings 0"
+        "dev": "next dev",
+        "lint": "eslint . --max-warnings 0",
+        "lint:fix": "eslint . --max-warnings 0 --fix",
+        "start": "next start"
     },
     "dependencies": {
         "@repo/common": "*",

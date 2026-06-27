@@ -1,11 +1,17 @@
 "use client";
 
+import type { Artist, ArtistWithTrackingStatus } from "@repo/common";
+import type { RemovableBadgeProps, SearchResultProps } from "@repo/ui";
 import Box from "@leafygreen-ui/box";
-import { Link } from "@leafygreen-ui/typography";
 import { css } from "@leafygreen-ui/emotion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BasicEmptyState } from "@leafygreen-ui/empty-state";
+import Icon from "@leafygreen-ui/icon";
 import LeafyGreenProvider from "@leafygreen-ui/leafygreen-provider";
-import { Bar } from "react-chartjs-2";
+import { palette } from "@leafygreen-ui/palette";
+import { color } from "@leafygreen-ui/tokens";
+import { Link } from "@leafygreen-ui/typography";
+import { DEFAULT_ARTIST_IDS } from "@repo/common";
+import { Footer, Header, SearchSelect } from "@repo/ui";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -15,6 +21,10 @@ import {
     Tooltip,
     Legend,
 } from "chart.js";
+import { compact, isEmpty, uniq } from "lodash";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Bar } from "react-chartjs-2";
 import {
     useBreakpoint,
     useGetLatestMeta,
@@ -23,25 +33,7 @@ import {
     useRequestArtist,
     useSearchArtistsByName,
 } from "@/hooks";
-import { compact, isEmpty, uniq } from "lodash";
-import { color } from "@leafygreen-ui/tokens";
-import { palette } from "@leafygreen-ui/palette";
-import {
-    Footer,
-    Header,
-    RemovableBadgeProps,
-    SearchResultProps,
-    SearchSelect,
-} from "@repo/ui";
-import {
-    Artist,
-    ArtistWithTrackingStatus,
-    DEFAULT_ARTIST_IDS,
-} from "@repo/common";
 import { humanizeNumber } from "@/utils/number-utils";
-import { BasicEmptyState } from "@leafygreen-ui/empty-state";
-import Icon from "@leafygreen-ui/icon";
-import dynamic from "next/dynamic";
 
 /**
  * This component needs to be dynamically imported for the NextJS build to work with Node 24+
@@ -89,12 +81,13 @@ const HomePage: React.FC = () => {
         });
     const {
         data: snapshots,
-        isLoading,
         error: snapshotsError,
+        isLoading,
     } = useListArtistSnapshots({
         ids: selectedArtistIds,
     });
     const isLoadingRef = useRef<boolean>(isLoading);
+    // eslint-disable-next-line react-hooks/refs -- Look into refactoring this the next time this page is updated
     isLoadingRef.current = isLoading;
 
     useEffect(() => {
@@ -162,13 +155,13 @@ const HomePage: React.FC = () => {
             }
 
             return {
-                label,
                 data: artistSnapshots.map((snapshot) => snapshot.followers),
+                label,
                 ...getHashedBarChartColor(artistId, darkMode),
             };
         });
 
-        return { labels: compact(labels), datasets: compact(datasets) };
+        return { datasets: compact(datasets), labels: compact(labels) };
     }, [snapshots, selectedArtistIds, breakpoint, artists, darkMode]);
 
     const textColor = darkMode
@@ -189,62 +182,62 @@ const HomePage: React.FC = () => {
 
     const options = useMemo(
         () => ({
-            indexAxis: "x" as const,
-            maintainAspectRatio: breakpoint === "desktop",
             elements: {
                 bar: {
                     borderWidth: 2,
                 },
             },
-            responsive: true,
+            indexAxis: "x" as const,
+            maintainAspectRatio: breakpoint === "desktop",
             plugins: {
-                tooltip: {
-                    bodyColor: invertedTextColor,
-                    titleColor: invertedTextColor,
-                    backgroundColor: invertedBackgroundColor,
-                },
                 legend: {
+                    labels: {
+                        color: textColor,
+                    },
                     position:
                         breakpoint === "mobile"
                             ? ("bottom" as const)
                             : ("right" as const),
-                    labels: {
+                },
+                title: {
+                    color: textColor,
+                    display: true,
+                    text: "Spotify followers over time",
+                },
+                tooltip: {
+                    backgroundColor: invertedBackgroundColor,
+                    bodyColor: invertedTextColor,
+                    titleColor: invertedTextColor,
+                },
+            },
+            responsive: true,
+            scales: {
+                x: {
+                    grid: {
+                        color: gridColor,
+                    },
+                    ticks: {
                         color: textColor,
                     },
                 },
-                title: {
-                    display: true,
-                    text: "Spotify followers over time",
-                    color: textColor,
-                },
-            },
-            scales: {
                 y: {
+                    grid: {
+                        color: gridColor,
+                    },
                     ticks: {
-                        color: textColor,
-                        callback: (value: string | number) => {
+                        callback: (value: number | string) => {
                             if (typeof value === "number") {
                                 return humanizeNumber(value);
                             }
 
                             return value;
                         },
-                    },
-                    grid: {
-                        color: gridColor,
+                        color: textColor,
                     },
                     title: {
+                        color: textColor,
                         display: true,
                         text: "Followers",
-                        color: textColor,
-                    },
-                },
-                x: {
-                    ticks: {
-                        color: textColor,
-                    },
-                    grid: {
-                        color: gridColor,
                     },
                 },
             },
@@ -287,9 +280,9 @@ const HomePage: React.FC = () => {
                 ) : (
                     <Box
                         className={css({
-                            display: "flex",
                             alignItems: "center",
                             columnGap: 4,
+                            display: "flex",
                         })}>
                         This artist is not yet being tracked.
                         <Link
@@ -314,12 +307,12 @@ const HomePage: React.FC = () => {
                     </Box>
                 ),
                 disabled: !result.isTracked,
-                selected: selectedArtistIds.includes(result.id),
                 onClick: () => {
                     if (result.isTracked) {
                         addArtist(result.id);
                     }
                 },
+                selected: selectedArtistIds.includes(result.id),
             };
         },
         [addArtist, requestArtist, requestedArtistIds, selectedArtistIds]
@@ -328,10 +321,10 @@ const HomePage: React.FC = () => {
     const getRemovableBadgeProps = useCallback(
         (artist: Artist): RemovableBadgeProps => {
             return {
+                children: artist.name,
                 onRemove: () => {
                     removeArtist(artist.id);
                 },
-                children: artist.name,
             };
         },
         [removeArtist]
@@ -354,13 +347,13 @@ const HomePage: React.FC = () => {
             <LeafyGreenProvider darkMode={darkMode}>
                 <Box
                     className={css({
+                        alignItems: "center",
                         backgroundColor,
-                        width: "100%",
-                        height: "100%",
                         display: "flex",
                         flexDirection: "column",
+                        height: "100%",
                         justifyContent: "center",
-                        alignItems: "center",
+                        width: "100%",
                     })}>
                     <PageLoader description={loadingText} />
                 </Box>
@@ -373,13 +366,13 @@ const HomePage: React.FC = () => {
             <LeafyGreenProvider darkMode={darkMode}>
                 <Box
                     className={css({
+                        alignItems: "center",
                         backgroundColor,
-                        width: "100%",
-                        height: "100%",
                         display: "flex",
                         flexDirection: "column",
+                        height: "100%",
                         justifyContent: "center",
-                        alignItems: "center",
+                        width: "100%",
                     })}>
                     <BasicEmptyState
                         description={
@@ -405,18 +398,18 @@ const HomePage: React.FC = () => {
         <LeafyGreenProvider darkMode={darkMode}>
             <Box
                 className={css({
-                    width: "100%",
-                    height: "100%",
                     backgroundColor,
+                    height: "100%",
+                    width: "100%",
                 })}>
                 <Box
                     className={css({
-                        width: "100%",
+                        display: "flex",
+                        flexDirection: "column",
                         height: "calc(100% - 192px)",
                         padding: 16,
                         rowGap: 16,
-                        display: "flex",
-                        flexDirection: "column",
+                        width: "100%",
                     })}>
                     <Header />
                     <SearchSelect
@@ -458,51 +451,51 @@ const HomePage: React.FC = () => {
 const getHashedBarChartColor = (id: string, darkMode: boolean) => {
     const lightThemeColors = [
         {
-            borderColor: palette.gray.dark3,
             backgroundColor: palette.gray.light2,
+            borderColor: palette.gray.dark3,
         },
         {
-            borderColor: palette.blue.dark1,
             backgroundColor: palette.blue.light3,
+            borderColor: palette.blue.dark1,
         },
         {
-            borderColor: palette.blue.dark3,
             backgroundColor: palette.blue.light2,
+            borderColor: palette.blue.dark3,
         },
         {
-            borderColor: palette.green.dark3,
             backgroundColor: palette.green.light2,
+            borderColor: palette.green.dark3,
         },
         {
-            borderColor: palette.purple.dark3,
             backgroundColor: palette.purple.light2,
+            borderColor: palette.purple.dark3,
         },
         {
-            borderColor: palette.red.dark3,
             backgroundColor: palette.red.light2,
+            borderColor: palette.red.dark3,
         },
         {
-            borderColor: palette.yellow.dark3,
             backgroundColor: palette.yellow.light2,
+            borderColor: palette.yellow.dark3,
         },
     ];
 
     const lightOrDarkColors = [
         {
-            borderColor: palette.green.dark1,
             backgroundColor: palette.green.light3,
+            borderColor: palette.green.dark1,
         },
         {
-            borderColor: palette.purple.base,
             backgroundColor: palette.purple.light3,
+            borderColor: palette.purple.base,
         },
         {
-            borderColor: palette.red.base,
             backgroundColor: palette.red.light3,
+            borderColor: palette.red.base,
         },
         {
-            borderColor: palette.yellow.base,
             backgroundColor: palette.yellow.light3,
+            borderColor: palette.yellow.base,
         },
     ];
 
@@ -514,7 +507,7 @@ const getHashedBarChartColor = (id: string, darkMode: boolean) => {
 
     const color = colors[index];
 
-    return color!;
+    return color;
 };
 
 const differenceInSeconds = (
@@ -526,10 +519,14 @@ const differenceInSeconds = (
 };
 
 const hash = (value: string) => {
-    var h = 0,
+    let h = 0,
         l = value.length,
         i = 0;
-    if (l > 0) while (i < l) h = ((h << 5) - h + value.charCodeAt(i++)) | 0;
+    if (l > 0) {
+        while (i < l) {
+            h = ((h << 5) - h + value.charCodeAt(i++)) | 0;
+        }
+    }
     return h;
 };
 
@@ -537,4 +534,5 @@ const getDefaultDarkMode = (): boolean =>
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
 
+// eslint-disable-next-line collation/no-default-export -- NextJS pages need to be default exported
 export default HomePage;

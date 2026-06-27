@@ -1,4 +1,6 @@
 {
+    "description": "API for the arthistory application",
+    "type": "commonjs",
     "dependencies": {
         "@repo/common": "*",
         "@spotify/web-api-ts-sdk": "1.2.0",
@@ -31,10 +33,12 @@
     "private": true,
     "scripts": {
         "build": "esbuild src/server.ts --bundle --platform=node --target=node24 --outfile=dist/server.js",
+        "postbuild": "rm -rf ../../build build && cd ../../node_modules/sqlite3 && npm run rebuild && cd - && cp -r ../../node_modules/sqlite3/build ../.. && cp -r ../../node_modules/sqlite3/build .",
         "clean": "rm -rf dist",
         "dev": "concurrently --names esbuild,nodemon \"npm run build -- --watch\" \"nodemon -q dist/server.js\"",
-        "start": "node dist/server.js",
-        "postbuild": "rm -rf ../../build build && cd ../../node_modules/sqlite3 && npm run rebuild && cd - && cp -r ../../node_modules/sqlite3/build ../.. && cp -r ../../node_modules/sqlite3/build ."
+        "lint": "eslint . --max-warnings 0",
+        "lint:fix": "eslint . --max-warnings 0 --fix",
+        "start": "node dist/server.js"
     },
     "version": "1.0.0"
 }

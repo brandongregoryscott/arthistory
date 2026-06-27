@@ -1,9 +1,6 @@
+import type { RequestArtistOptions, RequestArtistResult } from "@repo/common";
+import { REQUEST_ARTIST_ROUTE } from "@repo/common";
 import { useMutation } from "@tanstack/react-query";
-import {
-    REQUEST_ARTIST_ROUTE,
-    RequestArtistOptions,
-    RequestArtistResult,
-} from "@repo/common";
 import { post } from "@/utils/fetch";
 
 const useRequestArtist = () => {

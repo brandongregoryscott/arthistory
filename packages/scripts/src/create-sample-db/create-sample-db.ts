@@ -29,7 +29,7 @@ const createSampleDb = async (options: CreateSampleDbOptions) => {
 
     const ids = isEmpty(options?.ids)
         ? DEFAULT_IDS
-        : options.ids?.slice(0, 50) ?? DEFAULT_IDS;
+        : (options.ids?.slice(0, 50) ?? DEFAULT_IDS);
 
     if (!existsSync(inputFilename)) {
         logger.error({ inputFilename }, "Input file not found on filesystem");

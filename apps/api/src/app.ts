@@ -1,10 +1,4 @@
 import type { Request, Response } from "express";
-import express from "express";
-import bodyParser from "body-parser";
-import { errorHandler } from "./error-handler";
-import { readRateLimiter } from "./utilities/rate-limiter";
-import cors from "cors";
-import { ArtistsController } from "./controllers/artists-controller";
 import {
     SEARCH_ARTISTS_BY_NAME_ROUTE,
     REQUEST_ARTIST_ROUTE,
@@ -13,7 +7,13 @@ import {
     LIST_ARTISTS_ROUTE,
     GET_LATEST_META_ROUTE,
 } from "@repo/common";
+import bodyParser from "body-parser";
+import cors from "cors";
+import express from "express";
+import { ArtistsController } from "./controllers/artists-controller";
 import { MetaController } from "./controllers/meta-controller";
+import { errorHandler } from "./error-handler";
+import { readRateLimiter } from "./utilities/rate-limiter";
 
 const app = express();
 

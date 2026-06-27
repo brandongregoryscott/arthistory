@@ -5,9 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            staleTime: Infinity,
-            retry: false,
             refetchOnWindowFocus: false,
+            retry: false,
+            staleTime: Infinity,
         },
     },
 });
@@ -21,4 +21,5 @@ const App: React.FC<AppProps> = (props) => {
     );
 };
 
+// eslint-disable-next-line collation/no-default-export -- NextJS pages need to be default exported
 export default App;

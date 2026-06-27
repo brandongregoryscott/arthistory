@@ -1,18 +1,18 @@
 import type { Artist, ArtistSnapshot, ArtistSnapshotRow } from "@repo/common";
-import { getDb } from "../database";
 import { getDayOfYear, getMonth, getQuarter, getWeek, getYear } from "date-fns";
 import { countBy, uniqBy } from "lodash";
+import { getDb } from "../database";
 import { SpotifyClient } from "../spotify";
 import { normalizeTimestamp } from "../utilities/date-utils";
 
-interface ListArtistSnapshotsOptions {
+type ListArtistSnapshotsOptions = {
     ids: string[];
     resolution?: Resolution;
-}
+};
 
-interface ListArtistsOptions {
+type ListArtistsOptions = {
     ids: string[];
-}
+};
 
 type Resolution = "daily" | "monthly" | "quarterly" | "weekly" | "yearly";
 
@@ -63,11 +63,11 @@ const ArtistService = {
         let snapshots = results.map(normalizeArtistSnapshot);
 
         switch (resolution) {
-            case "yearly":
+            case "daily":
                 return intersectionByNormalizedTimestamp(
                     ids.length,
                     snapshots,
-                    getYear
+                    getDayOfYear
                 );
             case "quarterly":
                 return intersectionByNormalizedTimestamp(
@@ -75,24 +75,24 @@ const ArtistService = {
                     snapshots,
                     getQuarter
                 );
-            default:
-            case "monthly":
-                return intersectionByNormalizedTimestamp(
-                    ids.length,
-                    snapshots,
-                    getMonth
-                );
-            case "daily":
-                return intersectionByNormalizedTimestamp(
-                    ids.length,
-                    snapshots,
-                    getDayOfYear
-                );
             case "weekly":
                 return intersectionByNormalizedTimestamp(
                     ids.length,
                     snapshots,
                     getWeek
+                );
+            case "yearly":
+                return intersectionByNormalizedTimestamp(
+                    ids.length,
+                    snapshots,
+                    getYear
+                );
+            case "monthly":
+            default:
+                return intersectionByNormalizedTimestamp(
+                    ids.length,
+                    snapshots,
+                    getMonth
                 );
         }
     },

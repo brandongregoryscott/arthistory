@@ -1,5 +1,6 @@
+import type { ApiErrorResponse, ApiSuccessResponse } from "@repo/common";
+import { ApiError } from "@repo/common";
 import { API_URL } from "@/utils/config";
-import { ApiError, ApiErrorResponse, ApiSuccessResponse } from "@repo/common";
 
 const CONTENT_TYPE = "Content-Type";
 
@@ -24,22 +25,22 @@ const get = async <T>(route: string): Promise<T> => _fetch(route);
 const post = async <TBody, TResponse>(route: string, body: TBody) =>
     _fetch<TResponse>(route, {
         body: JSON.stringify(body),
-        method: "POST",
         headers: HEADERS,
+        method: "POST",
     });
 
 const _delete = async <TBody, TResponse>(route: string, body: TBody) =>
     _fetch<TResponse>(route, {
         body: JSON.stringify(body),
-        method: "DELETE",
         headers: HEADERS,
+        method: "DELETE",
     });
 
 const put = async <TBody, TResponse>(route: string, body: TBody) =>
     _fetch<TResponse>(route, {
         body: JSON.stringify(body),
-        method: "PUT",
         headers: HEADERS,
+        method: "PUT",
     });
 
-export { get, post, _delete as delete, put };
+export { _delete as delete, get, post, put };
