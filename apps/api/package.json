@@ -23,8 +23,9 @@
         "@types/lodash": "4.14.195",
         "@types/node": "20.4.2",
         "concurrently": "8.2.0",
+        "eslint": "9.39.3",
         "nodemon": "3.0.1",
-        "typescript": "5.5.3"
+        "typescript": "5.9.3"
     },
     "name": "api",
     "private": true,
