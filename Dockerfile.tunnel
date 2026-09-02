@@ -2,4 +2,8 @@ FROM alpine:3.21
 
 RUN apk add --no-cache autossh openssh-client
 
-ENTRYPOINT ["sh", "-c", "cp /root/.ssh/id_ed25519 /tmp/id_ed25519 && chmod 600 /tmp/id_ed25519 && exec autossh -M 0 -o StrictHostKeyChecking=accept-new -i /tmp/id_ed25519 -R arthistory-api:80:api:3001 nue.tuns.sh"]
+# Keep retrying even if the first connection dies quickly (e.g. tunnel starts
+# before the network is ready on boot). Without this autossh gives up entirely.
+ENV AUTOSSH_GATETIME=0
+
+ENTRYPOINT ["sh", "-c", "cp /root/.ssh/id_ed25519 /tmp/id_ed25519 && chmod 600 /tmp/id_ed25519 && exec autossh -M 0 -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -i /tmp/id_ed25519 -R arthistory-api:80:api:3001 nue.tuns.sh"]
