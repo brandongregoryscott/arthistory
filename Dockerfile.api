@@ -1,5 +1,5 @@
 # Build stage
-FROM node:24 AS build
+FROM node:24-trixie AS build
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ COPY tsconfig.json ./
 RUN npm run build --workspace=api
 
 # Runtime stage
-FROM node:24-slim
+FROM node:24-trixie-slim
 
 WORKDIR /app
 
