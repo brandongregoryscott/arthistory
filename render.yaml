@@ -10,5 +10,5 @@ services:
       runtime: static
       staticPublishPath: out
       envVars:
-          - key: VITE_API_URL
+          - key: NEXT_PUBLIC_API_URL
             value: https://bscott-arthistory-api.tuns.sh
