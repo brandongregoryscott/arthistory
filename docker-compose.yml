@@ -27,13 +27,16 @@ services:
   #     - /home/brandon/arthistory/data:/data
 
   tunnel:
-    build:
-      context: .
-      dockerfile: Dockerfile.tunnel
+    image: tuns-tunnel:latest # built locally on the host from the tuns-tunnel repo
+    pull_policy: never
+    environment:
+      - TUNS_NAME=arthistory-api
+      - TARGET_HOST=api
+      - TARGET_PORT=3001
     depends_on:
       - api
     volumes:
-      - /home/brandon/.ssh/id_ed25519:/root/.ssh/id_ed25519:ro
+      - /root/.ssh/tuns_ed25519:/root/.ssh/id_ed25519:ro
     restart: always
 
 volumes:
