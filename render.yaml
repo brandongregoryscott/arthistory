@@ -9,3 +9,6 @@ services:
       rootDir: apps/web
       runtime: static
       staticPublishPath: out
+      envVars:
+          - key: VITE_API_URL
+            value: https://bscott-arthistory-api.tuns.sh
