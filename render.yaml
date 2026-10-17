@@ -5,7 +5,6 @@ services:
       autoDeploy: true
       branch: main
       buildCommand: npm ci && npm run build
-      pullRequestPreviewsEnabled: true
       rootDir: apps/web
       runtime: static
       staticPublishPath: out
