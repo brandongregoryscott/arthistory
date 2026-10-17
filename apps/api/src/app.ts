@@ -23,8 +23,9 @@ app.use(bodyParser.json());
 app.use(cors());
 
 app.get(
-    "/healthcheck",
-    (_request: Request, response: Response): Response => response.json("✅")
+    "/health",
+    (_request: Request, response: Response): Response =>
+        response.json({ ok: true })
 );
 
 app.get(GET_LATEST_META_ROUTE, MetaController.latest);
