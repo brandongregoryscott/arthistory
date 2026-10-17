@@ -39,7 +39,7 @@ The API requires a SQLite database to query. A small sample database is included
 
 ### Spotify API keys
 
-The `/v1/artists` and `/v1/artists/search` endpoints in the API hit the Spotify API, so you'll need API keys to run them. See the [Spotify API](https://developer.spotify.com/documentation/web-api/tutorials/getting-started) documentation on signing up for developer access.
+The `/artists` and `/artists/search` endpoints in the API hit the Spotify API, so you'll need API keys to run them. See the [Spotify API](https://developer.spotify.com/documentation/web-api/tutorials/getting-started) documentation on signing up for developer access.
 
 ### Setup
 
@@ -123,3 +123,9 @@ pm2 start arthistory-api
 - Land on https://dash.cloudflare.com/{accountId}/r2/api-tokens and choose the API token to add additional buckets/permissions to
 
 </details>
+
+## API route convention
+
+Application routes are unversioned and start at the API origin, without an `/api` prefix. `GET /health` returns HTTP 200 with `{ "ok": true }`. Previous application paths have been removed; deploy the matching API and frontend builds together.
+
+The health check confirms the server responds; it does not probe external services or database availability.

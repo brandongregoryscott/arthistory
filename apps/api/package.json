@@ -35,7 +35,8 @@
         "postbuild": "rm -rf ../../build build && cp -r ../../node_modules/sqlite3/build ../.. && cp -r ../../node_modules/sqlite3/build .",
         "clean": "rm -rf dist",
         "dev": "concurrently --names esbuild,nodemon \"npm run build -- --watch\" \"nodemon -q dist/server.js\"",
-        "start": "node dist/server.js"
+        "start": "node dist/server.js",
+        "test": "tsx --test src/*.test.ts"
     },
     "version": "1.0.0"
 }

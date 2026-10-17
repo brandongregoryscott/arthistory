@@ -1,14 +1,14 @@
-const GET_LATEST_META_ROUTE = "/v1/meta/latest";
+const GET_LATEST_META_ROUTE = "/meta/latest";
 
-const REQUEST_ARTIST_ROUTE = "/v1/artists/:id/request";
+const REQUEST_ARTIST_ROUTE = "/artists/:id/request";
 
-const SEARCH_ARTISTS_BY_NAME_ROUTE = "/v1/artists/search";
+const SEARCH_ARTISTS_BY_NAME_ROUTE = "/artists/search";
 
-const GET_ARTIST_SNAPSHOTS_ROUTE = "/v1/artists/:id/snapshots";
+const GET_ARTIST_SNAPSHOTS_ROUTE = "/artists/:id/snapshots";
 
-const LIST_ARTISTS_ROUTE = "/v1/artists";
+const LIST_ARTISTS_ROUTE = "/artists";
 
-const LIST_ARTIST_SNAPSHOTS_ROUTE = "/v1/artists/snapshots";
+const LIST_ARTIST_SNAPSHOTS_ROUTE = "/artists/snapshots";
 
 export {
     GET_ARTIST_SNAPSHOTS_ROUTE,
