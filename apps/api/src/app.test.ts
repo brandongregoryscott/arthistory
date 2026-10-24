@@ -2,6 +2,8 @@ import type { Registry } from "@prometheus-io/client";
 import type { Request, Response } from "express";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { request } from "node:http";
+import { deflateSync, gzipSync } from "node:zlib";
 import posthog from "posthog-js";
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
@@ -119,4 +121,64 @@ test("records the real controller route template without artist IDs or query str
     expect(text).toContain('route="/artists/:id/snapshots",status_code="200"');
     expect(text).not.toContain("private-artist");
     expect(text).not.toContain("private-query");
+});
+
+test("accepts compressed JSON without changing routing", async () => {
+    const response = await fetch(`${origin}/__parser_probe__`, {
+        body: new Uint8Array(gzipSync('{"name":"parser-probe"}')),
+        headers: {
+            "Content-Encoding": "gzip",
+            "Content-Type": "application/json",
+        },
+        method: "POST",
+    });
+
+    expect(response.status).toBe(404);
+});
+
+test("finishes a compressed request before delayed trailing bytes without losing the listener", async () => {
+    const first = Buffer.concat([
+        new Uint8Array(deflateSync('{"name":"parser-probe"}')),
+        new Uint8Array([0]),
+    ]);
+    const trailing = Buffer.alloc(1024);
+    const status = await new Promise<number | undefined>((resolve, reject) => {
+        const client = request(
+            `${origin}/health`,
+            {
+                headers: {
+                    "Content-Encoding": "deflate",
+                    "Content-Length": first.length + trailing.length,
+                    "Content-Type": "application/json",
+                },
+                method: "GET",
+            },
+            (response) => {
+                // Send the remaining bytes only after the parser has handed off.
+                client.end(trailing);
+                response.resume();
+                response.once("error", reject);
+                response.once("end", () => resolve(response.statusCode));
+            }
+        );
+        client.once("error", reject);
+        client.setTimeout(2000, () =>
+            client.destroy(new Error("Parser did not finish"))
+        );
+        client.write(first);
+    });
+    const next = await fetch(`${origin}/__parser_probe__`);
+
+    expect(status).toBe(200);
+    expect(next.status).toBe(404);
+});
+
+test("rejects malformed JSON before routing", async () => {
+    const response = await fetch(`${origin}/__parser_probe__`, {
+        body: "{",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+    });
+
+    expect(response.status).toBe(500);
 });

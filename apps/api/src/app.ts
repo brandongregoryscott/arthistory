@@ -7,7 +7,6 @@ import {
     LIST_ARTISTS_ROUTE,
     GET_LATEST_META_ROUTE,
 } from "@repo/common";
-import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
 import { ArtistsController } from "./controllers/artists-controller";
@@ -24,7 +23,7 @@ app.set("trust proxy", true);
 
 app.use(requestLogging());
 app.use(metrics.middleware);
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(cors());
 
 app.get(
