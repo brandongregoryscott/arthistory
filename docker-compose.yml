@@ -11,6 +11,7 @@ services:
       - DATABASE_PATH=/data/_spotify-data.db
       - METRICS_HOST=0.0.0.0
       - METRICS_PORT=9464
+      - SOURCE_COMMIT=${SOURCE_COMMIT:-}
     networks:
       default:
       observability:

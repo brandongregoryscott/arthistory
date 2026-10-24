@@ -25,6 +25,8 @@ RUN npm run build --workspace=api
 
 # Runtime stage
 FROM node:24-trixie-slim
+ARG SOURCE_VERSION=unknown
+ENV APP_ENV=production APP_VERSION=$SOURCE_VERSION
 
 WORKDIR /app
 
