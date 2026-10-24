@@ -4,7 +4,7 @@
     "devDependencies": {
         "@repo/typescript-config": "*",
         "@stylistic/eslint-plugin": "5.9.0",
-        "@types/node": "24.5.2",
+        "@types/node": "26.6.5",
         "commitizen": "4.3.0",
         "eslint": "9.39.3",
         "eslint-plugin-collation": "1.7.0",
@@ -22,7 +22,7 @@
         "typescript-eslint": "8.56.1"
     },
     "engines": {
-        "node": ">=20"
+        "node": ">=26.12.1 <27"
     },
     "lint-staged": {
         "*.{ts,tsx,json,md}": "prettier --ignore-unknown --write",
