@@ -12,7 +12,9 @@ import {
 } from "./logging";
 
 type RecordData = Record<string, unknown>;
+
 const servers: Server[] = [];
+
 const capture = (level = "info") => {
     const lines: string[] = [];
     const log = createLogger(
@@ -31,6 +33,7 @@ const capture = (level = "info") => {
             lines.map((line) => JSON.parse(line) as RecordData),
     };
 };
+
 const serve = async (app: Express) => {
     const server = app.listen(0, "127.0.0.1");
     servers.push(server);
@@ -40,6 +43,7 @@ const serve = async (app: Express) => {
     });
     return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 };
+
 afterEach(async () => {
     await Promise.all(
         servers.splice(0).map(

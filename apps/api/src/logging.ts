@@ -1,6 +1,7 @@
 import type { Request, RequestHandler, Response } from "express";
 import type { ServerResponse } from "node:http";
 import type { DestinationStream, Logger } from "pino";
+import { isError, isNil, isNumber, isString } from "lodash";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomUUID } from "node:crypto";
 import pino from "pino";
@@ -24,8 +25,11 @@ type RequestState = {
     start: bigint;
     stream: boolean;
 };
+
 const context = new AsyncLocalStorage<RequestContext>();
+
 const requests = new WeakMap<ServerResponse, RequestState>();
+
 const methods = new Set([
     "GET",
     "POST",
@@ -35,11 +39,13 @@ const methods = new Set([
     "HEAD",
     "OPTIONS",
 ]);
+
 const method = (request: Request) =>
     methods.has(request.method) ? request.method : "OTHER";
+
 const routeTemplate = (request?: Request): string => {
     const path = (request?.route as { path?: unknown } | undefined)?.path;
-    return typeof path === "string" ? path : "__unmatched__";
+    return isString(path) ? path : "__unmatched__";
 };
 
 // Exception messages and SDK payloads can echo credentials or request bodies.
@@ -51,71 +57,104 @@ type SafeError = {
     status?: number;
     type: string;
 };
+
+const sanitizeSourceLocation = (location: string): string => {
+    try {
+        const url = new URL(location);
+        if (url.protocol !== "file:") {
+            return `${url.origin}/[source]`;
+        }
+
+        const origin = url.origin === "null" ? "file://" : url.origin;
+        return `${origin}${url.pathname}`;
+    } catch {
+        return "[source]";
+    }
+};
+
+const sanitizeStackFrame = (frame: string): string =>
+    frame
+        .replace(/(?:https?|file):\/\/[^\s)]+/g, sanitizeSourceLocation)
+        .slice(0, 1000);
+
+const sanitizeStack = (error: Error): string | undefined => {
+    const prefix =
+        error.message === "" ? error.name : `${error.name}: ${error.message}`;
+    if (!isString(error.stack) || !error.stack.startsWith(prefix)) {
+        return undefined;
+    }
+
+    return error.stack
+        .slice(prefix.length)
+        .split("\n")
+        .filter((frame) => /^\s+at /.test(frame))
+        .slice(0, 20)
+        .map(sanitizeStackFrame)
+        .join("\n");
+};
+
+const safeErrorCodes = new Set([
+    "EADDRINUSE",
+    "EADDRNOTAVAIL",
+    "EACCES",
+    "ECONNREFUSED",
+    "ECONNRESET",
+    "ETIMEDOUT",
+    "ENOTFOUND",
+    "EPIPE",
+    "ENOENT",
+    "SQLITE_BUSY",
+    "SQLITE_CONSTRAINT",
+    "SQLITE_ERROR",
+]);
+
 const safeError = (value: unknown, depth = 0): SafeError => {
-    if (!(value instanceof Error)) {
+    if (!isError(value)) {
         return { type: "NonError" };
     }
-    const { name: type } = value.constructor;
-    const prefix =
-        value.message === "" ? value.name : `${value.name}: ${value.message}`;
-    const stack =
-        typeof value.stack === "string" && value.stack.startsWith(prefix)
-            ? value.stack
-                  .slice(prefix.length)
-                  .split("\n")
-                  .filter((frame) => /^\s+at /.test(frame))
-                  .slice(0, 20)
-                  .map((frame) =>
-                      frame
-                          .replace(
-                              /(?:https?|file):\/\/[^\s)]+/g,
-                              (location) => {
-                                  try {
-                                      const url = new URL(location);
-                                      return url.protocol === "file:"
-                                          ? `${url.origin === "null" ? "file://" : url.origin}${url.pathname}`
-                                          : `${url.origin}/[source]`;
-                                  } catch {
-                                      return "[source]";
-                                  }
-                              }
-                          )
-                          .slice(0, 1000)
-                  )
-                  .join("\n")
-            : undefined;
-    const status =
+
+    const result: SafeError = {
+        stack: sanitizeStack(value),
+        type: value.constructor.name,
+    };
+    if (
         "status" in value &&
-        typeof value.status === "number" &&
+        isNumber(value.status) &&
         value.status >= 100 &&
         value.status <= 599
-            ? value.status
-            : undefined;
-    const codes = new Set([
-        "EADDRINUSE",
-        "EADDRNOTAVAIL",
-        "EACCES",
-        "ECONNREFUSED",
-        "ECONNRESET",
-        "ETIMEDOUT",
-        "ENOTFOUND",
-        "EPIPE",
-        "ENOENT",
-        "SQLITE_BUSY",
-        "SQLITE_CONSTRAINT",
-        "SQLITE_ERROR",
-    ]);
-    const code =
+    ) {
+        result.status = value.status;
+    }
+    if (
         "code" in value &&
-        typeof value.code === "string" &&
-        codes.has(value.code)
-            ? value.code
-            : undefined;
-    const cause =
-        depth < 3 && "cause" in value && value.cause instanceof Error
-            ? safeError(value.cause, depth + 1)
-            : undefined;
-    return { cause, code, stack, status, type };
+        isString(value.code) &&
+        safeErrorCodes.has(value.code)
+    ) {
+        result.code = value.code;
+    }
+    if (depth < 3 && "cause" in value && isError(value.cause)) {
+        result.cause = safeError(value.cause, depth + 1);
+    }
+    return result;
+};
+
+const requestContextFields = (instance: Logger) => {
+    const active = context.getStore();
+    if (isNil(active)) {
+        return {};
+    }
+
+    const bound = instance.bindings();
+    const result: { method?: string; requestId?: string; route: string } = {
+        route: routeTemplate(active.request),
+    };
+    if (isNil(bound.method)) {
+        result.method = method(active.request);
+    }
+    if (isNil(bound.requestId)) {
+        result.requestId = active.requestId;
+    }
+    return result;
 };
 
 const createLogger = (
@@ -130,27 +169,13 @@ const createLogger = (
                 service,
                 version:
                     [env.SOURCE_COMMIT, env.APP_VERSION].find(
-                        (value) => value != null && value.trim() !== ""
+                        (value) => !isNil(value) && value.trim() !== ""
                     ) ?? "unknown",
             },
             formatters: { level: (level) => ({ level }) },
             level: env.LOG_LEVEL ?? "info",
-            mixin: (_object, _level, instance) => {
-                const active = context.getStore();
-                if (active == null) {
-                    return {};
-                }
-                const bound = instance.bindings();
-                return {
-                    ...(bound.method == null
-                        ? { method: method(active.request) }
-                        : {}),
-                    ...(bound.requestId == null
-                        ? { requestId: active.requestId }
-                        : {}),
-                    route: routeTemplate(active.request),
-                };
-            },
+            mixin: (_object, _level, instance) =>
+                requestContextFields(instance),
             redact: {
                 paths: [
                     "authorization",
@@ -192,16 +217,69 @@ const createLogger = (
     );
 
 const logger = createLogger("arthistory-api");
+
 const elapsed = (state: RequestState) =>
     Number(process.hrtime.bigint() - state.start) / 1e6;
+
 const fields = (state: RequestState, response: ServerResponse) => ({
     route: routeTemplate(state.request),
     statusCode: response.statusCode,
 });
 
+const completionLevel = (
+    state: RequestState,
+    response: ServerResponse
+): "debug" | "error" | "info" | "warn" => {
+    if (state.failed || response.statusCode >= 500) {
+        return "error";
+    }
+    if (
+        !state.stream &&
+        (!response.writableFinished || response.statusCode >= 400)
+    ) {
+        return "warn";
+    }
+    if (state.request.path === "/health" || state.request.path === "/ready") {
+        return "debug";
+    }
+    return "info";
+};
+
+const completionFields = (state: RequestState, response: ServerResponse) => {
+    const details = {
+        ...fields(state, response),
+        aborted: !response.writableFinished,
+    };
+    if (state.stream) {
+        return {
+            ...details,
+            connectionDurationMs: elapsed(state),
+            event: "stream.closed",
+        };
+    }
+
+    let event = "request.completed";
+    if (details.aborted) {
+        event = "request.aborted";
+    }
+    return { ...details, durationMs: elapsed(state), event };
+};
+
+const logCompletion = (state: RequestState, response: ServerResponse): void => {
+    if (state.done) {
+        return;
+    }
+    state.done = true;
+    requests.delete(response);
+
+    const level = completionLevel(state, response);
+    const details = completionFields(state, response);
+    state.logger[level](details, details.event);
+};
+
 const logRequestError = (response: Response, error: unknown): void => {
     const state = requests.get(response);
-    if (state != null) {
+    if (!isNil(state)) {
         state.failed = true;
     }
     const log = state?.logger ?? response.req?.logger ?? logger;
@@ -211,7 +289,7 @@ const logRequestError = (response: Response, error: unknown): void => {
 
 const logStreamOpen = (response: ServerResponse): void => {
     const state = requests.get(response);
-    if (state == null || state.stream || state.done) {
+    if (isNil(state) || state.stream || state.done) {
         return;
     }
     state.stream = true;
@@ -242,40 +320,7 @@ const requestLogging =
             stream: false,
         };
         requests.set(response, state);
-        const complete = () => {
-            if (state.done) {
-                return;
-            }
-            state.done = true;
-            requests.delete(response);
-            const aborted = !response.writableFinished;
-            const event = state.stream
-                ? "stream.closed"
-                : aborted
-                  ? "request.aborted"
-                  : "request.completed";
-            const probe =
-                request.path === "/health" || request.path === "/ready";
-            const level =
-                state.failed || response.statusCode >= 500
-                    ? "error"
-                    : !state.stream && (aborted || response.statusCode >= 400)
-                      ? "warn"
-                      : probe
-                        ? "debug"
-                        : "info";
-            log[level](
-                {
-                    ...fields(state, response),
-                    aborted,
-                    event,
-                    ...(state.stream
-                        ? { connectionDurationMs: elapsed(state) }
-                        : { durationMs: elapsed(state) }),
-                },
-                event
-            );
-        };
+        const complete = () => logCompletion(state, response);
         response.once("finish", complete);
         response.once("close", complete);
         response.once("error", (error) => {
