@@ -1,0 +1,9 @@
+# Local development uses an isolated network and opts into tunnels explicitly.
+services:
+  tunnel:
+    profiles: ["tunnels"]
+
+networks:
+  observability:
+    external: false
+    name: ${COMPOSE_PROJECT_NAME:-arthistory}-observability-local

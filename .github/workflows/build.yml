@@ -57,6 +57,9 @@ jobs:
             - name: npm ci
               run: npm ci
 
+            - name: API tests
+              run: npm run test --workspace=api
+
             - name: npm run build
               run: npm run build
 

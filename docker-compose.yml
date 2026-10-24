@@ -9,6 +9,13 @@ services:
     environment:
       - PORT=3001
       - DATABASE_PATH=/data/_spotify-data.db
+      - METRICS_HOST=0.0.0.0
+      - METRICS_PORT=9464
+    networks:
+      default:
+      observability:
+        aliases:
+          - arthistory-api-metrics
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 30s
@@ -41,3 +48,8 @@ services:
 
 volumes:
   data:
+
+networks:
+  observability:
+    external: true
+    name: observability
