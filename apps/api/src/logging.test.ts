@@ -2,8 +2,7 @@ import type { ErrorRequestHandler, Express } from "express";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import express from "express";
-import assert from "node:assert/strict";
-import { afterEach, describe, it } from "node:test";
+import { afterEach, describe, expect, it } from "vitest";
 import {
     createLogger,
     logRequestError,
@@ -91,27 +90,22 @@ describe("standard API logging", () => {
             (record) => record.event === "operation.started"
         );
 
-        assert.equal(completed.length, 2);
-        assert.match(
-            first.headers.get("x-request-id") ?? "",
+        expect(completed).toHaveLength(2);
+        expect(first.headers.get("x-request-id") ?? "").toMatch(
             /^[a-f0-9-]{36}$/
         );
-        assert.equal(
-            completed[0]?.requestId,
-            first.headers.get("x-request-id")
-        );
-        assert.equal(nested?.requestId, first.headers.get("x-request-id"));
-        assert.notEqual(
-            first.headers.get("x-request-id"),
+        expect(completed[0]?.requestId).toBe(first.headers.get("x-request-id"));
+        expect(nested?.requestId).toBe(first.headers.get("x-request-id"));
+        expect(first.headers.get("x-request-id")).not.toBe(
             second.headers.get("x-request-id")
         );
-        assert.equal(completed[0]?.route, "/items/:id");
-        assert.equal(completed[0]?.service, "test-api");
-        assert.equal(completed[0]?.environment, "test");
-        assert.equal(completed[0]?.version, "abc123");
-        assert.equal(completed[0]?.statusCode, 200);
-        assert.equal(completed[0]?.level, "info");
-        assert.equal(typeof completed[0]?.durationMs, "number");
+        expect(completed[0]?.route).toBe("/items/:id");
+        expect(completed[0]?.service).toBe("test-api");
+        expect(completed[0]?.environment).toBe("test");
+        expect(completed[0]?.version).toBe("abc123");
+        expect(completed[0]?.statusCode).toBe(200);
+        expect(completed[0]?.level).toBe("info");
+        expect(completed[0]?.durationMs).toBeTypeOf("number");
         for (const value of [
             "private-id",
             "another-private-id",
@@ -120,7 +114,7 @@ describe("standard API logging", () => {
             "private-cookie",
             "forged-id",
         ]) {
-            assert.ok(!output.lines.join("").includes(value), value);
+            expect(output.lines.join(""), value).not.toContain(value);
         }
     });
 
@@ -151,15 +145,14 @@ describe("standard API logging", () => {
         await response.text();
         const records = output.records();
 
-        assert.equal(response.status, 400);
-        assert.equal(records.length, 1);
-        assert.equal(records[0]?.level, "warn");
-        assert.equal(records[0]?.route, "__unmatched__");
-        assert.equal(
-            records[0]?.requestId,
+        expect(response.status).toBe(400);
+        expect(records).toHaveLength(1);
+        expect(records[0]?.level).toBe("warn");
+        expect(records[0]?.route).toBe("__unmatched__");
+        expect(records[0]?.requestId).toBe(
             response.headers.get("x-request-id")
         );
-        assert.ok(!output.lines.join("").includes("private-"));
+        expect(output.lines.join("")).not.toContain("private-");
     });
 
     it("captures safe error source frames without exception payloads or messages", async () => {
@@ -201,23 +194,22 @@ describe("standard API logging", () => {
             (record) => record.event === "request.completed"
         );
 
-        assert.equal(response.status, 503);
-        assert.ok(failure != null);
-        assert.deepEqual(Object.keys(failure.err as object).sort(), [
+        expect(response.status).toBe(503);
+        expect(failure).toBeDefined();
+        expect(Object.keys(failure?.err as object).sort()).toEqual([
             "cause",
             "code",
             "stack",
             "status",
             "type",
         ]);
-        assert.equal((failure.err as RecordData).code, "ECONNREFUSED");
-        assert.match(
-            String((failure.err as RecordData).stack),
+        expect((failure?.err as RecordData).code).toBe("ECONNREFUSED");
+        expect(String((failure?.err as RecordData).stack)).toMatch(
             /logging\.test/
         );
-        assert.equal(failure.requestId, response.headers.get("x-request-id"));
-        assert.equal(completed?.level, "error");
-        assert.ok(!output.lines.join("").includes("private-"));
+        expect(failure?.requestId).toBe(response.headers.get("x-request-id"));
+        expect(completed?.level).toBe("error");
+        expect(output.lines.join("")).not.toContain("private-");
     });
 
     it("keeps healthy probes quiet while reporting unhealthy readiness", async () => {
@@ -236,10 +228,10 @@ describe("standard API logging", () => {
         await fetch(origin + "/ready").then((response) => response.text());
         const records = output.records();
 
-        assert.equal(records.length, 1);
-        assert.equal(records[0]?.route, "/ready");
-        assert.equal(records[0]?.statusCode, 503);
-        assert.equal(records[0]?.level, "error");
+        expect(records).toHaveLength(1);
+        expect(records[0]?.route).toBe("/ready");
+        expect(records[0]?.statusCode).toBe(503);
+        expect(records[0]?.level).toBe("error");
     });
 
     it("emits one stream open/error/close lifecycle instead of request completion", async () => {
@@ -260,21 +252,22 @@ describe("standard API logging", () => {
         await response.text();
         const records = output.records();
 
-        assert.deepEqual(
-            records.map((record) => record.event),
-            ["stream.opened", "stream.error", "stream.closed"]
-        );
-        assert.ok(
+        expect(records.map((record) => record.event)).toEqual([
+            "stream.opened",
+            "stream.error",
+            "stream.closed",
+        ]);
+        expect(
             records.every(
                 (record) =>
                     record.requestId === response.headers.get("x-request-id")
             )
-        );
-        assert.equal(typeof records[0]?.durationMs, "number");
-        assert.equal(typeof records[2]?.connectionDurationMs, "number");
-        assert.equal(records[2]?.durationMs, undefined);
-        assert.equal(records[2]?.route, "/events/:id");
-        assert.ok(!output.lines.join("").includes("private-"));
+        ).toBe(true);
+        expect(records[0]?.durationMs).toBeTypeOf("number");
+        expect(records[2]?.connectionDurationMs).toBeTypeOf("number");
+        expect(records[2]?.durationMs).toBeUndefined();
+        expect(records[2]?.route).toBe("/events/:id");
+        expect(output.lines.join("")).not.toContain("private-");
     });
 
     it("redacts credential fields and never serializes request/response objects", () => {
@@ -295,7 +288,7 @@ describe("standard API logging", () => {
         );
         const text = output.lines.join("");
 
-        assert.equal(output.records().length, 1);
-        assert.ok(!text.includes("private-"));
+        expect(output.records()).toHaveLength(1);
+        expect(text).not.toContain("private-");
     });
 });
