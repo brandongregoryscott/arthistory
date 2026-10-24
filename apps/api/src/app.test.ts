@@ -1,12 +1,16 @@
+import type { Registry } from "@prometheus-io/client";
 import type { Request, Response } from "express";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import assert from "node:assert/strict";
-import { after, before, mock, test } from "node:test";
+import { after, before, beforeEach, mock, test } from "node:test";
 import posthog from "posthog-js";
 
 let server: Server | undefined;
 let origin: string;
+let metricsServer: Server | undefined;
+let metricsOrigin: string;
+let registry: Registry;
 const respond =
     (route: string) => async (_request: Request, response: Response) =>
         response.json({ route });
@@ -36,7 +40,8 @@ before(async () => {
         "listArtistSnapshots",
         respond("listArtistSnapshots")
     );
-    const { app } = await import("./app.js");
+    const { app, metrics } = await import("./app.js");
+    ({ registry } = metrics);
     app.set("trust proxy", false);
     const activeServer = app.listen(0, "127.0.0.1");
     server = activeServer;
@@ -44,12 +49,20 @@ before(async () => {
         activeServer.once("listening", resolve)
     );
     origin = `http://127.0.0.1:${(activeServer.address() as AddressInfo).port}`;
+    const activeMetricsServer = metrics.app.listen(0, "127.0.0.1");
+    metricsServer = activeMetricsServer;
+    await new Promise<void>((resolve) =>
+        activeMetricsServer.once("listening", resolve)
+    );
+    metricsOrigin = `http://127.0.0.1:${(activeMetricsServer.address() as AddressInfo).port}`;
 });
 
 after(async () => {
     mock.restoreAll();
-    if (server != null) {
-        const activeServer = server;
+    for (const activeServer of [server, metricsServer]) {
+        if (activeServer == null) {
+            continue;
+        }
         await new Promise<void>((resolve, reject) =>
             activeServer.close((error) =>
                 error != null ? reject(error) : resolve()
@@ -57,6 +70,8 @@ after(async () => {
         );
     }
 });
+
+beforeEach(() => registry.resetMetrics());
 
 test("health returns the shared contract", async () => {
     const response = await fetch(`${origin}/health`);
@@ -84,4 +99,29 @@ test("removed health and versioned routes return 404", async () => {
     for (const path of ["/healthcheck", "/v1/meta/latest", "/v1/artists"]) {
         assert.equal((await fetch(`${origin}${path}`)).status, 404);
     }
+});
+
+test("private listener exports runtime metrics while public /metrics stays unavailable", async () => {
+    const publicResponse = await fetch(`${origin}/metrics`);
+    const privateResponse = await fetch(`${metricsOrigin}/metrics`);
+    const text = await privateResponse.text();
+
+    assert.equal(publicResponse.status, 404);
+    assert.equal(privateResponse.status, 200);
+    assert.ok(text.includes("process_resident_memory_bytes"));
+    assert.ok(text.includes('route="__unmatched__",status_code="404"'));
+});
+
+test("records the real controller route template without artist IDs or query strings", async () => {
+    const response = await fetch(
+        `${origin}/artists/private-artist/snapshots?token=private-query`
+    );
+    const text = await registry.metrics();
+
+    assert.equal(response.status, 200);
+    assert.ok(
+        text.includes('route="/artists/:id/snapshots",status_code="200"')
+    );
+    assert.ok(!text.includes("private-artist"));
+    assert.ok(!text.includes("private-query"));
 });

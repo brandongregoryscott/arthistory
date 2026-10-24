@@ -13,12 +13,15 @@ import express from "express";
 import { ArtistsController } from "./controllers/artists-controller";
 import { MetaController } from "./controllers/meta-controller";
 import { errorHandler } from "./error-handler";
+import { createMetrics } from "./metrics";
 import { readRateLimiter } from "./utilities/rate-limiter";
 
 const app = express();
+const metrics = createMetrics();
 
 app.set("trust proxy", true);
 
+app.use(metrics.middleware);
 app.use(bodyParser.json());
 app.use(cors());
 
@@ -43,4 +46,4 @@ app.get(LIST_ARTIST_SNAPSHOTS_ROUTE, ArtistsController.listArtistSnapshots);
 app.use(errorHandler);
 app.use(readRateLimiter);
 
-export { app };
+export { app, metrics };
