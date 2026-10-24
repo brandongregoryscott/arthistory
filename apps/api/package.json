@@ -23,7 +23,7 @@
         "@types/cors": "2.8.13",
         "@types/express": "5.0.6",
         "@types/lodash": "4.14.195",
-        "@types/node": "20.4.2",
+        "@types/node": "26.6.5",
         "concurrently": "8.2.0",
         "eslint": "9.39.3",
         "nodemon": "3.0.1",
@@ -33,7 +33,7 @@
     "name": "api",
     "private": true,
     "scripts": {
-        "build": "esbuild src/server.ts --bundle --platform=node --target=node24 --outfile=dist/server.js",
+        "build": "esbuild src/server.ts --bundle --platform=node --target=node26 --outfile=dist/server.js",
         "postbuild": "rm -rf ../../build build && cp -r ../../node_modules/sqlite3/build ../.. && cp -r ../../node_modules/sqlite3/build .",
         "clean": "rm -rf dist",
         "dev": "concurrently --names esbuild,nodemon \"npm run build -- --watch\" \"nodemon -q dist/server.js\"",

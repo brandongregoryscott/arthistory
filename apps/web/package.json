@@ -30,7 +30,7 @@
         "@repo/typescript-config": "*",
         "@types/eslint": "8.56.5",
         "@types/lodash": "4.17.4",
-        "@types/node": "20.11.24",
+        "@types/node": "26.6.5",
         "@types/react": "18.2.61",
         "@types/react-dom": "18.2.19",
         "eslint": "9.39.3",
