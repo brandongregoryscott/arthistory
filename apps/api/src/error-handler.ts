@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { isNotFoundError, isValidationError } from "@repo/common";
+import { logRequestError } from "./logging";
 import { badRequest, internalError, notFound } from "./utilities/responses";
 
 /**
@@ -14,8 +15,13 @@ const errorHandler = async (
     response: Response,
     _next: NextFunction
 ) => {
-    // eslint-disable-next-line no-console -- Keeping this log in for debugging
-    console.error(error);
+    if (!isNotFoundError(error) && !isValidationError(error)) {
+        logRequestError(response, error);
+    }
+    if (response.headersSent) {
+        response.destroy();
+        return;
+    }
     if (isNotFoundError(error)) {
         return notFound(response, error);
     }

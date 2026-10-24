@@ -2,9 +2,8 @@ import type { Registry } from "@prometheus-io/client";
 import type { Request, Response } from "express";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import assert from "node:assert/strict";
-import { after, before, beforeEach, mock, test } from "node:test";
 import posthog from "posthog-js";
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
 let server: Server | undefined;
 let origin: string;
@@ -15,29 +14,27 @@ const respond =
     (route: string) => async (_request: Request, response: Response) =>
         response.json({ route });
 
-before(async () => {
-    mock.method(posthog, "init", () => posthog);
+beforeAll(async () => {
+    vi.spyOn(posthog, "init").mockImplementation(() => posthog);
     const { ArtistsController } =
         await import("./controllers/artists-controller.js");
     const { MetaController } = await import("./controllers/meta-controller.js");
     // Stub dependencies before Express captures the controllers, then exercise
     // the actual HTTP router without contacting Spotify or opening SQLite.
-    mock.method(MetaController, "latest", respond("latest"));
-    mock.method(ArtistsController, "requestArtist", respond("requestArtist"));
-    mock.method(
-        ArtistsController,
-        "searchArtistsByName",
+    vi.spyOn(MetaController, "latest").mockImplementation(respond("latest"));
+    vi.spyOn(ArtistsController, "requestArtist").mockImplementation(
+        respond("requestArtist")
+    );
+    vi.spyOn(ArtistsController, "searchArtistsByName").mockImplementation(
         respond("searchArtistsByName")
     );
-    mock.method(
-        ArtistsController,
-        "getArtistSnapshots",
+    vi.spyOn(ArtistsController, "getArtistSnapshots").mockImplementation(
         respond("getArtistSnapshots")
     );
-    mock.method(ArtistsController, "listArtists", respond("listArtists"));
-    mock.method(
-        ArtistsController,
-        "listArtistSnapshots",
+    vi.spyOn(ArtistsController, "listArtists").mockImplementation(
+        respond("listArtists")
+    );
+    vi.spyOn(ArtistsController, "listArtistSnapshots").mockImplementation(
         respond("listArtistSnapshots")
     );
     const { app, metrics } = await import("./app.js");
@@ -57,8 +54,8 @@ before(async () => {
     metricsOrigin = `http://127.0.0.1:${(activeMetricsServer.address() as AddressInfo).port}`;
 });
 
-after(async () => {
-    mock.restoreAll();
+afterAll(async () => {
+    vi.restoreAllMocks();
     for (const activeServer of [server, metricsServer]) {
         if (activeServer == null) {
             continue;
@@ -75,8 +72,8 @@ beforeEach(() => registry.resetMetrics());
 
 test("health returns the shared contract", async () => {
     const response = await fetch(`${origin}/health`);
-    assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
 });
 
 test("unversioned routes reach their existing controllers", async () => {
@@ -90,14 +87,14 @@ test("unversioned routes reach their existing controllers", async () => {
     ] as const;
     for (const [method, path, handler] of routes) {
         const response = await fetch(`${origin}${path}`, { method });
-        assert.equal(response.status, 200, `${method} ${path}`);
-        assert.deepEqual(await response.json(), { route: handler });
+        expect(response.status, `${method} ${path}`).toBe(200);
+        expect(await response.json()).toEqual({ route: handler });
     }
 });
 
 test("removed health and versioned routes return 404", async () => {
     for (const path of ["/healthcheck", "/v1/meta/latest", "/v1/artists"]) {
-        assert.equal((await fetch(`${origin}${path}`)).status, 404);
+        expect((await fetch(`${origin}${path}`)).status).toBe(404);
     }
 });
 
@@ -106,10 +103,10 @@ test("private listener exports runtime metrics while public /metrics stays unava
     const privateResponse = await fetch(`${metricsOrigin}/metrics`);
     const text = await privateResponse.text();
 
-    assert.equal(publicResponse.status, 404);
-    assert.equal(privateResponse.status, 200);
-    assert.ok(text.includes("process_resident_memory_bytes"));
-    assert.ok(text.includes('route="__unmatched__",status_code="404"'));
+    expect(publicResponse.status).toBe(404);
+    expect(privateResponse.status).toBe(200);
+    expect(text).toContain("process_resident_memory_bytes");
+    expect(text).toContain('route="__unmatched__",status_code="404"');
 });
 
 test("records the real controller route template without artist IDs or query strings", async () => {
@@ -118,10 +115,8 @@ test("records the real controller route template without artist IDs or query str
     );
     const text = await registry.metrics();
 
-    assert.equal(response.status, 200);
-    assert.ok(
-        text.includes('route="/artists/:id/snapshots",status_code="200"')
-    );
-    assert.ok(!text.includes("private-artist"));
-    assert.ok(!text.includes("private-query"));
+    expect(response.status).toBe(200);
+    expect(text).toContain('route="/artists/:id/snapshots",status_code="200"');
+    expect(text).not.toContain("private-artist");
+    expect(text).not.toContain("private-query");
 });

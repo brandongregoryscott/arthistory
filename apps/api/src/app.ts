@@ -13,6 +13,7 @@ import express from "express";
 import { ArtistsController } from "./controllers/artists-controller";
 import { MetaController } from "./controllers/meta-controller";
 import { errorHandler } from "./error-handler";
+import { requestLogging } from "./logging";
 import { createMetrics } from "./metrics";
 import { readRateLimiter } from "./utilities/rate-limiter";
 
@@ -21,6 +22,7 @@ const metrics = createMetrics();
 
 app.set("trust proxy", true);
 
+app.use(requestLogging());
 app.use(metrics.middleware);
 app.use(bodyParser.json());
 app.use(cors());

@@ -2,8 +2,7 @@ import type { Express } from "express";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import express from "express";
-import assert from "node:assert/strict";
-import { afterEach, describe, it } from "node:test";
+import { afterEach, describe, expect, it } from "vitest";
 import { createMetrics } from "./metrics";
 
 const servers: Server[] = [];
@@ -55,25 +54,25 @@ describe("createMetrics", () => {
         const response = await fetch(`${endpoint}/metrics`);
         const text = await response.text();
 
-        assert.equal(response.status, 200);
-        assert.match(response.headers.get("content-type") ?? "", /text\/plain/);
-        assert.ok(
-            text.includes(
-                'http_request_duration_seconds_count{method="GET",route="/artists/:id/snapshots",status_code="503"} 2'
-            )
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type") ?? "").toMatch(
+            /text\/plain/
         );
-        assert.ok(
-            text.includes('http_request_duration_seconds_bucket{le="0.005",')
+        expect(text).toContain(
+            'http_request_duration_seconds_count{method="GET",route="/artists/:id/snapshots",status_code="503"} 2'
         );
-        assert.ok(text.includes("process_resident_memory_bytes"));
-        assert.ok(text.includes("nodejs_eventloop_lag_p99_seconds"));
+        expect(text).toContain(
+            'http_request_duration_seconds_bucket{le="0.005",'
+        );
+        expect(text).toContain("process_resident_memory_bytes");
+        expect(text).toContain("nodejs_eventloop_lag_p99_seconds");
         for (const secret of [
             "private-artist",
             "another-artist",
             "private-query",
             "private-token",
         ]) {
-            assert.ok(!text.includes(secret), secret);
+            expect(text, secret).not.toContain(secret);
         }
     });
 
@@ -88,18 +87,14 @@ describe("createMetrics", () => {
         await fetch(`${origin}/custom-private-path`, { method: "PROPFIND" });
         const text = await metrics.registry.metrics();
 
-        assert.ok(
-            text.includes(
-                'http_request_duration_seconds_count{method="GET",route="__unmatched__",status_code="404"} 2'
-            )
+        expect(text).toContain(
+            'http_request_duration_seconds_count{method="GET",route="__unmatched__",status_code="404"} 2'
         );
-        assert.ok(
-            text.includes(
-                'http_request_duration_seconds_count{method="OTHER",route="__unmatched__",status_code="404"} 1'
-            )
+        expect(text).toContain(
+            'http_request_duration_seconds_count{method="OTHER",route="__unmatched__",status_code="404"} 1'
         );
-        assert.ok(!text.includes("private-path"));
-        assert.ok(!text.includes("PROPFIND"));
+        expect(text).not.toContain("private-path");
+        expect(text).not.toContain("PROPFIND");
     });
 
     it("excludes health probes and metrics scrapes", async () => {
@@ -114,8 +109,8 @@ describe("createMetrics", () => {
         await fetch(`${endpoint}/metrics`);
         const text = await metrics.registry.metrics();
 
-        assert.ok(!text.includes("http_request_duration_seconds_count{"));
-        assert.ok(text.includes("process_resident_memory_bytes"));
+        expect(text).not.toContain("http_request_duration_seconds_count{");
+        expect(text).toContain("process_resident_memory_bytes");
     });
 
     it("isolates observations between registries", async () => {
@@ -129,7 +124,9 @@ describe("createMetrics", () => {
         const firstText = await first.registry.metrics();
         const secondText = await second.registry.metrics();
 
-        assert.ok(firstText.includes('route="__unmatched__"'));
-        assert.ok(!secondText.includes("http_request_duration_seconds_count{"));
+        expect(firstText).toContain('route="__unmatched__"');
+        expect(secondText).not.toContain(
+            "http_request_duration_seconds_count{"
+        );
     });
 });
