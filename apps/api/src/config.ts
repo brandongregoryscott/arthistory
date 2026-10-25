@@ -3,6 +3,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const PORT = process.env.PORT ?? 3001;
+const TRUST_PROXY_HOPS = Number(process.env.TRUST_PROXY_HOPS ?? 0);
+if (!Number.isSafeInteger(TRUST_PROXY_HOPS) || TRUST_PROXY_HOPS < 0) {
+    throw new Error("Invalid TRUST_PROXY_HOPS.");
+}
 const METRICS_HOST = process.env.METRICS_HOST ?? "127.0.0.1";
 const METRICS_PORT = Number(process.env.METRICS_PORT ?? 9464);
 if (METRICS_HOST.trim() === "") {
@@ -28,4 +32,5 @@ export {
     METRICS_PORT,
     PORT,
     POSTHOG_KEY,
+    TRUST_PROXY_HOPS,
 };

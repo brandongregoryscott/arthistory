@@ -9,6 +9,7 @@ import {
 } from "@repo/common";
 import cors from "cors";
 import express from "express";
+import { TRUST_PROXY_HOPS } from "./config";
 import { ArtistsController } from "./controllers/artists-controller";
 import { MetaController } from "./controllers/meta-controller";
 import { errorHandler } from "./error-handler";
@@ -19,7 +20,7 @@ import { readRateLimiter } from "./utilities/rate-limiter";
 const app = express();
 const metrics = createMetrics();
 
-app.set("trust proxy", true);
+app.set("trust proxy", TRUST_PROXY_HOPS);
 
 app.use(requestLogging());
 app.use(metrics.middleware);
@@ -31,6 +32,8 @@ app.get(
     (_request: Request, response: Response): Response =>
         response.json({ ok: true })
 );
+
+app.use(readRateLimiter);
 
 app.get(GET_LATEST_META_ROUTE, MetaController.latest);
 
@@ -45,6 +48,5 @@ app.get(LIST_ARTISTS_ROUTE, ArtistsController.listArtists);
 app.get(LIST_ARTIST_SNAPSHOTS_ROUTE, ArtistsController.listArtistSnapshots);
 
 app.use(errorHandler);
-app.use(readRateLimiter);
 
 export { app, metrics };
