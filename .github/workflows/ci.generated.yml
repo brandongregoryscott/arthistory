@@ -21,26 +21,128 @@ jobs:
   changes:
     name: affected jobs
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     timeout-minutes: 5
     outputs:
-      workflow: '${{ steps.detect.outputs.workflow }}'
-      quality: '${{ steps.detect.outputs.quality }}'
-      api: '${{ steps.detect.outputs.api }}'
-      web: '${{ steps.detect.outputs.web }}'
-      scripts: '${{ steps.detect.outputs.scripts }}'
-      api_container: '${{ steps.detect.outputs.api_container }}'
-      cron_container: '${{ steps.detect.outputs.cron_container }}'
+      workflow: '${{ github.event_name == ''workflow_dispatch'' && ''true'' || steps.detect.outputs.workflow }}'
+      quality: '${{ github.event_name == ''workflow_dispatch'' && ''true'' || steps.detect.outputs.quality }}'
+      api: '${{ github.event_name == ''workflow_dispatch'' && ''true'' || steps.detect.outputs.api }}'
+      web: '${{ github.event_name == ''workflow_dispatch'' && ''true'' || steps.detect.outputs.web }}'
+      scripts: '${{ github.event_name == ''workflow_dispatch'' && ''true'' || steps.detect.outputs.scripts }}'
+      api_container: '${{ github.event_name == ''workflow_dispatch'' && ''true'' || steps.detect.outputs.api_container }}'
+      cron_container: '${{ github.event_name == ''workflow_dispatch'' && ''true'' || steps.detect.outputs.cron_container }}'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: github.event_name != 'pull_request'
         with:
           fetch-depth: 0
           filter: 'blob:none'
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      - id: detect
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
-          node-version-file: .nvmrc
-      - name: Detect affected jobs
-        id: detect
-        run: node .github/ci.ts detect
+          base: '${{ github.ref }}'
+          filters: |-
+            {
+              "workflow": [
+                ".github/**",
+                "**/package.json",
+                "package-lock.json",
+                "npm-shrinkwrap.json",
+                ".npmrc",
+                ".nvmrc",
+                "tsconfig.json",
+                "turbo.json"
+              ],
+              "quality": [
+                ".github/**",
+                "**/package.json",
+                "package-lock.json",
+                "npm-shrinkwrap.json",
+                ".npmrc",
+                ".nvmrc",
+                "tsconfig.json",
+                "turbo.json",
+                "packages/common/**",
+                "packages/typescript-config/**",
+                "apps/**",
+                "packages/**",
+                "**/*.md",
+                "eslint.config.mjs",
+                ".prettier*"
+              ],
+              "api": [
+                ".github/**",
+                "**/package.json",
+                "package-lock.json",
+                "npm-shrinkwrap.json",
+                ".npmrc",
+                ".nvmrc",
+                "tsconfig.json",
+                "turbo.json",
+                "packages/common/**",
+                "packages/typescript-config/**",
+                "apps/api/**"
+              ],
+              "web": [
+                ".github/**",
+                "**/package.json",
+                "package-lock.json",
+                "npm-shrinkwrap.json",
+                ".npmrc",
+                ".nvmrc",
+                "tsconfig.json",
+                "turbo.json",
+                "packages/common/**",
+                "packages/typescript-config/**",
+                "apps/web/**",
+                "packages/ui/**"
+              ],
+              "scripts": [
+                ".github/**",
+                "**/package.json",
+                "package-lock.json",
+                "npm-shrinkwrap.json",
+                ".npmrc",
+                ".nvmrc",
+                "tsconfig.json",
+                "turbo.json",
+                "packages/common/**",
+                "packages/typescript-config/**",
+                "packages/scripts/**"
+              ],
+              "api_container": [
+                ".github/**",
+                "**/package.json",
+                "package-lock.json",
+                "npm-shrinkwrap.json",
+                ".npmrc",
+                ".nvmrc",
+                "tsconfig.json",
+                "turbo.json",
+                "packages/common/**",
+                "packages/typescript-config/**",
+                "apps/api/**",
+                "Dockerfile.api",
+                ".dockerignore"
+              ],
+              "cron_container": [
+                ".github/**",
+                "**/package.json",
+                "package-lock.json",
+                "npm-shrinkwrap.json",
+                ".npmrc",
+                ".nvmrc",
+                "tsconfig.json",
+                "turbo.json",
+                "packages/common/**",
+                "packages/typescript-config/**",
+                "packages/scripts/**",
+                "Dockerfile.cron",
+                ".dockerignore"
+              ]
+            }
   workflow:
     name: workflow
     needs:
@@ -60,9 +162,8 @@ jobs:
         run: |-
           npm run ci:typecheck
           npm run ci:lint
-          npm run ci:test
           npm run ci:check
-          npm exec prettier -- --check .github/workflows/ci.mts .github/ci.ts .github/ci.test.ts .github/tsconfig.json .github/eslint.config.mjs
+          npm exec prettier -- --check .github/workflows/ci.mts .github/tsconfig.json .github/eslint.config.mjs
       - uses: 'docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667'
         with:
           args: '-color .github/workflows/ci.generated.yml'
@@ -202,11 +303,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
       - name: Require affected checks to succeed
         env:
           NEEDS_JSON: '${{ toJSON(needs) }}'
-        run: node .github/ci.ts check
+        run: |-
+          node <<'NODE'
+          const needs = JSON.parse(process.env.NEEDS_JSON);
+          if (needs.changes.result !== 'success') throw new Error('Change detection failed');
+          for (const name of ["workflow","quality","api","web","scripts","api_container","cron_container"]) {
+              const selected = needs.changes.outputs[name];
+              if (!['true', 'false'].includes(selected)) throw new Error('Missing selection: ' + name);
+              const expected = selected === 'true' ? 'success' : 'skipped';
+              if (needs[name]?.result !== expected) throw new Error(name + ': expected ' + expected);
+          }
+          NODE

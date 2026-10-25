@@ -1,5 +1,4 @@
-import { job, step, workflow } from "gagen";
-import { targets } from "../ci.ts";
+import { conditions, job, step, workflow } from "gagen";
 
 const checkout = step({ uses: "actions/checkout@v7.0.1" });
 const setupNode = step.dependsOn(checkout)({
@@ -11,28 +10,78 @@ const install = step.dependsOn(setupNode)({
     run: "npm ci",
 });
 
+// Every image installs the workspace graph, so manifests affect all consumers.
+const sharedInputs = [
+    ".github/**",
+    "**/package.json",
+    "package-lock.json",
+    "npm-shrinkwrap.json",
+    ".npmrc",
+    ".nvmrc",
+    "tsconfig.json",
+    "turbo.json",
+];
+const applicationInputs = [
+    ...sharedInputs,
+    "packages/common/**",
+    "packages/typescript-config/**",
+];
+const filters = {
+    workflow: sharedInputs,
+    quality: [
+        ...applicationInputs,
+        "apps/**",
+        "packages/**",
+        "**/*.md",
+        "eslint.config.mjs",
+        ".prettier*",
+    ],
+    api: [...applicationInputs, "apps/api/**"],
+    web: [...applicationInputs, "apps/web/**", "packages/ui/**"],
+    scripts: [...applicationInputs, "packages/scripts/**"],
+    api_container: [
+        ...applicationInputs,
+        "apps/api/**",
+        "Dockerfile.api",
+        ".dockerignore",
+    ],
+    cron_container: [
+        ...applicationInputs,
+        "packages/scripts/**",
+        "Dockerfile.cron",
+        ".dockerignore",
+    ],
+};
+const targets = Object.keys(filters) as Array<keyof typeof filters>;
 const changesCheckout = step({
     uses: "actions/checkout@v7.0.1",
+    if: "github.event_name != 'pull_request'",
     with: { "fetch-depth": 0, filter: "blob:none" },
 });
-const changesNode = step.dependsOn(changesCheckout)({
-    uses: "actions/setup-node@v7.1.0",
-    with: { "node-version-file": ".nvmrc" },
-});
-const detect = step.dependsOn(changesNode)({
+const detect = step({
     id: "detect",
-    name: "Detect affected jobs",
+    uses: "dorny/paths-filter@v4.0.3",
     outputs: targets,
-    run: "node .github/ci.ts detect",
+    with: {
+        base: "${{ github.ref }}",
+        filters: JSON.stringify(filters, null, 2),
+    },
 });
 const changes = job("changes", {
     name: "affected jobs",
     runsOn: "ubuntu-latest",
     timeoutMinutes: 5,
+    permissions: { contents: "read", "pull-requests": "read" },
     outputs: Object.fromEntries(
-        targets.map((target) => [target, detect.outputs[target]])
+        targets.map((target) => [
+            target,
+            conditions
+                .isEvent("workflow_dispatch")
+                .then("true")
+                .else(detect.outputs[target]),
+        ])
     ),
-    steps: [detect],
+    steps: [changesCheckout, detect],
 });
 
 const workflowCheck = job("workflow", {
@@ -46,9 +95,8 @@ const workflowCheck = job("workflow", {
             name: "Check workflow source and generation",
             run: `npm run ci:typecheck
 npm run ci:lint
-npm run ci:test
 npm run ci:check
-npm exec prettier -- --check .github/workflows/ci.mts .github/ci.ts .github/ci.test.ts .github/tsconfig.json .github/eslint.config.mjs`,
+npm exec prettier -- --check .github/workflows/ci.mts .github/tsconfig.json .github/eslint.config.mjs`,
         }),
         step({
             uses: "docker://rhysd/actionlint@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667",
@@ -149,10 +197,6 @@ const containerJob = (image: "api" | "cron") =>
 const apiContainer = containerJob("api");
 const cronContainer = containerJob("cron");
 
-const gateNode = step.dependsOn(checkout)({
-    uses: "actions/setup-node@v7.1.0",
-    with: { "node-version-file": ".nvmrc" },
-});
 const ci = job("ci", {
     name: "ci",
     needs: [
@@ -169,10 +213,19 @@ const ci = job("ci", {
     runsOn: "ubuntu-latest",
     timeoutMinutes: 5,
     steps: [
-        step.dependsOn(gateNode)({
+        step({
             name: "Require affected checks to succeed",
             env: { NEEDS_JSON: "${{ toJSON(needs) }}" },
-            run: "node .github/ci.ts check",
+            run: `node <<'NODE'
+const needs = JSON.parse(process.env.NEEDS_JSON);
+if (needs.changes.result !== 'success') throw new Error('Change detection failed');
+for (const name of ${JSON.stringify(targets)}) {
+    const selected = needs.changes.outputs[name];
+    if (!['true', 'false'].includes(selected)) throw new Error('Missing selection: ' + name);
+    const expected = selected === 'true' ? 'success' : 'skipped';
+    if (needs[name]?.result !== expected) throw new Error(name + ': expected ' + expected);
+}
+NODE`,
         }),
     ],
 });
