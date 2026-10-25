@@ -30,7 +30,7 @@ const errorHandler = async (
         return badRequest(response, error);
     }
 
-    return internalError(response, error);
+    return internalError(response);
 };
 
 export { errorHandler };

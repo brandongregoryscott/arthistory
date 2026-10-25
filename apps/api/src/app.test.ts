@@ -224,6 +224,13 @@ test("rejects malformed JSON before routing", async () => {
     });
 
     expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+        data: null,
+        error: {
+            message: "An unhandled error occurred.",
+            name: "ERROR_UNHANDLED",
+        },
+    });
 });
 
 describe("rate limiting", () => {

@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { NotFoundError } from "@repo/common";
 import { MetaService } from "../services/meta-service";
 import { notFound, ok } from "../utilities/responses";
 
@@ -9,7 +10,10 @@ const MetaController = {
     ): Promise<Response> => {
         const latest = await MetaService.latest();
         if (latest === undefined) {
-            return notFound(response, "Latest data could not be found");
+            return notFound(
+                response,
+                new NotFoundError("Latest data could not be found")
+            );
         }
 
         return ok(response, latest);
