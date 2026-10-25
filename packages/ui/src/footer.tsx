@@ -1,5 +1,6 @@
 import type { SetStateAction } from "react";
 import { Flex, IconButton, Link, Text } from "@chakra-ui/react";
+import { isUndefined } from "lodash";
 import { Moon, Sun } from "lucide-react";
 
 type FooterProps = {
@@ -31,7 +32,7 @@ const Footer: React.FC<FooterProps> = (props) => {
                 variant="ghost">
                 {darkMode ? <Sun /> : <Moon />}
             </IconButton>
-            {lastUpdated !== undefined && (
+            {!isUndefined(lastUpdated) && (
                 <Text color="fg.muted" fontSize="sm">
                     {breakpoint === "mobile" ? "Updated " : "Last updated "}
                     {new Date(lastUpdated).toLocaleDateString(undefined, {

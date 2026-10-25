@@ -6,6 +6,7 @@ import {
     Flex,
     Text,
 } from "@chakra-ui/react";
+import { isEmpty, isUndefined } from "lodash";
 import type { RemovableBadgeProps } from "./removable-badge";
 import { RemovableBadge } from "./removable-badge";
 
@@ -74,7 +75,7 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
                 </Combobox.Control>
                 <Combobox.Positioner>
                     <Combobox.Content maxH="80" zIndex="dropdown">
-                        {items.length === 0 && (
+                        {isEmpty(items) && (
                             <Text color="fg.muted" p="3">
                                 No artists found
                             </Text>
@@ -115,7 +116,7 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
             <Flex aria-label="Selected artists" flexWrap="wrap" gap="2">
                 {selectedIds.map((id) => {
                     const selected = selectedValueMap[id];
-                    return selected === undefined ? null : (
+                    return isUndefined(selected) ? null : (
                         <RemovableBadge
                             key={id}
                             {...getRemovableBadgeProps(selected)}

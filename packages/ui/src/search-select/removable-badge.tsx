@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from "react";
 import { Tag } from "@chakra-ui/react";
+import { isString } from "lodash";
 
 type RemovableBadgeProps = {
     onRemove: () => void;
@@ -13,7 +14,7 @@ const RemovableBadge: React.FC<RemovableBadgeProps> = (props) => {
             <Tag.EndElement>
                 <Tag.CloseTrigger
                     aria-label={
-                        typeof children === "string"
+                        isString(children)
                             ? `Remove ${children}`
                             : "Remove artist"
                     }
