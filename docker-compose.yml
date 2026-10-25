@@ -4,9 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile.api
     ports:
-      - "3001:3001"
+      # Public requests must pass through the header-rewriting HTTP tunnel.
+      - "127.0.0.1:3001:3001"
     env_file: .env
     environment:
+      - TRUST_PROXY_HOPS=1
       - PORT=3001
       - DATABASE_PATH=/data/_spotify-data.db
       - METRICS_HOST=0.0.0.0

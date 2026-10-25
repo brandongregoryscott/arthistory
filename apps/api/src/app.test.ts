@@ -1,17 +1,53 @@
 import type { Registry } from "@prometheus-io/client";
-import type { Request, Response } from "express";
+import type { Express, Request, Response } from "express";
+import type * as rateLimitModule from "express-rate-limit";
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { request } from "node:http";
 import { deflateSync, gzipSync } from "node:zlib";
 import posthog from "posthog-js";
-import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
+import {
+    afterAll,
+    afterEach,
+    beforeAll,
+    beforeEach,
+    describe,
+    expect,
+    test,
+    vi,
+} from "vitest";
 
+// Keep the real limiter and store, lowering the quota only in rate-limit cases.
+const generalQuota = vi.hoisted(() => ({ max: 1000 }));
+
+vi.mock("express-rate-limit", async (importOriginal) => {
+    const actual = await importOriginal<typeof rateLimitModule>();
+    return {
+        ...actual,
+        default: (options: Parameters<typeof actual.default>[0]) =>
+            actual.default({
+                ...options,
+                max:
+                    options?.max === 1000
+                        ? () => generalQuota.max
+                        : options?.max,
+            }),
+    };
+});
+
+let app: Express;
+let readRateLimiter: rateLimitModule.RateLimitRequestHandler;
 let server: Server | undefined;
 let origin: string;
 let metricsServer: Server | undefined;
 let metricsOrigin: string;
 let registry: Registry;
+const client = "198.51.100.10";
+const otherClient = "198.51.100.11";
+const headers = (ip = client, prefix = "203.0.113.1") => ({
+    "X-Forwarded-For": `${prefix}, ${ip}`,
+});
+
 const respond =
     (route: string) => async (_request: Request, response: Response) =>
         response.json({ route });
@@ -39,9 +75,11 @@ beforeAll(async () => {
     vi.spyOn(ArtistsController, "listArtistSnapshots").mockImplementation(
         respond("listArtistSnapshots")
     );
-    const { app, metrics } = await import("./app.js");
+    const application = await import("./app.js");
+    ({ app } = application);
+    const { metrics } = application;
+    ({ readRateLimiter } = await import("./utilities/rate-limiter.js"));
     ({ registry } = metrics);
-    app.set("trust proxy", false);
     const activeServer = app.listen(0, "127.0.0.1");
     server = activeServer;
     await new Promise<void>((resolve) =>
@@ -70,7 +108,12 @@ afterAll(async () => {
     }
 });
 
-beforeEach(() => registry.resetMetrics());
+beforeEach(() => {
+    registry.resetMetrics();
+    for (const ip of [client, otherClient, "127.0.0.1"]) {
+        readRateLimiter.resetKey(ip);
+    }
+});
 
 test("health returns the shared contract", async () => {
     const response = await fetch(`${origin}/health`);
@@ -181,4 +224,136 @@ test("rejects malformed JSON before routing", async () => {
     });
 
     expect(response.status).toBe(500);
+});
+
+describe("rate limiting", () => {
+    beforeEach(() => {
+        generalQuota.max = 2;
+        app.set("trust proxy", 1);
+    });
+
+    afterEach(() => {
+        generalQuota.max = 1000;
+        app.set("trust proxy", 0);
+    });
+
+    test("ignores forged forwarding headers when running without a proxy", async () => {
+        app.set("trust proxy", 0);
+
+        try {
+            const first = await fetch(`${origin}/meta/latest`, {
+                headers: headers(client),
+            });
+            const second = await fetch(`${origin}/meta/latest`, {
+                headers: headers(otherClient),
+            });
+            const blocked = await fetch(`${origin}/meta/latest`, {
+                headers: headers("198.51.100.12"),
+            });
+
+            expect(first.status).toBe(200);
+            expect(second.status).toBe(200);
+            expect(blocked.status).toBe(429);
+        } finally {
+            app.set("trust proxy", 1);
+        }
+    });
+
+    test("limits successful reads and preserves the 429 response contract", async () => {
+        const first = await fetch(`${origin}/meta/latest`, {
+            headers: headers(),
+        });
+        const second = await fetch(`${origin}/meta/latest`, {
+            headers: headers(),
+        });
+        const blocked = await fetch(`${origin}/meta/latest`, {
+            headers: headers(),
+        });
+        const payload = await blocked.json();
+
+        expect(first.status).toBe(200);
+        expect(second.status).toBe(200);
+        expect(blocked.status).toBe(429);
+        expect(blocked.headers.get("Retry-After")).not.toBeNull();
+        expect(blocked.headers.get("RateLimit-Remaining")).toBe("0");
+        expect(payload).toMatchObject({
+            data: null,
+            error: { name: "ERROR_RATE_LIMIT" },
+        });
+    });
+
+    test("uses only the nearest forwarded client and keeps clients independent", async () => {
+        const first = await fetch(`${origin}/meta/latest`, {
+            headers: headers(client, "203.0.113.1"),
+        });
+        const second = await fetch(`${origin}/meta/latest`, {
+            headers: headers(client, "203.0.113.2"),
+        });
+        const blocked = await fetch(`${origin}/meta/latest`, {
+            headers: headers(client, "203.0.113.3"),
+        });
+        const independent = await fetch(`${origin}/meta/latest`, {
+            headers: headers(otherClient),
+        });
+
+        expect(app.get("trust proxy")).toBe(1);
+        expect(first.status).toBe(200);
+        expect(second.status).toBe(200);
+        expect(blocked.status).toBe(429);
+        expect(independent.status).toBe(200);
+    });
+
+    test("keeps health checks and CORS preflights outside the quota", async () => {
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+            const health = await fetch(`${origin}/health`, {
+                headers: headers(),
+            });
+
+            expect(health.status).toBe(200);
+            expect(health.headers.get("RateLimit-Limit")).toBeNull();
+        }
+
+        const first = await fetch(`${origin}/meta/latest`, {
+            headers: headers(),
+        });
+        const second = await fetch(`${origin}/meta/latest`, {
+            headers: headers(),
+        });
+        const blocked = await fetch(`${origin}/meta/latest`, {
+            headers: headers(),
+        });
+        const healthy = await fetch(`${origin}/health`, { headers: headers() });
+        const preflight = await fetch(`${origin}/meta/latest`, {
+            headers: {
+                ...headers(),
+                "Access-Control-Request-Method": "GET",
+                Origin: "https://example.com",
+            },
+            method: "OPTIONS",
+        });
+
+        expect(first.status).toBe(200);
+        expect(second.status).toBe(200);
+        expect(blocked.status).toBe(429);
+        expect(healthy.status).toBe(200);
+        expect(preflight.status).toBe(204);
+    });
+
+    test("counts writes in the general request quota", async () => {
+        const first = await fetch(`${origin}/artists/test/request`, {
+            headers: headers(),
+            method: "POST",
+        });
+        const second = await fetch(`${origin}/artists/test/request`, {
+            headers: headers(),
+            method: "POST",
+        });
+        const blocked = await fetch(`${origin}/meta/latest`, {
+            headers: headers(),
+        });
+
+        expect(first.status).toBe(200);
+        expect(second.status).toBe(200);
+        expect(blocked.status).toBe(429);
+    });
 });
