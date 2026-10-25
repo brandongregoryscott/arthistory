@@ -261,6 +261,7 @@ const HomePage: React.FC = () => {
     const getSearchResultProps = useCallback(
         (result: ArtistWithTrackingStatus): SearchResultProps => {
             return {
+                checked: selectedArtistIds.includes(result.id),
                 children: result.name,
                 description: result.isTracked ? (
                     result.genres.join(", ")
@@ -299,7 +300,6 @@ const HomePage: React.FC = () => {
                         addArtist(result.id);
                     }
                 },
-                selected: selectedArtistIds.includes(result.id),
             };
         },
         [addArtist, requestArtist, requestedArtistIds, selectedArtistIds]
