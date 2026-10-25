@@ -1,5 +1,3 @@
-"use client";
-
 import type { Artist, ArtistWithTrackingStatus } from "@repo/common";
 import type { RemovableBadgeProps, SearchResultProps } from "@repo/ui";
 import Box from "@leafygreen-ui/box";
@@ -7,11 +5,13 @@ import { css } from "@leafygreen-ui/emotion";
 import { BasicEmptyState } from "@leafygreen-ui/empty-state";
 import Icon from "@leafygreen-ui/icon";
 import LeafyGreenProvider from "@leafygreen-ui/leafygreen-provider";
+import { PageLoader } from "@leafygreen-ui/loading-indicator";
 import { palette } from "@leafygreen-ui/palette";
 import { color } from "@leafygreen-ui/tokens";
 import { Link } from "@leafygreen-ui/typography";
 import { DEFAULT_ARTIST_IDS } from "@repo/common";
 import { Footer, Header, SearchSelect } from "@repo/ui";
+import { createFileRoute } from "@tanstack/react-router";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -22,7 +22,6 @@ import {
     Legend,
 } from "chart.js";
 import { compact, isEmpty, uniq } from "lodash";
-import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
@@ -34,17 +33,6 @@ import {
     useSearchArtistsByName,
 } from "@/hooks";
 import { humanizeNumber } from "@/utils/number-utils";
-
-/**
- * This component needs to be dynamically imported for the NextJS build to work with Node 24+
- */
-const PageLoader = dynamic(
-    () =>
-        import("@leafygreen-ui/loading-indicator").then(
-            ({ PageLoader }) => PageLoader
-        ),
-    { ssr: false }
-);
 
 ChartJS.register(
     CategoryScale,
@@ -58,7 +46,6 @@ ChartJS.register(
 const EMPTY_ARTISTS: Record<string, Artist> = {};
 
 const HomePage: React.FC = () => {
-    const [isMounted, setIsMounted] = useState<boolean>(false);
     const breakpoint = useBreakpoint();
     const [darkMode, setDarkMode] = useState<boolean>(getDefaultDarkMode);
     const [searchValue, setSearchValue] = useState<string>("");
@@ -330,14 +317,6 @@ const HomePage: React.FC = () => {
         [removeArtist]
     );
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
-
-    if (!isMounted) {
-        return;
-    }
-
     const backgroundColor = darkMode
         ? color.dark.background.primary.default
         : color.light.background.primary.default;
@@ -534,5 +513,6 @@ const getDefaultDarkMode = (): boolean =>
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-// eslint-disable-next-line collation/no-default-export -- NextJS pages need to be default exported
-export default HomePage;
+const Route = createFileRoute("/")({ component: HomePage });
+
+export { Route };

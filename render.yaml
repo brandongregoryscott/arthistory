@@ -7,9 +7,13 @@ services:
       buildCommand: npm ci && npm run build
       rootDir: apps/web
       runtime: static
-      staticPublishPath: out
+      staticPublishPath: dist
       domains:
           - arthistory.brandonscott.me
       envVars:
-          - key: NEXT_PUBLIC_API_URL
+          - key: VITE_API_URL
             value: https://bscott-arthistory-api.tuns.sh
+      routes:
+          - type: rewrite
+            source: /*
+            destination: /index.html

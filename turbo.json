@@ -5,7 +5,7 @@
     "tasks": {
         "build": {
             "env": [
-                "NEXT_PUBLIC_API_URL",
+                "VITE_API_URL",
                 "AWS_S3_ENDPOINT",
                 "AWS_ACCESS_KEY_ID",
                 "AWS_SECRET_ACCESS_KEY",
@@ -14,9 +14,10 @@
             ],
             "inputs": ["$TURBO_DEFAULT$", ".env"],
             "dependsOn": ["^build"],
-            "outputs": [".next/**", "!.next/cache/**"]
+            "outputs": ["dist/**", "build/**"]
         },
         "dev": {
+            "env": ["VITE_API_URL"],
             "inputs": ["$TURBO_DEFAULT$", ".env", ".env.local"],
             "cache": false,
             "persistent": true

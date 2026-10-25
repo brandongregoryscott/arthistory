@@ -1,2 +1,4 @@
 
 .github/workflows/*.generated.yml
+
+apps/web/routeTree.gen.ts
