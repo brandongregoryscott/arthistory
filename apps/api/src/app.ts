@@ -27,10 +27,8 @@ app.use(metrics.middleware);
 app.use(express.json());
 app.use(cors());
 
-app.get(
-    "/health",
-    (_request: Request, response: Response): Response =>
-        response.json({ ok: true })
+app.get("/health", (_request: Request, response: Response): Response =>
+    response.json({ ok: true })
 );
 
 app.use(readRateLimiter);
