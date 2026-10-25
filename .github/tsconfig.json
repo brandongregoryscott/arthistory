@@ -7,7 +7,8 @@
         "noEmit": true,
         "skipLibCheck": true,
         "types": ["node"],
-        "erasableSyntaxOnly": true
+        "erasableSyntaxOnly": true,
+        "allowImportingTsExtensions": true
     },
-    "include": ["workflows/**/*.mts"]
+    "include": ["workflows/**/*.mts", "*.ts"]
 }

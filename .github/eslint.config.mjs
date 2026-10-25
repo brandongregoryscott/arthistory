@@ -1,3 +1,3 @@
 import tseslint from "typescript-eslint";
 
-export default [...tseslint.configs.recommended, { files: ["**/*.mts"] }];
+export default [...tseslint.configs.recommended, { files: ["**/*.{ts,mts}"] }];
