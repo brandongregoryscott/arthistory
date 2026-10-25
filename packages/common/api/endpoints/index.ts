@@ -6,32 +6,28 @@ import type {
 } from "../types";
 
 type GetLatestMetaResult =
-    | ApiErrorResponse
-    | ApiSuccessResponse<Pick<ArtistSnapshot, "timestamp">>;
+    ApiErrorResponse | ApiSuccessResponse<Pick<ArtistSnapshot, "timestamp">>;
 
 type GetArtistSnapshotsOptions = {
     id: string;
 };
 
 type GetArtistSnapshotsResult =
-    | ApiErrorResponse
-    | ApiSuccessResponse<ArtistSnapshot[]>;
+    ApiErrorResponse | ApiSuccessResponse<ArtistSnapshot[]>;
 
 type ListArtistSnapshotsOptions = {
     ids: string[];
 };
 
 type ListArtistSnapshotsResult =
-    | ApiErrorResponse
-    | ApiSuccessResponse<ArtistSnapshot[]>;
+    ApiErrorResponse | ApiSuccessResponse<ArtistSnapshot[]>;
 
 type ListArtistsOptions = {
     ids: string[];
 };
 
 type ListArtistsResult =
-    | ApiErrorResponse
-    | ApiSuccessResponse<Record<string, Artist>>;
+    ApiErrorResponse | ApiSuccessResponse<Record<string, Artist>>;
 
 type RequestArtistOptions = {
     id: string;
@@ -44,8 +40,7 @@ type SearchArtistsByNameOptions = {
 };
 
 type SearchArtistByNameResult =
-    | ApiErrorResponse
-    | ApiSuccessResponse<ArtistWithTrackingStatus[]>;
+    ApiErrorResponse | ApiSuccessResponse<ArtistWithTrackingStatus[]>;
 
 export type {
     GetArtistSnapshotsOptions,

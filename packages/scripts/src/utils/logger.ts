@@ -5,13 +5,7 @@ import { formatTimeSpanFromMilliseconds } from "./date-utils";
 const logger = pino({});
 
 type LogLevel =
-    | "debug"
-    | "error"
-    | "fatal"
-    | "info"
-    | "silent"
-    | "trace"
-    | "warn";
+    "debug" | "error" | "fatal" | "info" | "silent" | "trace" | "warn";
 
 type CreateTimerLoggerWithDataOptions = [
     data: Record<string, unknown>,
@@ -21,8 +15,7 @@ type CreateTimerLoggerWithDataOptions = [
 type CreateTimerLoggerMessageOptions = [message: string, level?: LogLevel];
 
 type CreateTimerOptions =
-    | CreateTimerLoggerMessageOptions
-    | CreateTimerLoggerWithDataOptions;
+    CreateTimerLoggerMessageOptions | CreateTimerLoggerWithDataOptions;
 
 type NormalizedCreateTimerOptions = {
     data: Record<string, unknown>;
