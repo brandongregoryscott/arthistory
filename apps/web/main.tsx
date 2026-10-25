@@ -1,3 +1,4 @@
+import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -20,6 +21,8 @@ if (root === null) {
 
 createRoot(root).render(
     <StrictMode>
-        <RouterProvider router={router} />
+        <ChakraProvider value={defaultSystem}>
+            <RouterProvider router={router} />
+        </ChakraProvider>
     </StrictMode>
 );

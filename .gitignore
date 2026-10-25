@@ -24,6 +24,8 @@ coverage
 # Build Outputs
 build
 dist
+apps/web/.next/
+apps/web/out/
 .eslintcache
 
 # Debug

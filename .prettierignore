@@ -2,3 +2,7 @@
 .github/workflows/*.generated.yml
 
 apps/web/routeTree.gen.ts
+
+# Legacy web build outputs
+apps/web/.next/
+apps/web/out/

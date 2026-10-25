@@ -1,14 +1,16 @@
 import type { Artist, ArtistWithTrackingStatus } from "@repo/common";
 import type { RemovableBadgeProps, SearchResultProps } from "@repo/ui";
-import Box from "@leafygreen-ui/box";
-import { css } from "@leafygreen-ui/emotion";
-import { BasicEmptyState } from "@leafygreen-ui/empty-state";
-import Icon from "@leafygreen-ui/icon";
-import LeafyGreenProvider from "@leafygreen-ui/leafygreen-provider";
-import { PageLoader } from "@leafygreen-ui/loading-indicator";
-import { palette } from "@leafygreen-ui/palette";
-import { color } from "@leafygreen-ui/tokens";
-import { Link } from "@leafygreen-ui/typography";
+import {
+    Box,
+    Button,
+    Center,
+    EmptyState,
+    Flex,
+    Spinner,
+    Text,
+    Theme,
+    useToken,
+} from "@chakra-ui/react";
 import { DEFAULT_ARTIST_IDS } from "@repo/common";
 import { Footer, Header, SearchSelect } from "@repo/ui";
 import { createFileRoute } from "@tanstack/react-router";
@@ -22,7 +24,8 @@ import {
     Legend,
 } from "chart.js";
 import { compact, isEmpty, uniq } from "lodash";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChartNoAxesCombined, TriangleAlert } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
     useBreakpoint,
@@ -56,10 +59,6 @@ const HomePage: React.FC = () => {
         name: searchValue,
     });
     const [loadingText, setLoadingText] = useState<string>("Loading...");
-    const initialTimestampRef = useRef<number>(new Date().valueOf());
-    const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-        undefined
-    );
     const { mutate: requestArtist } = useRequestArtist();
     const { data: latestMeta } = useGetLatestMeta();
     const { data: artists = EMPTY_ARTISTS, error: artistsError } =
@@ -73,51 +72,26 @@ const HomePage: React.FC = () => {
     } = useListArtistSnapshots({
         ids: selectedArtistIds,
     });
-    const isLoadingRef = useRef<boolean>(isLoading);
-    // eslint-disable-next-line react-hooks/refs -- Look into refactoring this the next time this page is updated
-    isLoadingRef.current = isLoading;
-
     useEffect(() => {
         if (!isLoading) {
             return;
         }
-
-        timerRef.current = setInterval(() => {
-            const isLoading = isLoadingRef.current;
-            if (!isLoading) {
-                clearInterval(timerRef.current);
-                return;
-            }
-
-            const initialTimestamp = initialTimestampRef.current;
-            const currentTimestamp = new Date().valueOf();
-            const loadingTimeInSeconds = differenceInSeconds(
-                initialTimestamp,
-                currentTimestamp
+        const initialTimestamp = Date.now();
+        const timer = setInterval(() => {
+            const seconds = differenceInSeconds(initialTimestamp, Date.now());
+            setLoadingText(
+                seconds > 40
+                    ? "Any second now..."
+                    : seconds > 30
+                      ? "Almost there..."
+                      : seconds > 15
+                        ? "The server is likely cold booting, please hold..."
+                        : seconds > 5
+                          ? "Still loading, hold tight..."
+                          : "Loading..."
             );
-
-            if (loadingTimeInSeconds > 40) {
-                setLoadingText("Any second now...");
-                return;
-            }
-
-            if (loadingTimeInSeconds > 30) {
-                setLoadingText("Almost there...");
-                return;
-            }
-
-            if (loadingTimeInSeconds > 15) {
-                setLoadingText(
-                    "The server is likely cold booting, please hold..."
-                );
-                return;
-            }
-
-            if (loadingTimeInSeconds > 5) {
-                setLoadingText("Still loading, hold tight...");
-                return;
-            }
         }, 1000);
+        return () => clearInterval(timer);
     }, [isLoading]);
 
     const data = useMemo(() => {
@@ -151,21 +125,25 @@ const HomePage: React.FC = () => {
         return { datasets: compact(datasets), labels: compact(labels) };
     }, [snapshots, selectedArtistIds, breakpoint, artists, darkMode]);
 
-    const textColor = darkMode
-        ? color.dark.text.primary.default
-        : color.light.text.primary.default;
-
-    const invertedTextColor = darkMode
-        ? color.light.text.primary.default
-        : color.dark.text.primary.default;
-
-    const invertedBackgroundColor = darkMode
-        ? color.light.background.primary.default
-        : color.dark.background.primary.default;
-
-    const gridColor = darkMode
-        ? color.dark.background.disabled.default
-        : color.light.background.disabled.default;
+    const [
+        lightText,
+        darkText,
+        lightGrid,
+        darkGrid,
+        lightBackground,
+        darkBackground,
+    ] = useToken("colors", [
+        "gray.800",
+        "gray.100",
+        "gray.200",
+        "gray.800",
+        "white",
+        "gray.950",
+    ]);
+    const textColor = darkMode ? darkText : lightText;
+    const invertedTextColor = darkMode ? lightText : darkText;
+    const invertedBackgroundColor = darkMode ? lightBackground : darkBackground;
+    const gridColor = darkMode ? darkGrid : lightGrid;
 
     const options = useMemo(
         () => ({
@@ -175,7 +153,7 @@ const HomePage: React.FC = () => {
                 },
             },
             indexAxis: "x" as const,
-            maintainAspectRatio: breakpoint === "desktop",
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     labels: {
@@ -261,22 +239,15 @@ const HomePage: React.FC = () => {
     const getSearchResultProps = useCallback(
         (result: ArtistWithTrackingStatus): SearchResultProps => {
             return {
-                checked: selectedArtistIds.includes(result.id),
                 children: result.name,
                 description: result.isTracked ? (
                     result.genres.join(", ")
                 ) : (
-                    <Box
-                        className={css({
-                            alignItems: "center",
-                            columnGap: 4,
-                            display: "flex",
-                        })}>
+                    <Flex align="center" flexWrap="wrap" gap="1">
                         This artist is not yet being tracked.
-                        <Link
-                            onClick={(
-                                event: React.MouseEvent<HTMLAnchorElement>
-                            ) => {
+                        <Button
+                            disabled={requestedArtistIds.includes(result.id)}
+                            onClick={(event) => {
                                 event.stopPropagation();
                                 if (requestedArtistIds.includes(result.id)) {
                                     return;
@@ -287,12 +258,14 @@ const HomePage: React.FC = () => {
                                     ...requestedArtistIds,
                                     result.id,
                                 ]);
-                            }}>
+                            }}
+                            size="xs"
+                            variant="plain">
                             {requestedArtistIds.includes(result.id)
                                 ? "Requested"
                                 : "Request"}
-                        </Link>
-                    </Box>
+                        </Button>
+                    </Flex>
                 ),
                 disabled: !result.isTracked,
                 onClick: () => {
@@ -300,6 +273,7 @@ const HomePage: React.FC = () => {
                         addArtist(result.id);
                     }
                 },
+                selected: selectedArtistIds.includes(result.id),
             };
         },
         [addArtist, requestArtist, requestedArtistIds, selectedArtistIds]
@@ -317,176 +291,119 @@ const HomePage: React.FC = () => {
         [removeArtist]
     );
 
-    const backgroundColor = darkMode
-        ? color.dark.background.primary.default
-        : color.light.background.primary.default;
-
-    if (isLoading) {
-        return (
-            <LeafyGreenProvider darkMode={darkMode}>
-                <Box
-                    className={css({
-                        alignItems: "center",
-                        backgroundColor,
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                        justifyContent: "center",
-                        width: "100%",
-                    })}>
-                    <PageLoader description={loadingText} />
-                </Box>
-            </LeafyGreenProvider>
-        );
-    }
-
-    if (snapshotsError != null || artistsError != null) {
-        return (
-            <LeafyGreenProvider darkMode={darkMode}>
-                <Box
-                    className={css({
-                        alignItems: "center",
-                        backgroundColor,
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                        justifyContent: "center",
-                        width: "100%",
-                    })}>
-                    <BasicEmptyState
-                        description={
-                            artistsError?.message ??
-                            snapshotsError?.message ??
-                            "One or more requests failed"
-                        }
-                        graphic={
-                            <Icon
-                                color={color.dark.icon.error.default}
-                                glyph="Warning"
-                                size={48}
-                            />
-                        }
-                        title="Error loading artists"
-                    />
-                </Box>
-            </LeafyGreenProvider>
-        );
-    }
-
     return (
-        <LeafyGreenProvider darkMode={darkMode}>
-            <Box
-                className={css({
-                    backgroundColor,
-                    height: "100%",
-                    width: "100%",
-                })}>
-                <Box
-                    className={css({
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "calc(100% - 192px)",
-                        padding: 16,
-                        rowGap: 16,
-                        width: "100%",
-                    })}>
+        <Theme appearance={darkMode ? "dark" : "light"}>
+            <Flex bg="bg" color="fg" direction="column" minH="100dvh">
+                <Flex
+                    as="main"
+                    direction="column"
+                    flex="1"
+                    gap="4"
+                    maxW="1600px"
+                    mx="auto"
+                    p={{ base: "4", md: "6" }}
+                    w="full">
                     <Header />
-                    <SearchSelect
-                        getRemovableBadgeProps={getRemovableBadgeProps}
-                        getSearchResultProps={getSearchResultProps}
-                        onChange={setSearchValue}
-                        results={searchResults}
-                        selectedIds={selectedArtistIds}
-                        selectedValueMap={artists}
-                        value={searchValue}
-                    />
-                    {isEmpty(selectedArtistIds) ? (
-                        <BasicEmptyState
-                            description="Select one or more artists to view historical data"
-                            graphic={
-                                <Icon
-                                    color={textColor}
-                                    glyph="Charts"
-                                    size={48}
-                                />
-                            }
-                            title="No artists selected"
-                        />
+                    {isLoading ? (
+                        <Center flex="1" minH="60vh" role="status">
+                            <Flex align="center" direction="column" gap="4">
+                                <Spinner color="teal.500" size="xl" />
+                                <Text>{loadingText}</Text>
+                            </Flex>
+                        </Center>
+                    ) : snapshotsError != null || artistsError != null ? (
+                        <EmptyState.Root flex="1">
+                            <EmptyState.Content>
+                                <EmptyState.Indicator>
+                                    <TriangleAlert />
+                                </EmptyState.Indicator>
+                                <EmptyState.Title>
+                                    Error loading artists
+                                </EmptyState.Title>
+                                <EmptyState.Description>
+                                    {artistsError?.message ??
+                                        snapshotsError?.message ??
+                                        "One or more requests failed"}
+                                </EmptyState.Description>
+                            </EmptyState.Content>
+                        </EmptyState.Root>
                     ) : (
-                        <Bar data={data} key={breakpoint} options={options} />
+                        <>
+                            <SearchSelect
+                                getRemovableBadgeProps={getRemovableBadgeProps}
+                                getSearchResultProps={getSearchResultProps}
+                                onChange={setSearchValue}
+                                results={searchResults}
+                                selectedIds={selectedArtistIds}
+                                selectedValueMap={artists}
+                                value={searchValue}
+                            />
+                            {isEmpty(selectedArtistIds) ? (
+                                <EmptyState.Root flex="1">
+                                    <EmptyState.Content>
+                                        <EmptyState.Indicator>
+                                            <ChartNoAxesCombined />
+                                        </EmptyState.Indicator>
+                                        <EmptyState.Title>
+                                            No artists selected
+                                        </EmptyState.Title>
+                                        <EmptyState.Description>
+                                            Select one or more artists to view
+                                            historical data
+                                        </EmptyState.Description>
+                                    </EmptyState.Content>
+                                </EmptyState.Root>
+                            ) : (
+                                <Box
+                                    h={{
+                                        base: "480px",
+                                        md: "min(65vh, 800px)",
+                                    }}
+                                    minW="0"
+                                    position="relative"
+                                    w="full">
+                                    <Bar
+                                        aria-label="Spotify followers over time"
+                                        data={data}
+                                        key={breakpoint}
+                                        options={options}
+                                        role="img"
+                                    />
+                                </Box>
+                            )}
+                        </>
                     )}
-                </Box>
+                </Flex>
                 <Footer
                     breakpoint={breakpoint}
                     darkMode={darkMode}
                     lastUpdated={latestMeta?.timestamp}
                     onThemeChange={setDarkMode}
                 />
-            </Box>
-        </LeafyGreenProvider>
+            </Flex>
+        </Theme>
     );
 };
 
 const getHashedBarChartColor = (id: string, darkMode: boolean) => {
-    const lightThemeColors = [
-        {
-            backgroundColor: palette.gray.light2,
-            borderColor: palette.gray.dark3,
-        },
-        {
-            backgroundColor: palette.blue.light3,
-            borderColor: palette.blue.dark1,
-        },
-        {
-            backgroundColor: palette.blue.light2,
-            borderColor: palette.blue.dark3,
-        },
-        {
-            backgroundColor: palette.green.light2,
-            borderColor: palette.green.dark3,
-        },
-        {
-            backgroundColor: palette.purple.light2,
-            borderColor: palette.purple.dark3,
-        },
-        {
-            backgroundColor: palette.red.light2,
-            borderColor: palette.red.dark3,
-        },
-        {
-            backgroundColor: palette.yellow.light2,
-            borderColor: palette.yellow.dark3,
-        },
+    const colors = [
+        "#319795",
+        "#805ad5",
+        "#dd6b20",
+        "#3182ce",
+        "#d53f8c",
+        "#38a169",
+        "#d69e2e",
+        "#00a3c4",
+        "#e53e3e",
+        "#718096",
+        "#667eea",
     ];
-
-    const lightOrDarkColors = [
-        {
-            backgroundColor: palette.green.light3,
-            borderColor: palette.green.dark1,
-        },
-        {
-            backgroundColor: palette.purple.light3,
-            borderColor: palette.purple.base,
-        },
-        {
-            backgroundColor: palette.red.light3,
-            borderColor: palette.red.base,
-        },
-        {
-            backgroundColor: palette.yellow.light3,
-            borderColor: palette.yellow.base,
-        },
-    ];
-
-    const colors = darkMode
-        ? lightOrDarkColors
-        : [...lightThemeColors, ...lightOrDarkColors];
-
-    const index = Math.abs(hash(id) % colors.length);
-
-    const color = colors[index];
-
-    return color;
+    const color = colors[Math.abs(hash(id) % colors.length)];
+    return {
+        backgroundColor: `${color}${darkMode ? "99" : "55"}`,
+        borderColor: color,
+    };
 };
 
 const differenceInSeconds = (

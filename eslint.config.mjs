@@ -222,6 +222,8 @@ const ignores = defineConfig([
             "**/dist/**",
             "eslint.config.mjs",
             "**/build/**",
+            "apps/web/.next/**",
+            "apps/web/out/**",
             "**/node_modules/**",
             "apps/web/routeTree.gen.ts",
         ],
