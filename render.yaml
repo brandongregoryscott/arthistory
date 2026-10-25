@@ -4,7 +4,7 @@ services:
 
       autoDeploy: true
       branch: main
-      buildCommand: npm ci && npm run build
+      buildCommand: npm ci --include-workspace-root --include=dev && npm run build
       rootDir: apps/web
       runtime: static
       staticPublishPath: dist
