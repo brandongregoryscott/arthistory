@@ -79,17 +79,25 @@ const HomePage: React.FC = () => {
         const initialTimestamp = Date.now();
         const timer = setInterval(() => {
             const seconds = differenceInSeconds(initialTimestamp, Date.now());
-            setLoadingText(
-                seconds > 40
-                    ? "Any second now..."
-                    : seconds > 30
-                      ? "Almost there..."
-                      : seconds > 15
-                        ? "The server is likely cold booting, please hold..."
-                        : seconds > 5
-                          ? "Still loading, hold tight..."
-                          : "Loading..."
-            );
+            if (seconds > 40) {
+                setLoadingText("Any second now...");
+                return;
+            }
+            if (seconds > 30) {
+                setLoadingText("Almost there...");
+                return;
+            }
+            if (seconds > 15) {
+                setLoadingText(
+                    "The server is likely cold booting, please hold..."
+                );
+                return;
+            }
+            if (seconds > 5) {
+                setLoadingText("Still loading, hold tight...");
+                return;
+            }
+            setLoadingText("Loading...");
         }, 1000);
         return () => clearInterval(timer);
     }, [isLoading]);
@@ -291,6 +299,84 @@ const HomePage: React.FC = () => {
         [removeArtist]
     );
 
+    const renderContent = () => {
+        if (isLoading) {
+            return (
+                <Center flex="1" minH="60vh" role="status">
+                    <Flex align="center" direction="column" gap="4">
+                        <Spinner color="teal.500" size="xl" />
+                        <Text>{loadingText}</Text>
+                    </Flex>
+                </Center>
+            );
+        }
+        if (snapshotsError != null || artistsError != null) {
+            return (
+                <EmptyState.Root flex="1">
+                    <EmptyState.Content>
+                        <EmptyState.Indicator>
+                            <TriangleAlert />
+                        </EmptyState.Indicator>
+                        <EmptyState.Title>
+                            Error loading artists
+                        </EmptyState.Title>
+                        <EmptyState.Description>
+                            {artistsError?.message ??
+                                snapshotsError?.message ??
+                                "One or more requests failed"}
+                        </EmptyState.Description>
+                    </EmptyState.Content>
+                </EmptyState.Root>
+            );
+        }
+        return (
+            <>
+                <SearchSelect
+                    getRemovableBadgeProps={getRemovableBadgeProps}
+                    getSearchResultProps={getSearchResultProps}
+                    onChange={setSearchValue}
+                    results={searchResults}
+                    selectedIds={selectedArtistIds}
+                    selectedValueMap={artists}
+                    value={searchValue}
+                />
+                {isEmpty(selectedArtistIds) ? (
+                    <EmptyState.Root flex="1">
+                        <EmptyState.Content>
+                            <EmptyState.Indicator>
+                                <ChartNoAxesCombined />
+                            </EmptyState.Indicator>
+                            <EmptyState.Title>
+                                No artists selected
+                            </EmptyState.Title>
+                            <EmptyState.Description>
+                                Select one or more artists to view historical
+                                data
+                            </EmptyState.Description>
+                        </EmptyState.Content>
+                    </EmptyState.Root>
+                ) : (
+                    <Box
+                        h={{
+                            base: "480px",
+                            md: "min(65vh, 800px)",
+                        }}
+                        minW="0"
+                        position="relative"
+                        w="full">
+                        <Bar
+                            aria-label="Spotify followers over time"
+                            data={data}
+                            key={breakpoint}
+                            options={options}
+                            role="img"
+                        />
+                    </Box>
+                )}
+            </>
+        );
+    };
+
     return (
         <Theme appearance={darkMode ? "dark" : "light"}>
             <Flex bg="bg" color="fg" direction="column" minH="100dvh">
@@ -304,75 +390,7 @@ const HomePage: React.FC = () => {
                     p={{ base: "4", md: "6" }}
                     w="full">
                     <Header />
-                    {isLoading ? (
-                        <Center flex="1" minH="60vh" role="status">
-                            <Flex align="center" direction="column" gap="4">
-                                <Spinner color="teal.500" size="xl" />
-                                <Text>{loadingText}</Text>
-                            </Flex>
-                        </Center>
-                    ) : snapshotsError != null || artistsError != null ? (
-                        <EmptyState.Root flex="1">
-                            <EmptyState.Content>
-                                <EmptyState.Indicator>
-                                    <TriangleAlert />
-                                </EmptyState.Indicator>
-                                <EmptyState.Title>
-                                    Error loading artists
-                                </EmptyState.Title>
-                                <EmptyState.Description>
-                                    {artistsError?.message ??
-                                        snapshotsError?.message ??
-                                        "One or more requests failed"}
-                                </EmptyState.Description>
-                            </EmptyState.Content>
-                        </EmptyState.Root>
-                    ) : (
-                        <>
-                            <SearchSelect
-                                getRemovableBadgeProps={getRemovableBadgeProps}
-                                getSearchResultProps={getSearchResultProps}
-                                onChange={setSearchValue}
-                                results={searchResults}
-                                selectedIds={selectedArtistIds}
-                                selectedValueMap={artists}
-                                value={searchValue}
-                            />
-                            {isEmpty(selectedArtistIds) ? (
-                                <EmptyState.Root flex="1">
-                                    <EmptyState.Content>
-                                        <EmptyState.Indicator>
-                                            <ChartNoAxesCombined />
-                                        </EmptyState.Indicator>
-                                        <EmptyState.Title>
-                                            No artists selected
-                                        </EmptyState.Title>
-                                        <EmptyState.Description>
-                                            Select one or more artists to view
-                                            historical data
-                                        </EmptyState.Description>
-                                    </EmptyState.Content>
-                                </EmptyState.Root>
-                            ) : (
-                                <Box
-                                    h={{
-                                        base: "480px",
-                                        md: "min(65vh, 800px)",
-                                    }}
-                                    minW="0"
-                                    position="relative"
-                                    w="full">
-                                    <Bar
-                                        aria-label="Spotify followers over time"
-                                        data={data}
-                                        key={breakpoint}
-                                        options={options}
-                                        role="img"
-                                    />
-                                </Box>
-                            )}
-                        </>
-                    )}
+                    {renderContent()}
                 </Flex>
                 <Footer
                     breakpoint={breakpoint}

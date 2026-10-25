@@ -23,6 +23,7 @@ const baseTypeScriptConfig = defineConfig([
                 },
             ],
             "no-console": "error",
+            "no-nested-ternary": "error",
             "no-useless-rename": "error",
             "no-var": "error",
             "prefer-destructuring": [
