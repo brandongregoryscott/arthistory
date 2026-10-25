@@ -1,6 +1,20 @@
-import type { ApiSuccessResponse, ApiErrorResponse } from "@repo/common";
+import type {
+    ApiError,
+    ApiSuccessResponse,
+    ApiErrorResponse,
+} from "@repo/common";
 import type { Response } from "express";
-import { serializeError } from "serialize-error";
+import { UnhandledError } from "@repo/common";
+
+const sendError = (
+    response: Response,
+    status: number,
+    error: ApiError
+): Response<ApiErrorResponse> =>
+    response.status(status).json({
+        data: null,
+        error: { message: error.message, name: error.name },
+    });
 
 const created = <T>(
     response: Response,
@@ -13,33 +27,26 @@ const ok = <T>(response: Response, data: T): Response<ApiSuccessResponse<T>> =>
 
 const conflict = (
     response: Response,
-    error: unknown
-): Response<ApiErrorResponse> =>
-    response.status(409).json({ data: null, error: serializeError(error) });
+    error: ApiError
+): Response<ApiErrorResponse> => sendError(response, 409, error);
 
 const badRequest = (
     response: Response,
-    error: unknown
-): Response<ApiErrorResponse> =>
-    response.status(400).json({ data: null, error: serializeError(error) });
+    error: ApiError
+): Response<ApiErrorResponse> => sendError(response, 400, error);
 
 const notFound = (
     response: Response,
-    error: unknown
-): Response<ApiErrorResponse> =>
-    response.status(404).json({ data: null, error: serializeError(error) });
+    error: ApiError
+): Response<ApiErrorResponse> => sendError(response, 404, error);
 
 const tooManyRequests = (
     response: Response,
-    error: unknown
-): Response<ApiErrorResponse> =>
-    response.status(429).json({ data: null, error: serializeError(error) });
+    error: ApiError
+): Response<ApiErrorResponse> => sendError(response, 429, error);
 
-const internalError = (
-    response: Response,
-    error: unknown
-): Response<ApiErrorResponse> =>
-    response.status(500).json({ data: null, error: serializeError(error) });
+const internalError = (response: Response): Response<ApiErrorResponse> =>
+    sendError(response, 500, new UnhandledError());
 
 export {
     badRequest,
