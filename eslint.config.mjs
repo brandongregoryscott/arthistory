@@ -23,6 +23,7 @@ const baseTypeScriptConfig = defineConfig([
                 },
             ],
             "no-console": "error",
+            "no-nested-ternary": "error",
             "no-useless-rename": "error",
             "no-var": "error",
             "prefer-destructuring": [
@@ -222,6 +223,8 @@ const ignores = defineConfig([
             "**/dist/**",
             "eslint.config.mjs",
             "**/build/**",
+            "apps/web/.next/**",
+            "apps/web/out/**",
             "**/node_modules/**",
             "apps/web/routeTree.gen.ts",
         ],

@@ -1,7 +1,6 @@
 import type { PropsWithChildren } from "react";
-import Badge from "@leafygreen-ui/badge";
-import Icon from "@leafygreen-ui/icon";
-import IconButton from "@leafygreen-ui/icon-button";
+import { Tag } from "@chakra-ui/react";
+import { isString } from "lodash";
 
 type RemovableBadgeProps = {
     onRemove: () => void;
@@ -10,12 +9,19 @@ type RemovableBadgeProps = {
 const RemovableBadge: React.FC<RemovableBadgeProps> = (props) => {
     const { children, onRemove } = props;
     return (
-        <Badge>
-            {children}
-            <IconButton aria-label="Remove" onClick={onRemove}>
-                <Icon glyph="X" />
-            </IconButton>
-        </Badge>
+        <Tag.Root colorPalette="teal" size="lg">
+            <Tag.Label>{children}</Tag.Label>
+            <Tag.EndElement>
+                <Tag.CloseTrigger
+                    aria-label={
+                        isString(children)
+                            ? `Remove ${children}`
+                            : "Remove artist"
+                    }
+                    onClick={onRemove}
+                />
+            </Tag.EndElement>
+        </Tag.Root>
     );
 };
 

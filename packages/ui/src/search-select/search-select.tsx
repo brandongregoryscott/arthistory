@@ -1,9 +1,22 @@
-import type { SearchResultProps } from "@leafygreen-ui/search-input";
-import Box from "@leafygreen-ui/box";
-import { css } from "@leafygreen-ui/emotion";
-import { SearchInput, SearchResult } from "@leafygreen-ui/search-input";
+import type { ReactNode } from "react";
+import {
+    Box,
+    Combobox,
+    createListCollection,
+    Flex,
+    Text,
+} from "@chakra-ui/react";
+import { isEmpty, isUndefined } from "lodash";
 import type { RemovableBadgeProps } from "./removable-badge";
 import { RemovableBadge } from "./removable-badge";
+
+type SearchResultProps = {
+    children: string;
+    description?: ReactNode;
+    disabled?: boolean;
+    onClick: () => void;
+    selected?: boolean;
+};
 
 type SearchSelectProps<TSearchResult extends { id: string }, TValue> = {
     getRemovableBadgeProps: (value: TValue) => RemovableBadgeProps;
@@ -11,9 +24,6 @@ type SearchSelectProps<TSearchResult extends { id: string }, TValue> = {
     onChange: (value: string) => void;
     results: TSearchResult[] | undefined;
     selectedIds: string[];
-    /**
-     * Key-value map where the key is the id of a selected value to render a removable badge
-     */
     selectedValueMap: Record<string, TValue>;
     value: string;
 };
@@ -30,35 +40,96 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
         selectedValueMap,
         value,
     } = props;
+    const items = (results ?? []).map((result) => ({
+        id: result.id,
+        ...getSearchResultProps(result),
+    }));
+    const collection = createListCollection({
+        isItemDisabled: (item) =>
+            item.disabled === true ||
+            item.selected === true ||
+            selectedIds.length >= 10,
+        items,
+        itemToString: (item) => item.children,
+        itemToValue: (item) => item.id,
+    });
+
     return (
         <>
-            <SearchInput
-                aria-label="Search"
-                onChange={(event) => onChange(event.target.value)}
-                value={value}>
-                {results?.map((result) => {
-                    const props = getSearchResultProps(result);
-                    return <SearchResult key={result.id} {...props} />;
-                })}
-            </SearchInput>
-            <Box
-                className={css({
-                    columnGap: 8,
-                    display: "flex",
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    rowGap: 8,
-                })}>
+            <Combobox.Root
+                collection={collection}
+                inputValue={value}
+                onInputValueChange={({ inputValue }) => onChange(inputValue)}
+                onSelect={({ itemValue }) =>
+                    items.find((item) => item.id === itemValue)?.onClick()
+                }
+                openOnClick={true}
+                selectionBehavior="preserve"
+                value={[]}>
+                <Combobox.Label>Search artists</Combobox.Label>
+                <Combobox.Control>
+                    <Combobox.Input placeholder="Search Spotify artists…" />
+                    <Combobox.IndicatorGroup>
+                        <Combobox.ClearTrigger aria-label="Clear search" />
+                    </Combobox.IndicatorGroup>
+                </Combobox.Control>
+                <Combobox.Positioner>
+                    <Combobox.Content maxH="80" zIndex="dropdown">
+                        {isEmpty(items) && (
+                            <Text color="fg.muted" p="3">
+                                No artists found
+                            </Text>
+                        )}
+                        {items.map((item) =>
+                            item.disabled === true ? (
+                                <Box
+                                    borderBottomWidth="1px"
+                                    key={item.id}
+                                    px="3"
+                                    py="2">
+                                    <Text fontWeight="medium">
+                                        {item.children}
+                                    </Text>
+                                    <Box color="fg.muted" fontSize="sm">
+                                        {item.description}
+                                    </Box>
+                                </Box>
+                            ) : (
+                                <Combobox.Item item={item} key={item.id}>
+                                    <Box>
+                                        <Combobox.ItemText>
+                                            {item.children}
+                                            {item.selected === true
+                                                ? " (selected)"
+                                                : ""}
+                                        </Combobox.ItemText>
+                                        <Text color="fg.muted" fontSize="sm">
+                                            {item.description}
+                                        </Text>
+                                    </Box>
+                                </Combobox.Item>
+                            )
+                        )}
+                    </Combobox.Content>
+                </Combobox.Positioner>
+            </Combobox.Root>
+            <Flex aria-label="Selected artists" flexWrap="wrap" gap="2">
                 {selectedIds.map((id) => {
-                    const value = selectedValueMap[id];
-                    if (value === undefined) {
-                        return;
-                    }
-
-                    const props = getRemovableBadgeProps(value);
-                    return <RemovableBadge key={id} {...props} />;
+                    const selected = selectedValueMap[id];
+                    return isUndefined(selected) ? null : (
+                        <RemovableBadge
+                            key={id}
+                            {...getRemovableBadgeProps(selected)}
+                        />
+                    );
                 })}
-            </Box>
+            </Flex>
+            {selectedIds.length >= 10 && (
+                <Text color="fg.muted" fontSize="sm">
+                    You can compare up to 10 artists. Remove an artist to add
+                    another.
+                </Text>
+            )}
         </>
     );
 };

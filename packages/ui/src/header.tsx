@@ -1,27 +1,14 @@
-import Box from "@leafygreen-ui/box";
-import { css } from "@leafygreen-ui/emotion";
-import { H3 } from "@leafygreen-ui/typography";
+import { Flex, Heading } from "@chakra-ui/react";
 
-const Header: React.FC = () => {
-    return (
-        <Box
-            className={css({
-                alignItems: "center",
-                columnGap: 16,
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "center",
-                width: "100%",
-            })}>
-            <H3
-                className={css({
-                    fontSize: "48px",
-                    lineHeight: "64px",
-                })}>
-                arthistory
-            </H3>
-        </Box>
-    );
-};
+const Header: React.FC = () => (
+    <Flex as="header" justify="center" py="2">
+        <Heading
+            as="h1"
+            fontSize={{ base: "4xl", md: "5xl" }}
+            letterSpacing="tight">
+            arthistory
+        </Heading>
+    </Flex>
+);
 
 export { Header };

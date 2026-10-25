@@ -1,10 +1,7 @@
 import type { SetStateAction } from "react";
-import Box from "@leafygreen-ui/box";
-import { css, cx } from "@leafygreen-ui/emotion";
-import Icon from "@leafygreen-ui/icon";
-import IconButton from "@leafygreen-ui/icon-button";
-import { color } from "@leafygreen-ui/tokens";
-import { Body, Link } from "@leafygreen-ui/typography";
+import { Flex, IconButton, Link, Text } from "@chakra-ui/react";
+import { isUndefined } from "lodash";
+import { Moon, Sun } from "lucide-react";
 
 type FooterProps = {
     breakpoint: "desktop" | "mobile";
@@ -14,69 +11,44 @@ type FooterProps = {
 };
 
 const Footer: React.FC<FooterProps> = (props) => {
-    const { breakpoint, darkMode, onThemeChange } = props;
-    const flexClassName = cx(
-        breakpoint === "mobile" && css({ display: "flex" })
-    );
-
-    const timestampPrefix =
-        breakpoint === "mobile" ? "Updated " : "Last updated ";
-    const lastUpdated =
-        props.lastUpdated !== undefined
-            ? new Date(props.lastUpdated).toLocaleDateString(undefined, {
-                  dateStyle: breakpoint === "mobile" ? "short" : undefined,
-              })
-            : undefined;
-
+    const { breakpoint, darkMode, lastUpdated, onThemeChange } = props;
     return (
-        <Box
-            className={css({
-                alignItems: "center",
-                backgroundColor: darkMode
-                    ? color.dark.background.secondary.default
-                    : color.light.background.secondary.default,
-                bottom: 0,
-                columnGap: 8,
-                display: "flex",
-                flexDirection: "row",
-                height: 32,
-                justifyContent: "space-between",
-                left: 0,
-                paddingLeft: 8,
-                paddingRight: 8,
-                position: "fixed",
-                width: "100%",
-            })}>
+        <Flex
+            align="center"
+            as="footer"
+            bg="bg.subtle"
+            borderTopWidth="1px"
+            flexWrap="wrap"
+            gap="3"
+            justify="space-between"
+            px={{ base: "3", md: "6" }}
+            py="3">
             <IconButton
-                aria-label="Theme switcher"
-                onClick={() => onThemeChange((darkMode) => !darkMode)}
-                size="default">
-                <Icon glyph={darkMode ? "Sun" : "Moon"} />
+                aria-label={
+                    darkMode ? "Switch to light theme" : "Switch to dark theme"
+                }
+                onClick={() => onThemeChange((value) => !value)}
+                size="sm"
+                variant="ghost">
+                {darkMode ? <Sun /> : <Moon />}
             </IconButton>
-            {lastUpdated !== undefined && (
-                <Body
-                    className={
-                        flexClassName
-                    }>{`${timestampPrefix}${lastUpdated}`}</Body>
+            {!isUndefined(lastUpdated) && (
+                <Text color="fg.muted" fontSize="sm">
+                    {breakpoint === "mobile" ? "Updated " : "Last updated "}
+                    {new Date(lastUpdated).toLocaleDateString(undefined, {
+                        dateStyle:
+                            breakpoint === "mobile" ? "short" : undefined,
+                    })}
+                </Text>
             )}
-            <Box
-                className={css({
-                    alignItems: "center",
-                    columnGap: 4,
-                    display: "flex",
-                    flexDirection: "row",
-                })}>
-                <Link
-                    className={flexClassName}
-                    href="https://github.com/brandongregoryscott/arthistory">
+            <Flex flexWrap="wrap" fontSize="sm" gap="3">
+                <Link href="https://github.com/brandongregoryscott/arthistory">
                     GitHub
                 </Link>
-                <Link className={flexClassName} href="https://ko-fi.com/bscott">
-                    Buy me a coffee
-                </Link>
+                <Link href="https://ko-fi.com/bscott">Buy me a coffee</Link>
                 <Link href="mailto:contact@brandonscott.me">Contact</Link>
-            </Box>
-        </Box>
+            </Flex>
+        </Flex>
     );
 };
 
