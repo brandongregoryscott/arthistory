@@ -10,9 +10,6 @@
     <a href="http://www.typescriptlang.org/">
         <img alt="TypeScript" src="https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg"/>
     </a>
-    <a href="http://commitizen.github.io/cz-cli/">
-        <img alt="Commitizen friendly" src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg"/>
-    </a>
 </p>
 
 Web application for viewing historical Spotify artist data.
