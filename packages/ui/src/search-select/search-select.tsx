@@ -27,15 +27,18 @@ type SearchSelectProps<TSearchResult extends { id: string }, TValue> = {
     value: string;
 };
 
-const SearchSelect = <TSearchResult extends { id: string }, TValue>({
-    getRemovableBadgeProps,
-    getSearchResultProps,
-    onChange,
-    results,
-    selectedIds,
-    selectedValueMap,
-    value,
-}: SearchSelectProps<TSearchResult, TValue>) => {
+const SearchSelect = <TSearchResult extends { id: string }, TValue>(
+    props: SearchSelectProps<TSearchResult, TValue>
+) => {
+    const {
+        getRemovableBadgeProps,
+        getSearchResultProps,
+        onChange,
+        results,
+        selectedIds,
+        selectedValueMap,
+        value,
+    } = props;
     const items = (results ?? []).map((result) => ({
         id: result.id,
         ...getSearchResultProps(result),
