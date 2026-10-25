@@ -13,12 +13,14 @@
         "eslint-plugin-perfectionist": "5.6.0",
         "eslint-plugin-react": "7.37.5",
         "eslint-plugin-react-hooks": "7.0.1",
+        "gagen": "0.8.0",
         "husky": "9.1.4",
         "jsonc-eslint-parser": "2.4.0",
         "lint-staged": "15.2.8",
         "prettier": "3.8.1",
         "tsx": "4.20.5",
         "turbo": "2.0.4",
+        "typescript": "5.9.3",
         "typescript-eslint": "8.56.1"
     },
     "engines": {
@@ -29,11 +31,16 @@
         "*.{ts,tsx}": "eslint --cache --fix"
     },
     "name": "arthistory",
-    "packageManager": "npm@7.24.2",
+    "packageManager": "npm@11.20.0",
     "private": true,
     "scripts": {
         "build": "turbo build",
         "build:force": "turbo build --force",
+        "ci:check": "gagen --lint",
+        "ci:generate": "gagen",
+        "ci:lint": "eslint --config .github/eslint.config.mjs .github/workflows/*.mts",
+        "ci:typecheck": "tsc -p .github/tsconfig.json",
+        "ci:update-pins": "gagen --update-pins",
         "clean": "rm -rf node_modules build apps/**/node_modules packages/**/node_modules apps/**/dist apps/**/build packages/**/dist packages/**/build apps/**/.next",
         "copy-object": "tsx packages/scripts/src/copy-object",
         "create-indexes": "tsx packages/scripts/src/create-indexes",
@@ -54,6 +61,7 @@
         "pretty-print-logs": "sudo journalctl --pager-end --no-pager --lines 5000 --unit arthistory-cron-service.service | cut -c 37-10000 | pino-pretty --ignore pid,hostname",
         "sync": "tsx packages/scripts/src/sync",
         "test": "npm run test --workspaces --if-present",
+        "typecheck": "npm run typecheck --workspaces --if-present",
         "upload-logs": "sudo journalctl --pager-end --no-pager --lines 5000 --unit arthistory-cron-service.service | cut -c 37-10000 > logs.txt && npm run upload-object -- --filename logs.txt --bucket logs --key logs-`node -e 'console.log(new Date().toISOString())'`.txt",
         "upload-object": "tsx packages/scripts/src/upload-object"
     },

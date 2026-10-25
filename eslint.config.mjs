@@ -216,7 +216,17 @@ const reactConfig = defineConfig([
 ]);
 
 const ignores = defineConfig([
-    { ignores: ["**/dist/**", "eslint.config.mjs", "**/.next/**", "**/build/**", "**/node_modules/**", "**/out/**"] },
+    {
+        ignores: [
+            ".github/**",
+            "**/dist/**",
+            "eslint.config.mjs",
+            "**/.next/**",
+            "**/build/**",
+            "**/node_modules/**",
+            "**/out/**",
+        ],
+    },
 ]);
 
 export default [

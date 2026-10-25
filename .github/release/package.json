@@ -1,0 +1,8 @@
+{
+    "name": "ci-release",
+    "private": true,
+    "type": "module",
+    "devDependencies": {
+        "semantic-release": "25.0.9"
+    }
+}

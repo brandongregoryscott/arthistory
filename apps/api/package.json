@@ -39,7 +39,8 @@
         "dev": "concurrently --names esbuild,nodemon \"npm run build -- --watch\" \"nodemon -q dist/server.js\"",
         "start": "node dist/server.js",
         "test": "vitest run",
-        "test:watch": "vitest"
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit"
     },
     "version": "1.0.0"
 }
