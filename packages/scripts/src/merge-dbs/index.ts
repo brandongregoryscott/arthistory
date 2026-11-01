@@ -1,5 +1,6 @@
 import { program } from "commander";
 import type { MergeDbsOptions } from "./merge-dbs";
+import { withWorkerLock } from "../utils/worker-lock";
 import { mergeDbs } from "./merge-dbs";
 
 program.option(
@@ -17,7 +18,15 @@ program.parse();
 const { skipCheckpointAsBase, skipIndexes } = program.opts<MergeDbsOptions>();
 
 const main = async () => {
-    await mergeDbs({ skipCheckpointAsBase, skipIndexes });
+    const ran = await withWorkerLock(async () => {
+        await mergeDbs({ skipCheckpointAsBase, skipIndexes });
+    });
+    if (!ran) {
+        throw new Error("Another sync or merge is running");
+    }
 };
 
-main();
+main().catch((error: Error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+});

@@ -21,7 +21,8 @@ type Artist = {
 type ArtistSnapshotRow = {
     followers: number;
     id: string;
-    popularity: number;
+    monthly_listeners?: null | number;
+    popularity: null | number;
     timestamp: number;
 };
 
@@ -31,7 +32,8 @@ type ArtistSnapshotRow = {
 type ArtistSnapshot = {
     followers: number;
     id: string;
-    popularity: number;
+    monthly_listeners?: null | number;
+    popularity: null | number;
     timestamp: string;
 };
 

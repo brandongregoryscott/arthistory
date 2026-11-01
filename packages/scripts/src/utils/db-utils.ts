@@ -1,147 +1,77 @@
 import type { ArtistSnapshotRow } from "@repo/common";
-import { stat } from "fs/promises";
-import { first, isEmpty, sortBy } from "lodash";
+import { stat } from "node:fs/promises";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import type { Database, SQLStatement } from "../types";
-import { DatabaseName, TableName } from "../constants/storage";
+import { DatabaseName } from "../constants/storage";
 import { getDbFilenames } from "./fs-utils";
-import { createTimerLogger, logger } from "./logger";
 
-const createArtistSnapshotsTable = (db: Database) =>
-    db.exec(createArtistSnapshotsTableSql());
-
-const createArtistSnapshotsTableSql = (uniqueConstraint: boolean = false) => `
-        CREATE TABLE IF NOT EXISTS ${TableName.ArtistSnapshots} (
-            id TEXT,
-            timestamp NUMERIC,
-            followers NUMERIC,
-            popularity NUMERIC
-            ${uniqueConstraint ? ",UNIQUE (id, timestamp)" : ""}
+const createArtistSnapshotsTable = async (db: Database) => {
+    await db.exec(`CREATE TABLE IF NOT EXISTS artist_snapshots (
+        id TEXT, timestamp NUMERIC, followers NUMERIC, popularity NUMERIC, monthly_listeners NUMERIC
+    )`);
+    const columns = await db.all<Array<{ name: string }>>(
+        "PRAGMA table_info(artist_snapshots)"
+    );
+    if (!columns.some((column) => column.name === "monthly_listeners")) {
+        await db.exec(
+            "ALTER TABLE artist_snapshots ADD COLUMN monthly_listeners NUMERIC"
         );
- `;
+    }
+};
 
 const createArtistSnapshotsIndexes = async (db: Database) =>
     db.exec(`
-        CREATE INDEX ${TableName.ArtistSnapshots}_id ON ${TableName.ArtistSnapshots} (id);
-        CREATE INDEX ${TableName.ArtistSnapshots}_timestamp ON ${TableName.ArtistSnapshots} (timestamp);
-`);
-
-const dropArtistSnapshotsConstraintIfExists = async (db: Database) => {
-    // Check to see if the table actually has a unique index before doing extra work to transfer records
-    // to a new table that definitely does not have the index
-    const hasUniqueIndex =
-        (await db.get(`PRAGMA index_list(${TableName.ArtistSnapshots});`)) !==
-        undefined;
-
-    if (!hasUniqueIndex) {
-        logger.info(
-            `No unique index found, creating ${TableName.ArtistSnapshots} if it does not exist`
-        );
-        await createArtistSnapshotsTable(db);
-        return;
-    }
-
-    const stopUniqueConstraintTimer = createTimerLogger(
-        `Creating '${TableName.ArtistSnapshots}' without unique constraint`
-    );
-    await db.exec(`
-        PRAGMA foreign_keys=off;
-
-        ${createArtistSnapshotsTableSql(true)}
-
-        BEGIN TRANSACTION;
-
-        ALTER TABLE ${TableName.ArtistSnapshots} RENAME TO ${TableName.ArtistSnapshotsWithConstraint};
-
-        ${createArtistSnapshotsTableSql()}
-
-        INSERT INTO ${TableName.ArtistSnapshots} SELECT * FROM ${TableName.ArtistSnapshotsWithConstraint};
-
-        COMMIT;
-
-        DROP TABLE IF EXISTS ${TableName.ArtistSnapshotsWithConstraint};
-        VACUUM;
-
-        PRAGMA foreign_keys=on;
-`);
-    stopUniqueConstraintTimer();
-};
+        CREATE INDEX IF NOT EXISTS artist_snapshots_id ON artist_snapshots (id);
+        CREATE INDEX IF NOT EXISTS artist_snapshots_timestamp ON artist_snapshots (timestamp);
+    `);
 
 const buildInsertArtistSnapshotStatement = (
     row: ArtistSnapshotRow
-): SQLStatement => {
-    const { followers, id, popularity, timestamp } = row;
-
-    return `
-        INSERT OR IGNORE INTO ${TableName.ArtistSnapshots}
-            (id, timestamp, popularity, followers)
-        VALUES
-            ('${id}', ${timestamp}, ${popularity}, ${followers});`;
-};
-
-/**
- * @see https://stackoverflow.com/a/58547438
- */
-const setPerformancePragmas = async (db: Database) =>
-    db.exec(`
-        PRAGMA synchronous = OFF;
-        PRAGMA locking_mode = EXCLUSIVE;
-        PRAGMA journal_mode = OFF;
- `);
+): SQLStatement => [
+    `INSERT OR IGNORE INTO artist_snapshots (id, timestamp, popularity, followers, monthly_listeners)
+     SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM artist_snapshots WHERE id = ? AND timestamp = ?)`,
+    [
+        row.id,
+        row.timestamp,
+        row.popularity,
+        row.followers,
+        row.monthly_listeners ?? null,
+        row.id,
+        row.timestamp,
+    ],
+];
 
 const countRows = async (db: Database, table: string): Promise<number> => {
-    const result = (await db.get(`SELECT COUNT(*) FROM ${table};`)) as {
-        "COUNT(*)": number;
-    };
-    return result["COUNT(*)"];
+    const row = await db.get<{ count: number }>(
+        `SELECT COUNT(*) AS count FROM ${table}`
+    );
+    return row?.count ?? 0;
 };
 
-const flushStatementsIfNeeded = async (
-    db: Database,
-    statements: SQLStatement[],
-    flushAfter: number
-): Promise<boolean> => {
-    if (statements.length < flushAfter) {
-        return false;
-    }
-
-    await flushStatements(db, statements);
-    return true;
-};
-
+// Await every write so an error rolls back instead of looking like a successful upload.
 const flushStatements = async (
     db: Database,
     statements: SQLStatement[]
-): Promise<void> =>
-    new Promise((resolve) => {
-        if (isEmpty(statements)) {
-            resolve();
-            return;
+): Promise<void> => {
+    if (statements.length === 0) {
+        return;
+    }
+    await db.exec("BEGIN IMMEDIATE");
+    try {
+        for (const statement of statements) {
+            if (Array.isArray(statement)) {
+                await db.run(...statement);
+            } else {
+                await db.run(statement);
+            }
         }
-
-        const statementCount = statements.length;
-        const stopFlushTimer = createTimerLogger(
-            { statementCount },
-            "Flushing statements"
-        );
-        const dbInstance = db.getDatabaseInstance();
-        dbInstance.serialize(() => {
-            dbInstance.run("BEGIN TRANSACTION");
-            statements.forEach((statement) => {
-                if (Array.isArray(statement)) {
-                    dbInstance.run(...statement);
-                    return;
-                }
-
-                dbInstance.run(statement);
-            });
-            dbInstance.run("COMMIT", () => {
-                stopFlushTimer();
-                resolve();
-            });
-        });
-    });
+        await db.exec("COMMIT");
+    } catch (error) {
+        await db.exec("ROLLBACK");
+        throw error;
+    }
+};
 
 const paginateRows = async <T>(
     db: Database,
@@ -149,59 +79,48 @@ const paginateRows = async <T>(
     pageSize: number,
     callback: (rows: T[]) => Promise<void>
 ): Promise<void> => {
-    const total = await countRows(db, table);
-    let counter = 0;
-    while (counter < total) {
+    let offset = 0;
+    for (;;) {
         const rows = await db.all<T[]>(
-            `SELECT * FROM ${table} LIMIT ${pageSize} OFFSET ${counter};`
+            `SELECT * FROM ${table} ORDER BY rowid LIMIT ? OFFSET ?`,
+            pageSize,
+            offset
         );
-        counter += rows.length;
+        if (rows.length === 0) {
+            return;
+        }
         await callback(rows);
+        offset += rows.length;
     }
 };
 
 const getSnapshotDbFilename = (timestamp: number) =>
     `${DatabaseName.PartialSnapshotPrefix}${timestamp}.db`;
 
+// Compatibility for existing multi-GB checkpoints; new cron checkpoints use an explicit manifest.
 const findCheckpointDbFilename = async (): Promise<string | undefined> => {
-    const dbFileNames = await getDbFilenames();
-    const dbFileSizes = await Promise.all(
-        dbFileNames.map(async (fileName) => {
-            const { size } = await stat(fileName);
-            return { fileName, size };
-        })
+    const files = await Promise.all(
+        (await getDbFilenames()).map(async (fileName) => ({
+            fileName,
+            size: (await stat(fileName)).size,
+        }))
     );
-    const dbFilesBySize = sortBy(dbFileSizes, ({ size }) => size).reverse();
-    const largestDb = first(dbFilesBySize);
-    // The checkpoint db should very likely be several GB at this point of tracking, so throw out anything smaller
-    if (largestDb !== undefined && largestDb.size >= Math.pow(1024, 3)) {
-        return largestDb.fileName;
-    }
-
-    return undefined;
+    return files
+        .sort((a, b) => b.size - a.size)
+        .find((file) => file.size >= 1024 ** 3)?.fileName;
 };
 
 const openDb = async (fileName: string): Promise<Database> =>
-    open({
-        driver: sqlite3.cached.Database,
-        filename: fileName,
-    });
-
-const openSnapshotDb = async (timestamp: number) =>
-    openDb(getSnapshotDbFilename(timestamp));
+    open({ driver: sqlite3.Database, filename: fileName });
 
 export {
     buildInsertArtistSnapshotStatement,
     countRows,
     createArtistSnapshotsIndexes,
     createArtistSnapshotsTable,
-    dropArtistSnapshotsConstraintIfExists,
     findCheckpointDbFilename,
     flushStatements,
-    flushStatementsIfNeeded,
     getSnapshotDbFilename,
     openDb,
-    openSnapshotDb,
     paginateRows,
-    setPerformancePragmas,
 };

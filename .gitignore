@@ -38,6 +38,10 @@ yarn-error.log*
 *.pem
 
 *.db
+*.db.building
+*.db.download
+sync-checkpoint.json
+sync-checkpoint.json.tmp
 
 # TanStack route generator cache
 .tanstack/

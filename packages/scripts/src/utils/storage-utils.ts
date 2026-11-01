@@ -3,6 +3,9 @@ import type { Progress } from "@aws-sdk/lib-storage";
 import { S3 } from "@aws-sdk/client-s3";
 import { compact } from "lodash";
 import { createWriteStream } from "node:fs";
+import { rename, rm } from "node:fs/promises";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import {
     AWS_ACCESS_KEY_ID,
     AWS_S3_ENDPOINT,
@@ -50,16 +53,19 @@ type DownloadObjectsOptions = {
 
 const downloadObjects = async (options: DownloadObjectsOptions) => {
     const { bucket, keys } = options;
-    return Promise.all(keys.map((key) => downloadObject({ bucket, key })));
+    for (const key of keys) {
+        await downloadObject({ bucket, key });
+    }
 };
 
 type DownloadObjectOptions = {
     bucket: string;
+    filename?: string;
     key: string;
 };
 
 const downloadObject = async (options: DownloadObjectOptions) => {
-    const { bucket, key } = options;
+    const { bucket, key, filename = key } = options;
     const stopDownloadTimer = createTimerLogger(
         { bucket, key },
         "Downloading object"
@@ -69,18 +75,16 @@ const downloadObject = async (options: DownloadObjectOptions) => {
         Bucket: bucket,
         Key: key,
     });
-    const objectStream = result.Body?.transformToWebStream();
-    if (objectStream === undefined) {
-        return;
+    if (!(result.Body instanceof Readable)) {
+        throw new Error("Object download returned no Node stream");
     }
-
-    const fileStream = createWriteStream(key);
-    const writableStream = new WritableStream({
-        write: (chunk) => {
-            fileStream.write(chunk);
-        },
-    });
-    await objectStream.pipeTo(writableStream);
+    const temporary = `${filename}.download`;
+    try {
+        await pipeline(result.Body, createWriteStream(temporary));
+        await rename(temporary, filename);
+    } finally {
+        await rm(temporary, { force: true });
+    }
     stopDownloadTimer();
 };
 
@@ -91,11 +95,23 @@ type ListObjectsOptions = {
 
 const listObjects = async (options: ListObjectsOptions): Promise<_Object[]> => {
     const { bucket, prefix } = options;
-    const { Contents: objects = [] } = await s3.listObjectsV2({
-        Bucket: bucket,
-        Prefix: prefix,
-    });
-
+    const objects: _Object[] = [];
+    let continuationToken: string | undefined;
+    do {
+        const page = await s3.listObjectsV2({
+            Bucket: bucket,
+            ContinuationToken: continuationToken,
+            Prefix: prefix,
+        });
+        objects.push(...(page.Contents ?? []));
+        continuationToken =
+            page.IsTruncated === true ? page.NextContinuationToken : undefined;
+        if (page.IsTruncated === true && continuationToken === undefined) {
+            throw new Error(
+                "Object listing was truncated without a continuation token"
+            );
+        }
+    } while (continuationToken !== undefined);
     return objects;
 };
 

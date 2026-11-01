@@ -28,13 +28,21 @@ services:
     volumes:
       - /home/brandon/arthistory/data:/data
 
-  # cron:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.cron
-  #   env_file: .env
-  #   volumes:
-  #     - /home/brandon/arthistory/data:/data
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    env_file: .env
+    environment:
+      - SYNC_INTERVAL_HOURS=${SYNC_INTERVAL_HOURS:-24}
+      - SYNC_REQUEST_SPACING_SECONDS=${SYNC_REQUEST_SPACING_SECONDS:-60}
+      - SYNC_MAX_REQUESTS_PER_RUN=${SYNC_MAX_REQUESTS_PER_RUN:-5}
+      - SYNC_COOLDOWN_HOURS=${SYNC_COOLDOWN_HOURS:-24}
+      - SYNC_FAILURE_RETRY_HOURS=${SYNC_FAILURE_RETRY_HOURS:-24}
+    restart: unless-stopped
+    stop_grace_period: 45s
+    volumes:
+      - /home/brandon/arthistory/data:/data
 
   tunnel:
     image: tuns-tunnel:latest # built locally on the host from the tuns-tunnel repo

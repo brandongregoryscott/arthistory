@@ -33,6 +33,7 @@
     "packageManager": "npm@11.20.0",
     "private": true,
     "scripts": {
+        "artist-sync": "tsx packages/scripts/src/artist-sync",
         "build": "turbo build",
         "build:force": "turbo build --force",
         "ci:check": "gagen --lint",
@@ -55,6 +56,7 @@
         "lint": "eslint . --max-warnings 0",
         "lint:fix": "eslint . --max-warnings 0 --fix",
         "list-objects": "tsx packages/scripts/src/list-objects",
+        "merge-and-backup": "tsx packages/scripts/src/cron-service/merge.ts",
         "merge-dbs": "tsx packages/scripts/src/merge-dbs",
         "prepare": "husky || exit 0",
         "pretty-print-logs": "sudo journalctl --pager-end --no-pager --lines 5000 --unit arthistory-cron-service.service | cut -c 37-10000 | pino-pretty --ignore pid,hostname",

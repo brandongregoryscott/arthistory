@@ -8,13 +8,11 @@
     "dependencies": {
         "@aws-sdk/client-s3": "3.899.0",
         "@aws-sdk/lib-storage": "3.899.0",
-        "@spotify/web-api-ts-sdk": "1.2.0",
         "commander": "14.0.1",
         "cron": "4.3.3",
         "dotenv": "17.2.3",
         "lodash": "4.17.21",
         "pino": "10.4.0",
-        "serialize-error": "8.1.0",
         "sqlite": "5.1.1",
         "sqlite3": "6.0.1"
     },
@@ -24,6 +22,7 @@
     },
     "scripts": {
         "build": "tsc -p tsconfig.json",
+        "test": "tsx --test src/**/*.test.ts",
         "typecheck": "tsc -p tsconfig.json"
     }
 }
