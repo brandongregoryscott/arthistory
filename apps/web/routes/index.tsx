@@ -103,20 +103,25 @@ const HomePage: React.FC = () => {
     }, [isLoading]);
 
     const data = useMemo(() => {
+        const formatDate = (timestamp: string) =>
+            new Date(timestamp).toLocaleDateString(undefined, {
+                dateStyle: breakpoint === "mobile" ? "short" : undefined,
+            });
         const labels = uniq(
             compact(
-                snapshots?.map((snapshot) =>
-                    new Date(snapshot.timestamp).toLocaleDateString(undefined, {
-                        dateStyle:
-                            breakpoint === "mobile" ? "short" : undefined,
-                    })
-                )
+                snapshots?.map((snapshot) => formatDate(snapshot.timestamp))
             )
         );
 
         const datasets = selectedArtistIds.map((artistId) => {
             const artistSnapshots =
                 snapshots?.filter((snapshot) => snapshot.id === artistId) ?? [];
+            const followersByDate = new Map(
+                artistSnapshots.map((snapshot) => [
+                    formatDate(snapshot.timestamp),
+                    snapshot.followers,
+                ])
+            );
 
             const label = artists[artistId]?.name;
             if (label === undefined) {
@@ -124,7 +129,7 @@ const HomePage: React.FC = () => {
             }
 
             return {
-                data: artistSnapshots.map((snapshot) => snapshot.followers),
+                data: labels.map((date) => followersByDate.get(date) ?? null),
                 label,
                 ...getHashedBarChartColor(artistId, darkMode),
             };

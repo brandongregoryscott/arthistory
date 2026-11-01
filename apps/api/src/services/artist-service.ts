@@ -1,6 +1,6 @@
 import type { Artist, ArtistSnapshot, ArtistSnapshotRow } from "@repo/common";
 import { getDayOfYear, getMonth, getQuarter, getWeek, getYear } from "date-fns";
-import { countBy, uniqBy } from "lodash";
+import { uniqBy } from "lodash";
 import { getDb } from "../database";
 import { SpotifyClient } from "../spotify";
 import { normalizeTimestamp } from "../utilities/date-utils";
@@ -60,40 +60,20 @@ const ArtistService = {
             `SELECT * FROM artist_snapshots WHERE id IN (${queryPlaceholder(ids.length)}) ORDER BY timestamp ASC;`,
             ids
         );
-        let snapshots = results.map(normalizeArtistSnapshot);
+        const snapshots = results.map(normalizeArtistSnapshot);
 
         switch (resolution) {
             case "daily":
-                return intersectionByNormalizedTimestamp(
-                    ids.length,
-                    snapshots,
-                    getDayOfYear
-                );
+                return sampleArtistSnapshots(snapshots, getDayOfYear);
             case "quarterly":
-                return intersectionByNormalizedTimestamp(
-                    ids.length,
-                    snapshots,
-                    getQuarter
-                );
+                return sampleArtistSnapshots(snapshots, getQuarter);
             case "weekly":
-                return intersectionByNormalizedTimestamp(
-                    ids.length,
-                    snapshots,
-                    getWeek
-                );
+                return sampleArtistSnapshots(snapshots, getWeek);
             case "yearly":
-                return intersectionByNormalizedTimestamp(
-                    ids.length,
-                    snapshots,
-                    getYear
-                );
+                return sampleArtistSnapshots(snapshots, getYear);
             case "monthly":
             default:
-                return intersectionByNormalizedTimestamp(
-                    ids.length,
-                    snapshots,
-                    getMonth
-                );
+                return sampleArtistSnapshots(snapshots, getMonth);
         }
     },
 };
@@ -106,20 +86,14 @@ const normalizeArtistSnapshot = (row: ArtistSnapshotRow): ArtistSnapshot => ({
     timestamp: normalizeTimestamp(row.timestamp),
 });
 
-const intersectionByNormalizedTimestamp = (
-    count: number,
+const sampleArtistSnapshots = (
     snapshots: ArtistSnapshot[],
     getInterval: (timestamp: string) => number
 ): ArtistSnapshot[] => {
-    const countByTimestamp = countBy(
-        snapshots,
-        (snapshot) => snapshot.timestamp
-    );
-
+    // Each artist has its own collection schedule. Keep its observations even
+    // when another selected artist has no data on the same day.
     return uniqBy(
-        snapshots.filter(
-            (snapshot) => countByTimestamp[snapshot.timestamp] === count
-        ),
+        snapshots,
         (snapshot) =>
             `${snapshot.id}_${getYear(snapshot.timestamp)}_${getInterval(snapshot.timestamp)}`
     );
