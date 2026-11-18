@@ -35,3 +35,19 @@ describe("trusted proxy configuration", () => {
         }
     );
 });
+
+describe("PocketBase configuration", () => {
+    it("rejects incomplete configuration only when loaded", async () => {
+        vi.stubEnv("POCKETBASE_URL", "https://pb.example.com");
+        vi.stubEnv("POCKETBASE_SUPERUSER_EMAIL", "owner@example.com");
+        vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "");
+
+        const { loadPocketBaseConfig } = await import("./config.js");
+
+        expect(loadPocketBaseConfig).toThrow();
+
+        vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "test-password");
+
+        expect(loadPocketBaseConfig().url).toBe("https://pb.example.com");
+    });
+});
