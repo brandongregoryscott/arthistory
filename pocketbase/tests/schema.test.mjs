@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+    cpSync,
+    mkdirSync,
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    statSync,
+    writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { test } from "node:test";
@@ -39,6 +47,31 @@ test(
                 new URL("./fixture.js", import.meta.url),
                 resolve(hooks, "fixture.js")
             );
+            const prepared = resolve(root, "prepared");
+            execFileSync(process.execPath, [
+                "--import",
+                "tsx",
+                resolve("apps/api/src/migration/index.ts"),
+                "--source",
+                resolve("_spotify-data.db"),
+                "--timestamp-unit",
+                "seconds",
+                "--output",
+                prepared,
+            ]);
+            const items = ["artists", "snapshots"].flatMap((collection) =>
+                readFileSync(resolve(prepared, collection + ".jsonl"), "utf8")
+                    .trim()
+                    .split("\n")
+                    .filter(Boolean)
+                    .map((line) => ({ collection, record: JSON.parse(line) }))
+            );
+            assert.ok(items.length > 0 && items.length < 1000);
+            cpSync(
+                new URL("./prepared-fixture.js", import.meta.url),
+                resolve(hooks, "prepared-fixture.js")
+            );
+
             writeFileSync(
                 resolve(hooks, "test.pb.js"),
                 `
@@ -47,6 +80,13 @@ test(
                 run: () => {
                     $app.bootstrap();
                     require(__hooks + "/fixture.js")($app);
+                }
+            }));
+            $app.rootCmd.addCommand(new Command({
+                use: "test-prepared",
+                run: (cmd) => {
+                    $app.bootstrap();
+                    require(__hooks + "/prepared-fixture.js")($app, ${JSON.stringify(items)}, cmd);
                 }
             }));
         `
@@ -67,6 +107,14 @@ test(
                 );
             run("migrate", "up");
             run("test-schema");
+            process.stdout.write(run("test-prepared"));
+            const backupBytes = statSync(
+                resolve(root, "data", "backups", "prepared-fixture.zip")
+            ).size;
+            assert.ok(backupBytes > 0);
+            process.stdout.write(
+                "Native fixture backup bytes: " + backupBytes + "\n"
+            );
             assert.match(run("migrate", "up"), /No new migrations/);
             assert.match(
                 run("migrate", "down", "1", "--automigrate=false"),

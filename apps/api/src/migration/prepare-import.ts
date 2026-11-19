@@ -1,5 +1,4 @@
 import type { SQLOutputValue } from "node:sqlite";
-import { createHash } from "node:crypto";
 import {
     closeSync,
     existsSync,
@@ -15,6 +14,8 @@ import { basename, dirname, resolve } from "node:path";
 import type { LegacySource } from "./legacy-source";
 import { isSpotifyArtistId } from "../utilities/id-validation";
 import { openLegacySource, validateSource } from "./legacy-source";
+import { isNullableMetric } from "./metric-validation";
+import { importId } from "./prepared-records";
 
 type PrepareImportOptions = {
     cutoff?: number;
@@ -113,7 +114,7 @@ const prepareImport = (options: PrepareImportOptions) => {
                     writeArtist({
                         aliases: [],
                         displayName: "",
-                        id: stableId(`artist:${id}`),
+                        id: importId(`artist:${id}`),
                         metadataSource: "legacy-id",
                         searchNames: [],
                         spotifyId: id,
@@ -149,9 +150,9 @@ const prepareImport = (options: PrepareImportOptions) => {
             counts.snapshots++;
 
             writeSnapshot({
-                artist: stableId(`artist:${id}`),
+                artist: importId(`artist:${id}`),
                 capturedAt,
-                id: stableId(`snapshot:${id}:${weekStart}`),
+                id: importId(`snapshot:${id}:${weekStart}`),
                 metrics: {
                     followers: row.followers,
                     monthlyListeners: null,
@@ -203,12 +204,6 @@ const prepareImport = (options: PrepareImportOptions) => {
     }
 };
 
-const stableId = (key: string) =>
-    BigInt("0x" + createHash("sha256").update(key).digest("hex"))
-        .toString(36)
-        .slice(-15)
-        .padStart(15, "0");
-
 const validateRow = (row: LegacyRow) => {
     if (
         !isSpotifyArtistId(row.id) ||
@@ -224,16 +219,10 @@ const validateRow = (row: LegacyRow) => {
         );
     }
 
-    for (const key of ["followers", "popularity"]) {
+    for (const key of ["followers", "popularity"] as const) {
         const value = row[key];
 
-        if (
-            value !== null &&
-            (typeof value !== "number" ||
-                !Number.isSafeInteger(value) ||
-                value < 0 ||
-                (key === "popularity" && value > 100))
-        ) {
+        if (!isNullableMetric(key, value)) {
             throw new Error(`Invalid legacy metric: ${key}.`);
         }
     }

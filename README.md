@@ -76,6 +76,32 @@ have syncing disabled. Names remain unresolved and are counted in the report.
 Existing output directories are rejected. These files are preparation artifacts;
 the command does not load PocketBase or change any original database.
 
+### Loading prepared data
+
+Configure the server-side PocketBase connection in the root .env, then load a
+prepared export into an isolated migration target:
+
+```sh
+npm run import-data -- --input ./prepared-data
+```
+
+The loader validates all records, relationships and report counts into a private
+temporary spool before contacting PocketBase. Allow temporary disk space for one
+additional copy of the prepared records. Writes use bounded, sequential batches
+through the built-in records API.
+
+Rerun the same export after interruption. Matching rows and newer captures are
+skipped; existing artist names, aliases and enrollment are preserved. Conflicts
+stop the load. Existing artists must have the deterministic IDs from preparation;
+a different ID for the same Spotify artist requires reconciliation before loading.
+The loader does not update snapshots with conflicting values or enable collection.
+
+The regular test command checks the SDK request contract with mocked fetch
+responses. With POCKETBASE_TEST_BINARY configured, it also loads prepared fixture
+records through the real PocketBase model layer and reports table/index storage
+and native backup size/time. Live HTTP loading, production-scale measurements and
+a complete restore still need verification before cutover.
+
 ### Database
 
 The API requires a SQLite database to query. A small sample database is included in the repo: [`_spotify-data.db`](./_spotify-data.db).
