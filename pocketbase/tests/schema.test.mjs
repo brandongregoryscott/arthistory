@@ -117,7 +117,7 @@ test(
             );
             assert.match(run("migrate", "up"), /No new migrations/);
             assert.match(
-                run("migrate", "down", "1", "--automigrate=false"),
+                run("migrate", "down", "2", "--automigrate=false"),
                 /Reverted 1794900000_collections.js/
             );
             run("migrate", "up");

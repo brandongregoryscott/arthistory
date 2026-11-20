@@ -1,7 +1,7 @@
+import type { SnapshotResolution } from "@repo/common";
 import type { Request, Response } from "express";
-import { ValidationError } from "@repo/common";
+import { isSnapshotResolution, ValidationError } from "@repo/common";
 import { isEmpty, isString, uniq } from "lodash";
-import type { Resolution } from "../services/artist-service";
 import { artistRequested, searchQueryEntered } from "../analytics";
 import { normalizeSearchQuery } from "../artists/artist-search-index";
 import { ArtistService } from "../services/artist-service";
@@ -13,8 +13,11 @@ const ArtistsController = {
         request: Request,
         response: Response
     ): Promise<Response> => {
-        const id = request.params.id as string;
-        const resolution = request.query.resolution as Resolution | undefined;
+        const { id } = request.params;
+        if (!isSpotifyArtistId(id)) {
+            throw new ValidationError("Provide a Spotify artist ID.");
+        }
+        const resolution = parseResolution(request.query.resolution);
 
         const snapshots = await ArtistService.listArtistSnapshots({
             ids: [id],
@@ -40,7 +43,7 @@ const ArtistsController = {
         response: Response
     ): Promise<Response> => {
         const ids = parseArtistIds(request.query.ids);
-        const resolution = request.query.resolution as Resolution | undefined;
+        const resolution = parseResolution(request.query.resolution);
         if (isEmpty(ids)) {
             return ok(response, []);
         }
@@ -93,6 +96,17 @@ const parseArtistIds = (value: unknown) => {
     }
 
     return ids;
+};
+
+const parseResolution = (value: unknown): SnapshotResolution => {
+    if (value == null) {
+        return "monthly";
+    }
+    if (!isSnapshotResolution(value)) {
+        throw new ValidationError("Invalid snapshot resolution.");
+    }
+
+    return value;
 };
 
 export { ArtistsController };

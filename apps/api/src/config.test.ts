@@ -76,3 +76,29 @@ describe("artist metadata configuration", () => {
         );
     });
 });
+
+describe("snapshot source configuration", () => {
+    it.each([
+        { expected: false, value: undefined },
+        { expected: false, value: "" },
+        { expected: false, value: "false" },
+        { expected: true, value: "true" },
+    ])(
+        "uses PocketBase=$expected for flag $value",
+        async ({ expected, value }) => {
+            vi.stubEnv("SNAPSHOTS_USE_POCKETBASE", value);
+
+            const { SNAPSHOTS_USE_POCKETBASE } = await import("./config.js");
+
+            expect(SNAPSHOTS_USE_POCKETBASE).toBe(expected);
+        }
+    );
+
+    it("rejects an invalid boolean flag", async () => {
+        vi.stubEnv("SNAPSHOTS_USE_POCKETBASE", "unknown");
+
+        await expect(import("./config.js")).rejects.toThrow(
+            "Invalid SNAPSHOTS_USE_POCKETBASE."
+        );
+    });
+});

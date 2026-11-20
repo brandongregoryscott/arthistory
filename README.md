@@ -121,9 +121,21 @@ The existing route envelopes are preserved. The legacy isTracked field describes
 history availability; syncEnabled describes explicit enrollment. Unknown current
 metrics are null. Public artist requests remain analytics-only.
 
-This switch affects metadata and search only. Snapshot reads still use the legacy
-database. Name backfill, snapshot read integration and the final backend cutover
-remain separate changes.
+This switch affects metadata and search only. Name backfill and the final backend
+cutover remain separate changes.
+
+### PocketBase snapshot reads
+
+After importing history, set SNAPSHOTS_USE_POCKETBASE=true to read snapshots and
+latest capture freshness through Express. The default retains SQLite reads.
+Responses keep the existing envelopes; snapshot timestamp is the UTC period start,
+and capturedAt reports the actual capture time. Missing audience metrics remain
+null. Each artist keeps its own available history, and the chart aligns months
+with null gaps. Monthly/quarterly/yearly responses retain the latest capture in
+each period, including that capture's unavailable metrics.
+
+Reads are paginated and bounded. Exceeding a read limit fails the request rather
+than returning partial history. This change does not enable collection.
 
 ### Database
 

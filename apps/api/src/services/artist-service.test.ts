@@ -3,7 +3,10 @@ import { ArtistService } from "./artist-service";
 
 const spotify = vi.hoisted(() => ({ get: vi.fn(), search: vi.fn() }));
 
-vi.mock("../config", () => ({ ARTIST_METADATA_SOURCE: "spotify" }));
+vi.mock("../config", () => ({
+    ARTIST_METADATA_SOURCE: "spotify",
+    SNAPSHOTS_USE_POCKETBASE: false,
+}));
 vi.mock("../storage/pocketbase", () => ({
     PocketBaseClient: class {
         constructor() {
@@ -16,7 +19,14 @@ vi.mock("../spotify", () => ({
 }));
 vi.mock("../database", () => ({
     getDb: async () => ({
-        all: async () => [{ id: "1111111111111111111111" }],
+        all: async () => [
+            {
+                followers: 10000,
+                id: "1111111111111111111111",
+                popularity: 0,
+                timestamp: 1767571200,
+            },
+        ],
     }),
 }));
 
@@ -56,5 +66,20 @@ describe("legacy artist metadata compatibility", () => {
 
         expect(result).toEqual({ [artist.id]: artist });
         expect(spotify.get).toHaveBeenCalledWith(artist.id);
+    });
+
+    it("keeps legacy snapshot reads available without PocketBase", async () => {
+        const result = await ArtistService.listArtistSnapshots({
+            ids: [artist.id],
+            resolution: "weekly",
+        });
+
+        expect(result).toHaveLength(1);
+        expect(result[0]).toMatchObject({
+            followers: 10000,
+            id: artist.id,
+            popularity: 0,
+        });
+        expect(typeof result[0]?.timestamp).toBe("string");
     });
 });

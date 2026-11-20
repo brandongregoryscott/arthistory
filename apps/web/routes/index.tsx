@@ -11,7 +11,7 @@ import {
     Theme,
     useToken,
 } from "@chakra-ui/react";
-import { DEFAULT_ARTIST_IDS } from "@repo/common";
+import { alignMonthlyFollowers, DEFAULT_ARTIST_IDS } from "@repo/common";
 import { Footer, Header, SearchSelect } from "@repo/ui";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -23,7 +23,7 @@ import {
     Tooltip,
     Legend,
 } from "chart.js";
-import { compact, isEmpty, uniq } from "lodash";
+import { compact, isEmpty } from "lodash";
 import { ChartNoAxesCombined, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bar } from "react-chartjs-2";
@@ -103,28 +103,25 @@ const HomePage: React.FC = () => {
     }, [isLoading]);
 
     const data = useMemo(() => {
-        const labels = uniq(
-            compact(
-                snapshots?.map((snapshot) =>
-                    new Date(snapshot.timestamp).toLocaleDateString(undefined, {
-                        dateStyle:
-                            breakpoint === "mobile" ? "short" : undefined,
-                    })
-                )
-            )
+        const { timestamps, values } = alignMonthlyFollowers(
+            snapshots ?? [],
+            selectedArtistIds
+        );
+        const labels = timestamps.map((timestamp) =>
+            new Date(timestamp).toLocaleDateString(undefined, {
+                dateStyle: breakpoint === "mobile" ? "short" : undefined,
+                timeZone: "UTC",
+            })
         );
 
         const datasets = selectedArtistIds.map((artistId) => {
-            const artistSnapshots =
-                snapshots?.filter((snapshot) => snapshot.id === artistId) ?? [];
-
             const label = artists[artistId]?.name;
             if (label === undefined) {
                 return undefined;
             }
 
             return {
-                data: artistSnapshots.map((snapshot) => snapshot.followers),
+                data: values[artistId] ?? [],
                 label,
                 ...getHashedBarChartColor(artistId, darkMode),
             };
