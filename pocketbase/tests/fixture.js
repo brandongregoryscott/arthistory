@@ -66,6 +66,16 @@ module.exports = (app) => {
             }),
         "invalid aliases"
     );
+    assert(
+        app.findRecordsByFilter(
+            "artists",
+            "snapshots_via_artist.id != ''",
+            "id",
+            10,
+            0
+        ).length === 0,
+        "no history back-relation"
+    );
     const snapshot = {
         artist: artist.id,
         weekStart: "2026-01-05 00:00:00.000Z",
@@ -74,6 +84,16 @@ module.exports = (app) => {
         source: "fixture",
     };
     const row = create("snapshots", snapshot);
+    assert(
+        app.findRecordsByFilter(
+            "artists",
+            "snapshots_via_artist.id != ''",
+            "id",
+            10,
+            0
+        ).length === 1,
+        "history back-relation"
+    );
     const stored = JSON.parse(
         app.findRecordById("snapshots", row.id).getString("metrics")
     );

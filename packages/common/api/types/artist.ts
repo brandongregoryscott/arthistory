@@ -1,17 +1,17 @@
 /**
- * Structure returned for an artist from the Spotify API
+ * Artist display metadata. Unavailable current audience metrics remain null.
  */
 type Artist = {
     external_urls: Record<string, string>;
     followers: {
-        href: null;
-        total: number;
+        href: null | string;
+        total: null | number;
     };
     genres: string[];
     id: string;
     images: Array<{ height: number; url: string; width: number }>;
     name: string;
-    popularity: number;
+    popularity: null | number;
     uri: string;
 };
 
@@ -36,10 +36,12 @@ type ArtistSnapshot = {
 };
 
 /**
- * Structure that includes a flag for whether the artist is currently being tracked/synced
+ * Historical availability (legacy isTracked) and optional owner-controlled collection state
  */
 type ArtistWithTrackingStatus = {
+    hasHistory?: boolean;
     isTracked: boolean;
+    syncEnabled?: boolean;
 } & Artist;
 
 export type {

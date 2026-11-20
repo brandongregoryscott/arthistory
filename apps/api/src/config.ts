@@ -30,6 +30,11 @@ const loadPocketBaseConfig = (): PocketBaseConfig => {
     return { email, password, url: parsed.origin };
 };
 
+const ARTIST_METADATA_SOURCE = process.env.ARTIST_METADATA_SOURCE ?? "spotify";
+if (!["spotify", "pocketbase"].includes(ARTIST_METADATA_SOURCE)) {
+    throw new Error("Invalid ARTIST_METADATA_SOURCE.");
+}
+
 const PORT = process.env.PORT ?? 3001;
 const TRUST_PROXY_HOPS = Number(process.env.TRUST_PROXY_HOPS ?? 0);
 if (!Number.isSafeInteger(TRUST_PROXY_HOPS) || TRUST_PROXY_HOPS < 0) {
@@ -53,6 +58,7 @@ const DATABASE_PATH = process.env.DATABASE_PATH ?? "";
 const POSTHOG_KEY = process.env.POSTHOG_KEY ?? "";
 
 export {
+    ARTIST_METADATA_SOURCE,
     CLIENT_ID,
     CLIENT_SECRET,
     DATABASE_PATH,

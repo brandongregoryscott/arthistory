@@ -1,8 +1,15 @@
-import type { Artist, ArtistSnapshot, ArtistSnapshotRow } from "@repo/common";
+import type {
+    Artist,
+    ArtistSnapshot,
+    ArtistSnapshotRow,
+    ArtistWithTrackingStatus,
+} from "@repo/common";
 import { getDayOfYear, getMonth, getQuarter, getWeek, getYear } from "date-fns";
 import { countBy, uniqBy } from "lodash";
+import { ArtistCache } from "../artists/artist-cache";
+import { ARTIST_METADATA_SOURCE, loadPocketBaseConfig } from "../config";
 import { getDb } from "../database";
-import { SpotifyClient } from "../spotify";
+import { PocketBaseClient } from "../storage/pocketbase";
 import { normalizeTimestamp } from "../utilities/date-utils";
 
 type ListArtistSnapshotsOptions = {
@@ -14,7 +21,19 @@ type ListArtistsOptions = {
     ids: string[];
 };
 
+type ArtistSearchPage = {
+    artists: ArtistWithTrackingStatus[];
+    total: number;
+};
+
 type Resolution = "daily" | "monthly" | "quarterly" | "weekly" | "yearly";
+
+const artistCache =
+    ARTIST_METADATA_SOURCE === "pocketbase"
+        ? new ArtistCache({
+              client: new PocketBaseClient(loadPocketBaseConfig()),
+          })
+        : undefined;
 
 const ArtistService = {
     isTracked: async (ids: string[]): Promise<Record<string, boolean>> => {
@@ -38,8 +57,12 @@ const ArtistService = {
     ): Promise<Record<string, Artist>> => {
         const { ids } = options;
 
-        // Spotify removed the batch Get Several Artists endpoint (GET /v1/artists?ids=...)
-        // for apps created after Feb 11, 2026. Use individual artist fetches instead.
+        if (artistCache != null) {
+            return artistCache.list(ids);
+        }
+
+        const { SpotifyClient } = await import("../spotify.js");
+
         const artists = await Promise.all(
             ids.map((id) => SpotifyClient.artists.get(id))
         );
@@ -96,6 +119,28 @@ const ArtistService = {
                 );
         }
     },
+    searchArtists: async (name: string): Promise<ArtistSearchPage> => {
+        if (artistCache != null) {
+            const artists = artistCache.search(name);
+
+            return { artists, total: artists.length };
+        }
+
+        const { SpotifyClient } = await import("../spotify.js");
+        const result = await SpotifyClient.search(name, ["artist"]);
+        const tracked = await ArtistService.isTracked(
+            result.artists.items.map((artist) => artist.id)
+        );
+
+        return {
+            artists: result.artists.items.map((artist) => ({
+                ...artist,
+                external_urls: { ...artist.external_urls },
+                isTracked: tracked[artist.id] === true,
+            })),
+            total: result.artists.total,
+        };
+    },
 };
 
 const queryPlaceholder = (count: number): string =>
@@ -126,4 +171,4 @@ const intersectionByNormalizedTimestamp = (
 };
 
 export type { Resolution };
-export { ArtistService };
+export { artistCache, ArtistService };

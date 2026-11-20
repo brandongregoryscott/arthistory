@@ -13,8 +13,9 @@ const useSearchArtistsByName = (options: SearchArtistsByNameOptions) => {
         enabled: !isEmpty(name),
         placeholderData: keepPreviousData,
         queryFn: async () => {
+            const query = new URLSearchParams({ name });
             const { data, error } = (await get(
-                `${SEARCH_ARTISTS_BY_NAME_ROUTE}?name=${name}`
+                `${SEARCH_ARTISTS_BY_NAME_ROUTE}?${query}`
             )) as SearchArtistByNameResult;
 
             if (error !== null) {

@@ -102,6 +102,29 @@ records through the real PocketBase model layer and reports table/index storage
 and native backup size/time. Live HTTP loading, production-scale measurements and
 a complete restore still need verification before cutover.
 
+### Local artist metadata
+
+Set ARTIST_METADATA_SOURCE=pocketbase to use stored artist display names and fuzzy
+search through Express. Populate names in PocketBase first; unresolved names are
+reported at startup and remain absent from name search. ID lookups retain an ID
+fallback for unresolved records. Searches never fetch artist pages.
+
+Artist records are cached in memory for ID lookups, with a Fuse.js search index
+over their names and aliases. This cache is loaded before startup and refreshed
+from PocketBase once per minute.
+Dashboard edits, missed notifications and restores are picked up by full refreshes.
+A failed refresh retains the last complete index and logs an error. Index budgets
+fail the rebuild rather than silently truncating the artist cache. Queries and results
+are bounded; exact, prefix and substring matches rank ahead of typo matches.
+
+The existing route envelopes are preserved. The legacy isTracked field describes
+history availability; syncEnabled describes explicit enrollment. Unknown current
+metrics are null. Public artist requests remain analytics-only.
+
+This switch affects metadata and search only. Snapshot reads still use the legacy
+database. Name backfill, snapshot read integration and the final backend cutover
+remain separate changes.
+
 ### Database
 
 The API requires a SQLite database to query. A small sample database is included in the repo: [`_spotify-data.db`](./_spotify-data.db).
