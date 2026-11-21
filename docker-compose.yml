@@ -1,4 +1,34 @@
 services:
+  # Opt in during migration; the existing API continues using its legacy DB.
+  pocketbase:
+    profiles: ["pocketbase", "pocketbase-tunnel"]
+    build:
+      context: .
+      dockerfile: Dockerfile.pocketbase
+    environment:
+      POCKETBASE_SUPERUSER_EMAIL: ${POCKETBASE_SUPERUSER_EMAIL:-}
+      POCKETBASE_SUPERUSER_PASSWORD: ${POCKETBASE_SUPERUSER_PASSWORD:-}
+    ports:
+      - "127.0.0.1:${POCKETBASE_PORT:-8090}:8090"
+    volumes:
+      - pocketbase-data:/pb_data
+    restart: unless-stopped
+
+  pocketbase-tunnel:
+    profiles: ["pocketbase-tunnel"]
+    image: tuns-tunnel:latest # built locally on the host from the tuns-tunnel repo
+    pull_policy: never
+    environment:
+      TUNS_NAME: ${POCKETBASE_TUNNEL_NAME:-arthistory-pocketbase}
+      TARGET_HOST: pocketbase
+      TARGET_PORT: 8090
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    volumes:
+      - ${TUNS_SSH_KEY_PATH:-/root/.ssh/tuns_ed25519}:/root/.ssh/id_ed25519:ro
+    restart: unless-stopped
+
   api:
     build:
       context: .
@@ -11,6 +41,7 @@ services:
       - TRUST_PROXY_HOPS=1
       - PORT=3001
       - DATABASE_PATH=/data/_spotify-data.db
+      - POCKETBASE_URL=http://pocketbase:8090
       - METRICS_HOST=0.0.0.0
       - METRICS_PORT=9464
       - SOURCE_COMMIT=${SOURCE_COMMIT:-}
@@ -50,6 +81,7 @@ services:
     restart: always
 
 volumes:
+  pocketbase-data:
   data:
 
 networks:

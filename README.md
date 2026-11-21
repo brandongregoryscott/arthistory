@@ -30,6 +30,25 @@ Not every artist on Spotify is tracked, but new artists can be requested through
 
 ## Development
 
+### PocketBase sidecar
+
+The API currently uses the legacy database. To start the optional sidecar, set the
+server-side PocketBase credentials in the root .env (see apps/api/.env.example):
+
+```sh
+docker compose --profile pocketbase up -d --build pocketbase
+```
+
+The owner dashboard is at /_/ on the PocketBase origin. To start its tunnel:
+
+```sh
+docker compose --profile pocketbase-tunnel up -d pocketbase-tunnel
+```
+
+The existing npm test command includes schema/rollback checks when
+POCKETBASE_TEST_BINARY points to the pinned PocketBase executable; otherwise it
+explicitly skips that integration test.
+
 ### Database
 
 The API requires a SQLite database to query. A small sample database is included in the repo: [`_spotify-data.db`](./_spotify-data.db).

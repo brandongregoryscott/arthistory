@@ -6,3 +6,5 @@ build
 .git
 *.db
 .turbo
+
+pocketbase/pb_data/
