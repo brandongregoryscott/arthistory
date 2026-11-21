@@ -139,6 +139,33 @@ matching records/newer captures are skipped, owner metadata/enrollment is preser
 and conflicts stop the load. Imported artists remain disabled. Compare counts and
 coverage before enabling name backfill; never enroll the imported roster wholesale.
 
+Import progress is written to stderr as JSON lines, with separate `validating`,
+`connecting`, `importing`, and `complete` phases. Updates include processed/total
+records, percent, elapsed seconds and records per second; importing also reports
+the batch and created/skipped counts. Phase transitions print immediately and
+record updates are throttled to once per five seconds. By default, every restart revalidates
+and stages the entire export before contacting PocketBase, then checks/skips
+existing records from the beginning. There is no saved cursor.
+
+Add `--skip-preflight` to start writing without first validating and spooling the
+entire export. Records, relationships, ordering and counts are checked while
+streaming instead; a late error can stop the run after earlier valid batches
+have been imported. Keep the prepared files unchanged during the run. This skips
+the initial pass, not existing-record lookups or conflict checks.
+
+To survive a terminal disconnect, run from `/app` in the API container:
+
+```sh
+nohup node dist/cli/migration/load-index.js --input /migration/prepared-data --skip-preflight \
+  >> /migration/import.log 2>&1 < /dev/null &
+echo $! > /migration/import.pid
+tail -f /migration/import.log
+```
+
+Start only one import process at a time. Disconnecting from the log viewer does
+not stop the import. Container replacement/restart or a host reboot still stops
+the process; rerun the same command against the persistent export afterward.
+
 ## Native backups and restore
 
 In PocketBase Settings > Backups, configure a daily schedule such as `0 3 * * *`

@@ -11,123 +11,128 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import type { ReportImportProgress } from "./import-progress";
 import type { ImportItem } from "./prepared-records";
 import { importId, validateArtist, validateSnapshot } from "./prepared-records";
 
 const MAX_LINE_BYTES = 16384;
 const MAX_REPORT_BYTES = 64 * 1024;
 
-// Validate and freeze the full export before making any target requests. Private
-// spooling keeps memory bounded and isolates loading from concurrent input edits.
-const stageImport = async (directory: string) => {
-    const reportFile = resolve(directory, "report.json");
+type ImportCounts = { artists: number; snapshots: number };
 
+const readPreparedImport = (directory: string) => {
+    const reportFile = resolve(directory, "report.json");
     if (statSync(reportFile).size > MAX_REPORT_BYTES) {
         throw new Error("Import report is too large.");
     }
-
     const report: unknown = JSON.parse(readFileSync(reportFile, "utf8"));
     const counts = readCounts(report);
+    return { ...counts, records: readPreparedRecords(directory, counts) };
+};
+
+// Both modes validate every record and cross-file relationship. Streaming mode
+// discovers late errors after earlier batches may already have been written.
+async function* readPreparedRecords(
+    directory: string,
+    counts: ImportCounts
+): AsyncGenerator<ImportItem> {
+    const rows = readJsonLines<unknown>(resolve(directory, "snapshots.jsonl"));
+    let artists = 0;
+    let snapshots = 0;
+    let previousArtist = "";
+    try {
+        let next = await rows.next();
+        for await (const input of readJsonLines<unknown>(
+            resolve(directory, "artists.jsonl")
+        )) {
+            const artist = validateArtist(input);
+            if (artist.spotifyId <= previousArtist) {
+                throw new Error(
+                    "Prepared artists must be unique and sorted by Spotify ID."
+                );
+            }
+            previousArtist = artist.spotifyId;
+            artists++;
+            yield { collection: "artists", record: artist };
+            let previousWeek = "";
+            let artistSnapshots = 0;
+            while (next.done !== true) {
+                const snapshot = validateSnapshot(next.value);
+                if (snapshot.artist !== artist.id) {
+                    break;
+                }
+                if (
+                    (previousWeek !== "" &&
+                        snapshot.weekStart >= previousWeek) ||
+                    snapshot.id !==
+                        importId(
+                            `snapshot:${artist.spotifyId}:${snapshot.weekStart}`
+                        )
+                ) {
+                    throw new Error(
+                        "Invalid snapshot ordering or deterministic ID."
+                    );
+                }
+                previousWeek = snapshot.weekStart;
+                artistSnapshots++;
+                snapshots++;
+                yield { collection: "snapshots", record: snapshot };
+                next = await rows.next();
+            }
+            if (artistSnapshots === 0) {
+                throw new Error("Prepared artist has no snapshots.");
+            }
+        }
+        if (
+            next.done !== true ||
+            artists !== counts.artists ||
+            snapshots !== counts.snapshots
+        ) {
+            throw new Error(
+                "Prepared records do not match their relationships or report counts."
+            );
+        }
+    } finally {
+        await rows.return(undefined);
+    }
+}
+
+// Default mode freezes the full validated export before target requests. Private
+// spooling keeps memory bounded and isolates loading from concurrent input edits.
+const stageImport = async (
+    directory: string,
+    reportProgress?: ReportImportProgress
+) => {
+    const prepared = readPreparedImport(directory);
     const temporary = mkdtempSync(resolve(tmpdir(), "arthistory-import-"));
     const filename = resolve(temporary, "records.jsonl");
     let fd: number | undefined;
     let complete = false;
-    let artists = 0;
-    let snapshots = 0;
-
+    let processed = 0;
+    const total = prepared.artists + prepared.snapshots;
+    const progress = (force = false) =>
+        reportProgress?.({ phase: "validating", processed, total }, force);
     try {
         fd = openSync(filename, "wx", 0o600);
-
-        const rows = readJsonLines<unknown>(
-            resolve(directory, "snapshots.jsonl")
-        );
-        let next = await rows.next();
-        let previousArtist = "";
-
-        try {
-            for await (const input of readJsonLines<unknown>(
-                resolve(directory, "artists.jsonl")
-            )) {
-                const artist = validateArtist(input);
-
-                if (artist.spotifyId <= previousArtist) {
-                    throw new Error(
-                        "Prepared artists must be unique and sorted by Spotify ID."
-                    );
-                }
-
-                previousArtist = artist.spotifyId;
-                artists++;
-                writeFileSync(
-                    fd,
-                    JSON.stringify({
-                        collection: "artists",
-                        record: artist,
-                    } satisfies ImportItem) + "\n"
-                );
-
-                let previousWeek = "";
-                let artistSnapshots = 0;
-
-                while (next.done !== true) {
-                    const snapshot = validateSnapshot(next.value);
-
-                    if (snapshot.artist !== artist.id) {
-                        break;
-                    }
-
-                    if (
-                        (previousWeek !== "" &&
-                            snapshot.weekStart >= previousWeek) ||
-                        snapshot.id !==
-                            importId(
-                                `snapshot:${artist.spotifyId}:${snapshot.weekStart}`
-                            )
-                    ) {
-                        throw new Error(
-                            "Invalid snapshot ordering or deterministic ID."
-                        );
-                    }
-
-                    previousWeek = snapshot.weekStart;
-                    artistSnapshots++;
-                    snapshots++;
-                    writeFileSync(
-                        fd,
-                        JSON.stringify({
-                            collection: "snapshots",
-                            record: snapshot,
-                        } satisfies ImportItem) + "\n"
-                    );
-                    next = await rows.next();
-                }
-
-                if (artistSnapshots === 0) {
-                    throw new Error("Prepared artist has no snapshots.");
-                }
-            }
-
-            if (
-                next.done !== true ||
-                artists !== counts.artists ||
-                snapshots !== counts.snapshots
-            ) {
-                throw new Error(
-                    "Prepared records do not match their relationships or report counts."
-                );
-            }
-        } finally {
-            await rows.return(undefined);
+        progress();
+        for await (const item of prepared.records) {
+            writeFileSync(fd, JSON.stringify(item) + "\n");
+            processed++;
+            progress();
         }
-
+        progress(true);
         complete = true;
-
-        return { artists, filename, snapshots, temporary };
+        return {
+            artists: prepared.artists,
+            filename,
+            records: readJsonLines<ImportItem>(filename),
+            snapshots: prepared.snapshots,
+            temporary,
+        };
     } finally {
         if (fd != null) {
             closeSync(fd);
         }
-
         if (!complete) {
             rmSync(temporary, { force: true, recursive: true });
         }
@@ -203,4 +208,4 @@ const readCounts = (input: unknown) => {
     return { artists, snapshots };
 };
 
-export { readJsonLines, stageImport };
+export { readJsonLines, readPreparedImport, stageImport };
