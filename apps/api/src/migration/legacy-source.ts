@@ -44,7 +44,9 @@ const openLegacySource = (source: LegacySource) => {
 
     try {
         db.exec(
-            "PRAGMA query_only=ON; PRAGMA temp_store=FILE; PRAGMA cache_size=-32768; PRAGMA temp.cache_size=-8192; BEGIN"
+            // The main database is read-only. Only the disposable TEMP schema
+            // can be written, to exclude invalid rows before follower ranking.
+            "PRAGMA temp_store=FILE; PRAGMA cache_size=-32768; PRAGMA temp.cache_size=-8192; CREATE TEMP TABLE invalid_source_rows (sourceRow INTEGER PRIMARY KEY); BEGIN"
         );
 
         for (const result of db.prepare("PRAGMA integrity_check").iterate()) {
@@ -77,12 +79,19 @@ const openLegacySource = (source: LegacySource) => {
         };
 
         const multiplier = source.timestampUnit === "seconds" ? 1000 : 1;
+        const rawRows = db.prepare(`SELECT id, timestamp, followers, popularity,
+            rowid AS sourceRow, timestamp * ${multiplier} AS captured
+            FROM artist_snapshots`);
+        const excludeRow = db.prepare(
+            "INSERT INTO temp.invalid_source_rows (sourceRow) VALUES (?)"
+        );
 
         // Disk-backed SQLite sorting/window storage bounds JS memory even when
         // the backup has no usable index. No indexes are added.
         const rows = db.prepare(`WITH raw AS (
                 SELECT id, timestamp, followers, popularity, rowid AS sourceRow,
                     timestamp * ${multiplier} AS captured FROM artist_snapshots
+                    WHERE rowid NOT IN (SELECT sourceRow FROM temp.invalid_source_rows)
             ), ranked AS (
                 SELECT *, FIRST_VALUE(followers) OVER (
                     PARTITION BY id ORDER BY followers IS NULL, captured DESC, sourceRow DESC
@@ -90,7 +99,7 @@ const openLegacySource = (source: LegacySource) => {
             )
             SELECT * FROM ranked ORDER BY id, captured DESC, sourceRow DESC`);
 
-        return { db, inventory, rows };
+        return { db, excludeRow, inventory, rawRows, rows };
     } catch (error) {
         db.close();
 

@@ -1,4 +1,5 @@
 import type { SQLOutputValue } from "node:sqlite";
+import { isError } from "lodash";
 import {
     closeSync,
     existsSync,
@@ -67,6 +68,7 @@ const prepareImport = (options: PrepareImportOptions) => {
         const writeArtist = createWriter("artists.jsonl");
         const writeSnapshot = createWriter("snapshots.jsonl");
         const writeExcluded = createWriter("excluded-artists.jsonl");
+        const writeError = createWriter("errors.jsonl");
         const keep = new Set(keepIds);
         const missingKeepIds = new Set(keepIds);
 
@@ -74,6 +76,7 @@ const prepareImport = (options: PrepareImportOptions) => {
             artists: 0,
             collapsedRows: 0,
             excludedArtists: 0,
+            invalidRows: 0,
             namedArtists: 0,
             retainedRows: 0,
             snapshots: 0,
@@ -86,11 +89,39 @@ const prepareImport = (options: PrepareImportOptions) => {
         let firstCapture: null | string = null;
         let lastCapture: null | string = null;
 
+        // Audit raw rows before sorting/ranking. Invalid latest captures must
+        // not determine whether an otherwise valid artist passes the cutoff.
+        for (const row of source.rawRows.iterate()) {
+            const { sourceRow } = row;
+            if (
+                typeof sourceRow !== "number" ||
+                !Number.isSafeInteger(sourceRow)
+            ) {
+                throw new Error("Invalid source row number.");
+            }
+            counts.sourceRows++;
+            try {
+                validateRow(row);
+            } catch (error) {
+                writeError({
+                    followers: row.followers,
+                    id: row.id,
+                    popularity: row.popularity,
+                    reason: isError(error)
+                        ? error.message
+                        : "Invalid source row.",
+                    sourceRow,
+                    timestamp: row.timestamp,
+                });
+                source.excludeRow.run(sourceRow);
+                counts.invalidRows++;
+            }
+        }
+
         for (const row of source.rows.iterate()) {
             const { captured, id } = validateRow(row);
             const capturedAt = new Date(captured).toISOString();
 
-            counts.sourceRows++;
             if (firstCapture == null || capturedAt < firstCapture) {
                 firstCapture = capturedAt;
             }
@@ -205,8 +236,11 @@ const prepareImport = (options: PrepareImportOptions) => {
 };
 
 const validateRow = (row: LegacyRow) => {
+    if (!isSpotifyArtistId(row.id)) {
+        throw new Error("Invalid Spotify artist ID.");
+    }
+
     if (
-        !isSpotifyArtistId(row.id) ||
         typeof row.timestamp !== "number" ||
         !Number.isSafeInteger(row.timestamp) ||
         typeof row.captured !== "number" ||
@@ -214,9 +248,7 @@ const validateRow = (row: LegacyRow) => {
         row.captured < Date.UTC(2000, 0, 1) ||
         row.captured >= Date.UTC(2100, 0, 1)
     ) {
-        throw new Error(
-            "Invalid ID/timestamp; check explicit timestamp units."
-        );
+        throw new Error("Invalid timestamp; check explicit timestamp units.");
     }
 
     for (const key of ["followers", "popularity"] as const) {

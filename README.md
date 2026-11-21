@@ -121,6 +121,13 @@ history. Override with `--cutoff` or repeated `--keep-id`. Latest complete captu
 win; ties use the larger source rowid. Nulls, timestamp units and provenance survive.
 
 The new output directory contains artists/snapshots, exclusions and report counts.
+Invalid IDs, timestamps and metrics are recorded with their source row numbers,
+original values and validation reasons in `errors.jsonl`; preparation continues
+with valid rows. Invalid captures are excluded before follower pruning and weekly
+selection. Review `report.json` (`counts.invalidRows`) and `errors.jsonl` before
+importing, especially if an incorrect timestamp unit excluded most or all rows.
+The command prints its final report and warns when rows were skipped. Schema,
+integrity, disk and other operational failures still stop preparation.
 Existing output paths are rejected. Loading preflights the full export in bounded
 memory, then uses sequential record batches. Rerun the same export after interruption:
 matching records/newer captures are skipped, owner metadata/enrollment is preserved,

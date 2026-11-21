@@ -41,12 +41,18 @@ const main = () => {
         throw new Error("Cutoff must be a nonnegative decimal integer.");
     }
 
-    prepareImport({
+    const report = prepareImport({
         cutoff: parseInt(values.cutoff, 10),
         keepIds: values["keep-id"],
         output: values.output,
         source,
     });
+    process.stdout.write(JSON.stringify(report, null, 4) + "\n");
+    if (report.counts.invalidRows > 0) {
+        process.stderr.write(
+            `Skipped ${report.counts.invalidRows} invalid rows; review ${values.output}/errors.jsonl before importing.\n`
+        );
+    }
 };
 
 main();

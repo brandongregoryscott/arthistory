@@ -141,6 +141,12 @@ disk space. Use `--keep-id` for any defaults that must survive the pruning cutof
 Compare report counts, retained history and nulls after loading; rerunning the same
 export resumes safely. Existing enrollment is preserved; newly imported artists stay off.
 
+Before loading, review preparation's `errors.jsonl` and `report.json` invalid-row
+count. Malformed IDs/timestamps/metrics are audited and skipped automatically;
+only valid captures determine pruning and weekly history. Unexpectedly high error
+counts can indicate a wrong timestamp unit or source format. Keep the original
+backup and error audit for investigation; the importer does not repair source IDs.
+
 Then enable `sync_settings.namesBackfillEnabled` to resolve blank names. This shares
 pacing/cooldowns with collection and does not enroll artists. Expand collection only
 deliberately, after checking behavior, query latency, storage and backup size/duration.
