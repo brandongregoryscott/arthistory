@@ -35,6 +35,6 @@ RUN echo '{}' > package.json
 
 COPY --from=build /app/apps/api/dist/server.js dist/server.js
 
-EXPOSE 3001
+EXPOSE 6768
 
 CMD ["node", "dist/server.js"]

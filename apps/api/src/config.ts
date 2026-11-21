@@ -29,7 +29,7 @@ const loadPocketBaseConfig = (): PocketBaseConfig => {
     return { email, password, url: parsed.origin };
 };
 
-const PORT = process.env.PORT ?? 3001;
+const PORT = process.env.PORT ?? 6768;
 const TRUST_PROXY_HOPS = Number(process.env.TRUST_PROXY_HOPS ?? 0);
 if (!Number.isSafeInteger(TRUST_PROXY_HOPS) || TRUST_PROXY_HOPS < 0) {
     throw new Error("Invalid TRUST_PROXY_HOPS.");

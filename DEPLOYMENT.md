@@ -33,8 +33,19 @@ Stop/disable the old collector cron or service before enabling the new collector
 
 Add the PocketBase credentials from [the env example](apps/api/.env.example) to the
 existing root `.env`; do not overwrite other deployment settings. For host-side CLI
-commands, set `POCKETBASE_URL` to the sidecar's loopback origin. Compose supplies the
-container URL to the API. Keep all credentials server-side.
+commands, set `POCKETBASE_URL=http://127.0.0.1:6769`. Compose publishes PocketBase
+on loopback port `6769` by default, keeping container port `8090` internal. If the
+host port is occupied, set `DB_PORT` to a free port and update the host-side
+`POCKETBASE_URL` to match. In Coolify, check for an existing `DB_PORT=8090`
+override and remove it or change it to the chosen port before redeploying. Compose
+supplies the container URL to the API. Keep all credentials server-side.
+
+ArtHistory uses the adjacent port set web `6767`, API `6768`, PocketBase `6769`.
+For an existing installation, update any old `PORT=3001` override to `6768` (or
+remove it to use the default). The API container, health check and tunnel all use
+`6768`; `PORT` controls only its published host port in Compose. Local frontend
+development uses `VITE_API_URL=http://localhost:6768`. Production frontend builds
+continue to use the public Express origin.
 
 The commands below use the production Compose file explicitly, excluding the local
 override. They assume the existing tunnel image/key and observability network are
