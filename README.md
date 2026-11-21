@@ -49,6 +49,33 @@ The existing npm test command includes schema/rollback checks when
 POCKETBASE_TEST_BINARY points to the pinned PocketBase executable; otherwise it
 explicitly skips that integration test.
 
+### Preparing legacy data
+
+Download the latest merged legacy backup from R2, then inspect and prepare that
+single SQLite file with explicit timestamp units:
+
+```sh
+npm run prepare-import -- --source ./backup.db --timestamp-unit seconds --inventory
+npm run prepare-import -- --source ./backup.db --timestamp-unit seconds --output ./prepared-data
+```
+
+The tool opens the backup read-only and checks its integrity, row/artist counts
+and timestamp range. Verify that inventory before importing. SQLite sorting uses
+temporary disk space; allow free disk of several times the input size.
+JavaScript holds one row at a time.
+
+The export retains artists whose latest known non-null follower count meets the
+cutoff, preserving their earlier weekly history. Use --cutoff to change the
+threshold or repeat --keep-id to retain specific artists. Weekly snapshots use
+the latest complete capture, including null values. Ties prefer the larger
+rowid within the backup.
+
+The new output directory contains artists.jsonl, snapshots.jsonl,
+excluded-artists.jsonl and report.json. IDs are deterministic; imported artists
+have syncing disabled. Names remain unresolved and are counted in the report.
+Existing output directories are rejected. These files are preparation artifacts;
+the command does not load PocketBase or change any original database.
+
 ### Database
 
 The API requires a SQLite database to query. A small sample database is included in the repo: [`_spotify-data.db`](./_spotify-data.db).

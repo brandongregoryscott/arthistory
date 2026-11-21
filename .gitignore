@@ -43,3 +43,7 @@ yarn-error.log*
 .tanstack/
 
 pocketbase/pb_data/
+
+# Prepared catalogue data
+/prepared-data/
+/.prepared-data-*/
