@@ -59,14 +59,19 @@ docker compose -f docker-compose.yml ps pocketbase
 docker compose -f docker-compose.yml logs --tail=100 pocketbase
 ```
 
-Confirm health and successful migrations. Open `/_/` through private access using
-the configured superuser credentials. To start the optional dashboard tunnel:
+Confirm health and successful migrations. Production Compose starts the dashboard
+tuns.sh tunnel by default, like Noisehaus. For the sidecar-only preparation above,
+start it explicitly:
 
 ```sh
-docker compose -f docker-compose.yml --profile pocketbase-tunnel up -d pocketbase-tunnel
+docker compose -f docker-compose.yml up -d pocketbase-tunnel
+docker compose -f docker-compose.yml logs --tail=50 pocketbase-tunnel
 ```
 
-Keep the dashboard access-controlled. Confirm the `sync_settings` record with
+The tunnel requests `POCKETBASE_TUNNEL_NAME` (default `arthistory-pocketbase`), using
+the registered SSH key at `TUNS_SSH_KEY_PATH` (default `/root/.ssh/tuns_ed25519`).
+Open the assigned HTTPS URL from its logs with `/_/` appended, and sign in using
+the configured PocketBase superuser credentials. Confirm the `sync_settings` record with
 `key = global` has both `enabled` and `namesBackfillEnabled` off.
 
 ## 3. Collect a small roster
