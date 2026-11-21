@@ -83,7 +83,7 @@ test(
                 "tsx",
                 resolve("apps/api/src/migration/index.ts"),
                 "--source",
-                resolve("_spotify-data.db"),
+                resolve("pocketbase/tests/fixtures/legacy.db"),
                 "--timestamp-unit",
                 "seconds",
                 "--output",

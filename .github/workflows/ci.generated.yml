@@ -77,7 +77,6 @@ jobs:
       matrix:
         image:
           - api
-          - cron
           - pocketbase
       fail-fast: false
     steps:
@@ -94,15 +93,12 @@ jobs:
           build-args: 'SOURCE_VERSION=${{ github.sha }}'
           cache-from: 'type=gha,scope=${{ matrix.image }}'
           cache-to: 'type=gha,mode=max,scope=${{ matrix.image }}'
+      - name: Check API bundle
+        if: matrix.image == 'api'
+        run: 'docker run --rm --entrypoint node ci-api:check --check dist/server.js'
       - name: Apply PocketBase migrations
         if: matrix.image == 'pocketbase'
         run: 'docker run --rm --entrypoint /usr/local/bin/pocketbase ci-pocketbase:check migrate up --dir /tmp/pb-smoke --migrationsDir /pb_migrations --hooksDir /pb_hooks'
-      - name: Load API SQLite binding
-        if: matrix.image == 'api'
-        run: 'docker run --rm --entrypoint node ci-api:check -e "require(''./build/Release/node_sqlite3.node'')"'
-      - name: Query cron SQLite database
-        if: matrix.image == 'cron'
-        run: 'docker run --rm --entrypoint node ci-cron:check -e "const sqlite = require(''/app/node_modules/sqlite3''); const db = new sqlite.Database('':memory:''); db.exec(''CREATE TABLE smoke (id INTEGER)'', error => { if (error) throw error; db.close(); });"'
   ci:
     name: ci
     needs:

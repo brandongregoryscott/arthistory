@@ -38,10 +38,9 @@ services:
         environment:
             - TRUST_PROXY_HOPS=1
             - PORT=3001
-            - DATABASE_PATH=/data/_spotify-data.db
+
             - POCKETBASE_URL=http://pocketbase:8090
-            - ARTIST_METADATA_SOURCE=pocketbase
-            - SNAPSHOTS_USE_POCKETBASE=true
+
             - METRICS_HOST=0.0.0.0
             - METRICS_PORT=9464
             - SOURCE_COMMIT=${SOURCE_COMMIT:-}
@@ -75,7 +74,6 @@ services:
 
 volumes:
     pocketbase-data:
-    data:
 
 networks:
     observability:

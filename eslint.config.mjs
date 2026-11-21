@@ -234,12 +234,5 @@ const ignores = defineConfig([
 export default [
     ...ignores,
     ...baseTypeScriptConfig,
-    // CLI scripts use console for output
-    {
-        files: ["packages/scripts/**/*.ts"],
-        rules: {
-            "no-console": "off",
-        },
-    },
     ...reactConfig,
 ];

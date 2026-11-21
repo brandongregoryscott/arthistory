@@ -4,18 +4,16 @@ import { logger } from "./logging";
 import { artistCache } from "./services/artist-service";
 
 const main = async () => {
-    if (artistCache != null) {
-        await artistCache.start((error) => {
-            logger.error(
-                { err: error, event: "artist-cache.refresh-failed" },
-                "Artist cache refresh failed"
-            );
-        });
-        logger.info(
-            { ...artistCache.coverage, event: "artist-cache.ready" },
-            "Artist cache ready"
+    await artistCache.start((error) => {
+        logger.error(
+            { err: error, event: "artist-cache.refresh-failed" },
+            "Artist cache refresh failed"
         );
-    }
+    });
+    logger.info(
+        { ...artistCache.coverage, event: "artist-cache.ready" },
+        "Artist cache ready"
+    );
 
     const server = app.listen(PORT, () => {
         logger.info({ event: "listening", port: PORT }, "API listening");
@@ -36,7 +34,7 @@ const main = async () => {
     for (const signal of ["SIGTERM", "SIGINT"] as const) {
         process.once(signal, () => {
             logger.info({ event: "stopping", signal }, "API stopping");
-            artistCache?.stop();
+            artistCache.stop();
             let remaining = 2;
             for (const listener of [server, metricsServer]) {
                 listener.close(() => {
@@ -53,7 +51,7 @@ const main = async () => {
 };
 
 void main().catch((error: unknown) => {
-    artistCache?.stop();
+    artistCache.stop();
     logger.error(
         { err: error, event: "startup-failed" },
         "API initialization failed"
