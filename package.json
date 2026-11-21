@@ -52,6 +52,7 @@
         "download-object": "tsx packages/scripts/src/download-object",
         "format": "prettier --check \"**/*.{json,js,ts,tsx,md}\"",
         "format:fix": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
+        "import-data": "tsx apps/api/src/migration/load-index.ts",
         "lint": "eslint . --max-warnings 0",
         "lint:fix": "eslint . --max-warnings 0 --fix",
         "list-objects": "tsx packages/scripts/src/list-objects",
