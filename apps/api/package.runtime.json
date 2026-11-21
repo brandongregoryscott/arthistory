@@ -1,0 +1,11 @@
+{
+    "name": "arthistory-api-runtime",
+    "private": true,
+    "scripts": {
+        "add-artist": "node dist/cli/artists/add-artist.js",
+        "import-data": "node dist/cli/migration/load-index.js",
+        "inspect-artist": "node dist/cli/artists/inspect-artist.js",
+        "prepare-import": "node dist/cli/migration/index.js",
+        "start": "node dist/server.js"
+    }
+}
