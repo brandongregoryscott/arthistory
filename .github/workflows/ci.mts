@@ -41,6 +41,15 @@ const checks = job("checks", {
     },
     steps: [
         step.dependsOn(install)({
+            name: "Install pinned PocketBase for native tests",
+            if: "matrix.script == 'test'",
+            run: `version=$(sed -n 's/^ARG PB_VERSION=//p' Dockerfile.pocketbase)
+mkdir -p /tmp/pocketbase
+curl --fail --location --retry 3 "https://github.com/pocketbase/pocketbase/releases/download/v\${version}/pocketbase_\${version}_linux_amd64.zip" -o /tmp/pocketbase.zip
+unzip /tmp/pocketbase.zip pocketbase -d /tmp/pocketbase
+printf 'POCKETBASE_TEST_BINARY=/tmp/pocketbase/pocketbase\n' >> "$GITHUB_ENV"`,
+        }),
+        step.dependsOn(install)({
             name: "Run check",
             run: "npm run ${{ matrix.script }}",
         }),
@@ -51,7 +60,10 @@ const containers = job("containers", {
     name: "container (${{ matrix.image }})",
     runsOn: "ubuntu-latest",
     timeoutMinutes: 30,
-    strategy: { failFast: false, matrix: { image: ["api", "cron"] } },
+    strategy: {
+        failFast: false,
+        matrix: { image: ["api", "cron", "pocketbase"] },
+    },
     steps: [
         checkout,
         step({ uses: "docker/setup-buildx-action@v4.4.1" }),
@@ -68,6 +80,11 @@ const containers = job("containers", {
                 "cache-from": "type=gha,scope=${{ matrix.image }}",
                 "cache-to": "type=gha,mode=max,scope=${{ matrix.image }}",
             },
+        }),
+        step({
+            name: "Apply PocketBase migrations",
+            if: "matrix.image == 'pocketbase'",
+            run: "docker run --rm --entrypoint /usr/local/bin/pocketbase ci-pocketbase:check migrate up --dir /tmp/pb-smoke --migrationsDir /pb_migrations --hooksDir /pb_hooks",
         }),
         step({
             name: "Load API SQLite binding",
@@ -111,7 +128,7 @@ workflow({
     name: "CI",
     on: {
         push: { branches: ["main"] },
-        pull_request: { branches: ["main"] },
+        pull_request: {},
         workflow_dispatch: {},
     },
     permissions: { contents: "read" },
