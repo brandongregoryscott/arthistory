@@ -3,18 +3,20 @@ import type {
     ArtistSnapshot,
     ArtistSnapshotRow,
     ArtistWithTrackingStatus,
+    SnapshotResolution,
 } from "@repo/common";
 import { getDayOfYear, getMonth, getQuarter, getWeek, getYear } from "date-fns";
 import { countBy, uniqBy } from "lodash";
 import { ArtistCache } from "../artists/artist-cache";
 import { ARTIST_METADATA_SOURCE, loadPocketBaseConfig } from "../config";
 import { getDb } from "../database";
+import { artistSnapshotStore } from "../snapshots";
 import { PocketBaseClient } from "../storage/pocketbase";
 import { normalizeTimestamp } from "../utilities/date-utils";
 
 type ListArtistSnapshotsOptions = {
     ids: string[];
-    resolution?: Resolution;
+    resolution?: SnapshotResolution;
 };
 
 type ListArtistsOptions = {
@@ -25,8 +27,6 @@ type ArtistSearchPage = {
     artists: ArtistWithTrackingStatus[];
     total: number;
 };
-
-type Resolution = "daily" | "monthly" | "quarterly" | "weekly" | "yearly";
 
 const artistCache =
     ARTIST_METADATA_SOURCE === "pocketbase"
@@ -78,6 +78,10 @@ const ArtistService = {
         options: ListArtistSnapshotsOptions
     ): Promise<ArtistSnapshot[]> => {
         const { ids, resolution } = options;
+        if (artistSnapshotStore != null) {
+            return artistSnapshotStore.list({ ids, resolution });
+        }
+
         const db = await getDb();
         const results = await db.all<ArtistSnapshotRow[]>(
             `SELECT * FROM artist_snapshots WHERE id IN (${queryPlaceholder(ids.length)}) ORDER BY timestamp ASC;`,
@@ -170,5 +174,4 @@ const intersectionByNormalizedTimestamp = (
     );
 };
 
-export type { Resolution };
 export { artistCache, ArtistService };

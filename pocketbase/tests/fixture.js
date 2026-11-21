@@ -94,6 +94,29 @@ module.exports = (app) => {
         ).length === 1,
         "history back-relation"
     );
+    assert(
+        app
+            .findCollectionByNameOrId("snapshots")
+            .indexes.some((index) => index.includes("snapshots_capture")),
+        "capture freshness index"
+    );
+    const selected = app.findRecordsByFilter(
+        "snapshots",
+        "(artist.spotifyId = {:spotifyId}) && id > {:cursor}",
+        "id",
+        500,
+        0,
+        { spotifyId: artist.getString("spotifyId"), cursor: "" }
+    );
+    assert(
+        selected.length === 1 && selected[0].id === row.id,
+        "snapshot artist relation/cursor filter"
+    );
+    assert(
+        app.findRecordsByFilter("snapshots", "", "-capturedAt", 1, 0)[0].id ===
+            row.id,
+        "capture freshness order"
+    );
     const stored = JSON.parse(
         app.findRecordById("snapshots", row.id).getString("metrics")
     );

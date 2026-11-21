@@ -35,6 +35,13 @@ if (!["spotify", "pocketbase"].includes(ARTIST_METADATA_SOURCE)) {
     throw new Error("Invalid ARTIST_METADATA_SOURCE.");
 }
 
+const SNAPSHOTS_USE_POCKETBASE_VALUE =
+    process.env.SNAPSHOTS_USE_POCKETBASE ?? "";
+if (!["", "false", "true"].includes(SNAPSHOTS_USE_POCKETBASE_VALUE)) {
+    throw new Error("Invalid SNAPSHOTS_USE_POCKETBASE.");
+}
+const SNAPSHOTS_USE_POCKETBASE = SNAPSHOTS_USE_POCKETBASE_VALUE === "true";
+
 const PORT = process.env.PORT ?? 3001;
 const TRUST_PROXY_HOPS = Number(process.env.TRUST_PROXY_HOPS ?? 0);
 if (!Number.isSafeInteger(TRUST_PROXY_HOPS) || TRUST_PROXY_HOPS < 0) {
@@ -67,6 +74,7 @@ export {
     METRICS_PORT,
     PORT,
     POSTHOG_KEY,
+    SNAPSHOTS_USE_POCKETBASE,
     TRUST_PROXY_HOPS,
 };
 export type { PocketBaseConfig };

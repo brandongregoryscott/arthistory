@@ -19,9 +19,9 @@ type Artist = {
  * Structure for the data captured on each sync for an individual artist
  */
 type ArtistSnapshotRow = {
-    followers: number;
+    followers: null | number;
     id: string;
-    popularity: number;
+    popularity: null | number;
     timestamp: number;
 };
 
@@ -29,9 +29,11 @@ type ArtistSnapshotRow = {
  * Transfer object for returning data to the frontend
  */
 type ArtistSnapshot = {
-    followers: number;
+    capturedAt?: string;
+    followers: null | number;
     id: string;
-    popularity: number;
+    monthlyListeners?: null | number;
+    popularity: null | number;
     timestamp: string;
 };
 

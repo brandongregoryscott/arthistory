@@ -1,7 +1,8 @@
-import type { Request, Response } from "express";
+import type { Request } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ArtistSearchIndex } from "../artists/artist-search-index";
 import { ArtistsController } from "./artists-controller";
+import { createResponse } from "./test-helpers";
 
 const cache = vi.hoisted(() => ({ list: vi.fn(), search: vi.fn() }));
 
@@ -12,6 +13,7 @@ vi.mock("../config", () => ({
         password: "test-password",
         url: "http://pocketbase.invalid",
     }),
+    SNAPSHOTS_USE_POCKETBASE: false,
 }));
 vi.mock("../artists/artist-cache", () => ({
     ArtistCache: class {
@@ -144,13 +146,3 @@ describe("local artist metadata controllers", () => {
         expect(cache.list).not.toHaveBeenCalled();
     });
 });
-
-const createResponse = () => {
-    const json = vi.fn();
-    const status = vi.fn();
-    const value = { json, status };
-    json.mockReturnValue(value);
-    status.mockReturnValue(value);
-
-    return { json, status, value: value as unknown as Response };
-};
