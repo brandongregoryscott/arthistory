@@ -182,6 +182,99 @@ describe("loadImport", () => {
         }
     );
 
+    it("identifies a failed write batch and acknowledged counts", async () => {
+        const remote = mockPocketBase();
+        remote.failure = "rejection";
+        const failure = await loadImport({
+            batchSize: 2,
+            client: new PocketBaseClient(config),
+            directory,
+        }).catch((error: Error) => error);
+        expect(failure).toBeInstanceOf(Error);
+        if (!(failure instanceof Error)) {
+            throw new Error("Expected import failure.");
+        }
+        expect(JSON.parse(failure.message)).toMatchObject({
+            batch: 1,
+            created: 0,
+            message: "Batch rejected",
+            pocketbase: { status: 400 },
+            records: expect.arrayContaining([
+                expect.objectContaining({ collection: "artists" }),
+                expect.objectContaining({ collection: "snapshots" }),
+            ]),
+            stage: "Create PocketBase record batch",
+        });
+        expect(remote.batches).toHaveLength(1);
+    });
+
+    it("identifies an authentication failure before any writes", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async () =>
+                Response.json(
+                    { message: "Failed to authenticate." },
+                    { status: 400 }
+                )
+            )
+        );
+        const failure = await loadImport({
+            client: new PocketBaseClient(config),
+            directory,
+        }).catch((error: Error) => error);
+        if (!(failure instanceof Error)) {
+            throw new Error("Expected import failure.");
+        }
+        expect(JSON.parse(failure.message)).toMatchObject({
+            batch: 0,
+            created: 0,
+            pocketbase: {
+                status: 400,
+            },
+            records: [],
+            stage: "Check PocketBase authentication and required collections",
+        });
+        expect(failure.message).not.toContain(config.password);
+    });
+
+    it("adds lookup context to PocketBase's generic server error", async () => {
+        const remote = mockPocketBase();
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (input: string, options: RequestInit) => {
+                if (new URL(input).searchParams.has("filter")) {
+                    return Response.json(
+                        {
+                            message:
+                                "Something went wrong while processing your request.",
+                        },
+                        { status: 500 }
+                    );
+                }
+                return remote.fetch(input, options);
+            })
+        );
+        const failure = await loadImport({
+            client: new PocketBaseClient(config),
+            directory,
+        }).catch((error: Error) => error);
+        if (!(failure instanceof Error)) {
+            throw new Error("Expected import failure.");
+        }
+        expect(JSON.parse(failure.message)).toMatchObject({
+            batch: 1,
+            created: 0,
+            message: "Something went wrong while processing your request.",
+            pocketbase: { hint: expect.stringContaining("Logs"), status: 500 },
+            records: [
+                expect.objectContaining({ collection: "artists" }),
+                expect.objectContaining({ collection: "artists" }),
+            ],
+            stage: "Look up existing artists records",
+        });
+        expect(remote.batches).toHaveLength(0);
+    });
+
     it("stops on conflicting snapshot values without changing the stored capture", async () => {
         const remote = mockPocketBase();
         await loadImport({ client: new PocketBaseClient(config), directory });
