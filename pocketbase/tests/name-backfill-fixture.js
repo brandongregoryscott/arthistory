@@ -1,5 +1,5 @@
 module.exports = (app, fixtureHtml, unicodeHtml) => {
-    const job = require(__hooks + "/name-backfill.js");
+    const job = require(__hooks + "/artist-sync.js");
     const http = require(__hooks + "/artist-page-http.js");
     const ID = "6lcwlkAjBPSKnFBZjjZFJs";
     let now = Date.parse("2026-01-05T12:00:00.000Z");
@@ -416,22 +416,27 @@ module.exports = (app, fixtureHtml, unicodeHtml) => {
     app.save(policy);
 };
 
-module.exports.crash = (app) => {
+module.exports.crash = (app, mode = "names") => {
     const policy = app.findFirstRecordByData("sync_settings", "key", "global");
-    policy.set("namesBackfillEnabled", true);
+    policy.set("namesBackfillEnabled", mode === "names");
+    policy.set("enabled", mode === "snapshots");
     app.save(policy);
     const artist = new Record(app.findCollectionByNameOrId("artists"));
     artist.set("spotifyId", "6lcwlkAjBPSKnFBZjjZFJs");
+    artist.set("syncEnabled", mode === "snapshots");
     app.save(artist);
-    require(__hooks + "/name-backfill.js").tick(app, {
+    const job = require(__hooks + "/artist-sync.js");
+    const tick = mode === "snapshots" ? job.collect : job.tick;
+    tick(app, {
         now: () => Date.parse("2026-01-05T12:00:00.000Z"),
         token: () => "interrupted-attempt",
         readPage: () => $os.exit(0),
     });
 };
 
-module.exports.restart = (app) => {
-    const job = require(__hooks + "/name-backfill.js");
+module.exports.restart = (app, mode = "names") => {
+    const job = require(__hooks + "/artist-sync.js");
+    const tick = mode === "snapshots" ? job.collect : job.tick;
     const assert = (value, message) => {
         if (!value) {
             throw new Error(message);
@@ -447,26 +452,36 @@ module.exports.restart = (app) => {
             return {
                 status: 200,
                 displayName: "Recovered",
+                metrics: {
+                    followers: null,
+                    monthlyListeners: null,
+                    popularity: null,
+                },
                 retryAfterMs: null,
             };
         },
     };
     assert(
-        job.tick(app, deps).status === "idle" && calls === 0,
+        tick(app, deps).status === "idle" && calls === 0,
         "restart honors active lease"
     );
     now += 3600000;
     assert(
-        job.tick(app, deps).status === "idle" && calls === 0,
+        tick(app, deps).status === "idle" && calls === 0,
         "restart honors reserved attempt after lease expiry"
     );
     const artist = new Record(app.findCollectionByNameOrId("artists"));
     artist.set("spotifyId", "5AyEXCtu3xnnsTGCo4RVZh");
+    artist.set("syncEnabled", mode === "snapshots");
     app.save(artist);
     assert(
-        job.tick(app, deps).status === "resolved" && calls === 1,
+        tick(app, deps).status ===
+            (mode === "snapshots" ? "collected" : "resolved") && calls === 1,
         "restart can progress to another artist"
     );
+    for (const row of app.findAllRecords("snapshots")) {
+        app.delete(row);
+    }
     for (const row of app.findAllRecords("artists")) {
         app.delete(row);
     }
@@ -486,5 +501,6 @@ module.exports.restart = (app) => {
         "global"
     );
     settings.set("namesBackfillEnabled", false);
+    settings.set("enabled", false);
     app.save(settings);
 };

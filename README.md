@@ -248,7 +248,7 @@ the controls below; ongoing snapshot collection remains a separate step.
 
 ### Filling missing artist names
 
-The PocketBase `artist-name-backfill` cron fills one unresolved artist per invocation
+The PocketBase `artist-sync` cron fills one unresolved artist per invocation
 and runs once per minute. It starts disabled. After importing artists, enable
 `namesBackfillEnabled` on the global `sync_settings` record to begin; turn it off
 to stop. This setting is independent of snapshot collection and never enrolls artists.
@@ -264,3 +264,17 @@ Each completed attempt logs named/unresolved coverage and HTTP status. To inspec
 unresolved IDs, filter the PocketBase artists collection with `displayName = ""`.
 The API's normal cache refresh picks up resolved names. No public search request
 fetches pages, and no historical snapshots are manufactured by backfill.
+
+### Collecting weekly snapshots
+
+Set `enabled` on the global `sync_settings` record and explicitly set `syncEnabled`
+on the artists to collect. Both are required. Start with a small roster. The
+`artist-sync` job takes one due artist per invocation, alternating priority between
+collection and name backfill each minute while sharing the same pacing, lease and
+cooldown state. Startup checks persisted due state; the next cron tick resumes it.
+
+A capture writes the current Monday UTC week and actual capture time, with nullable
+metrics. A newer capture updates that week's row. Snapshot and success state commit
+together. Missed weeks are left missing. Dashboard name edits become owner metadata
+and are preserved during subsequent collection. Disable the global policy or an
+artist to stop its collection; in-flight work rechecks that policy before writing.
