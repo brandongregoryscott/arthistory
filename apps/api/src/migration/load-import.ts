@@ -3,6 +3,7 @@ import { isEmpty } from "lodash";
 import { rmSync } from "node:fs";
 import type { PocketBaseClient } from "../storage/pocketbase";
 import type { ImportItem } from "./prepared-records";
+import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
 import { snapshotColumns } from "./prepared-records";
 import { readJsonLines, stageImport } from "./staged-import";
 
@@ -210,10 +211,12 @@ const canSkip = (item: ImportItem, existing: RecordModel | undefined) => {
     return (
         capture > Date.parse(incoming.capturedAt) ||
         (capture === Date.parse(incoming.capturedAt) &&
-            existing.followers === (incoming.metrics.followers ?? -1) &&
+            existing.followers ===
+                (incoming.metrics.followers ?? MISSING_METRIC) &&
             existing.monthlyListeners ===
-                (incoming.metrics.monthlyListeners ?? -1) &&
-            existing.popularity === (incoming.metrics.popularity ?? -1) &&
+                (incoming.metrics.monthlyListeners ?? MISSING_METRIC) &&
+            existing.popularity ===
+                (incoming.metrics.popularity ?? MISSING_METRIC) &&
             existing.source === incoming.source)
     );
 };

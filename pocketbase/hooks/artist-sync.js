@@ -1,4 +1,5 @@
 // @ts-check
+const { MISSING_METRIC } = require("./snapshot-metrics.cjs");
 /** @typedef {import("./artist-sync-types.js").BackfillApp} BackfillApp */
 /** @typedef {import("./artist-sync-types.js").BackfillDependencies} BackfillDependencies */
 /** @typedef {import("./artist-sync-types.js").Claim} Claim */
@@ -229,7 +230,7 @@ const saveSnapshot = (app, artist, metrics, now) => {
         "monthlyListeners",
         "popularity",
     ])) {
-        row.set(key, metrics[key] ?? -1);
+        row.set(key, metrics[key] ?? MISSING_METRIC);
     }
     row.set("source", "spotify-public-page");
     app.save(row);

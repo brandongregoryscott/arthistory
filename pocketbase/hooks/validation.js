@@ -1,4 +1,5 @@
 // @ts-check
+const { MISSING_METRIC } = require("./snapshot-metrics.cjs");
 // PocketBase executes plain JS; the existing typecheck command checks this helper.
 /** @typedef {{ getString(field: string): string, getFloat(field: string): number }} ValidationRecord */
 /** @param {ValidationRecord} record */
@@ -7,7 +8,7 @@ const validateSnapshot = (record) => {
         const value = record.getFloat(key);
         if (
             !Number.isSafeInteger(value) ||
-            value < -1 ||
+            value < MISSING_METRIC ||
             (key === "popularity" && value > 100)
         ) {
             throw new Error("Invalid snapshot metric: " + key);

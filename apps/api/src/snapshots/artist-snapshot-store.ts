@@ -2,6 +2,7 @@ import type { ArtistSnapshot, SnapshotResolution } from "@repo/common";
 import { bucketSnapshots, ValidationError } from "@repo/common";
 import { isEmpty, uniq } from "lodash";
 import type { PocketBaseClient } from "../storage/pocketbase";
+import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
 import { isSpotifyArtistId } from "../utilities/id-validation";
 
 type SnapshotRecord = {
@@ -116,14 +117,18 @@ class ArtistSnapshotStore {
                 snapshots.push({
                     capturedAt: new Date(record.capturedAt).toISOString(),
                     followers:
-                        record.followers === -1 ? null : record.followers,
+                        record.followers === MISSING_METRIC
+                            ? null
+                            : record.followers,
                     id,
                     monthlyListeners:
-                        record.monthlyListeners === -1
+                        record.monthlyListeners === MISSING_METRIC
                             ? null
                             : record.monthlyListeners,
                     popularity:
-                        record.popularity === -1 ? null : record.popularity,
+                        record.popularity === MISSING_METRIC
+                            ? null
+                            : record.popularity,
                     timestamp: new Date(record.weekStart).toISOString(),
                 });
             }
