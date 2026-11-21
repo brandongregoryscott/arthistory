@@ -5,24 +5,12 @@ import { MetaController } from "./meta-controller";
 import { createResponse } from "./test-helpers";
 
 vi.mock("../config", () => ({
-    ARTIST_METADATA_SOURCE: "spotify",
     loadPocketBaseConfig: () => ({
         email: "owner@example.com",
         password: "test-password",
         url: "http://pocketbase.invalid",
     }),
-    SNAPSHOTS_USE_POCKETBASE: true,
 }));
-vi.mock("../database", () => ({
-    getDb: () => {
-        throw new Error(
-            "PocketBase snapshot reads must not open legacy SQLite."
-        );
-    },
-}));
-vi.mock("../spotify", () => {
-    throw new Error("Snapshot reads must not import Spotify.");
-});
 vi.mock("../analytics", () => ({
     artistRequested: vi.fn(),
     searchQueryEntered: vi.fn(),

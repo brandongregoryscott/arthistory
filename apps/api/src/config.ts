@@ -8,8 +8,7 @@ type PocketBaseConfig = {
     url: string;
 };
 
-// Validate on use, so adding the sidecar doesn't require legacy deployments to
-// configure it before the read-path cutover.
+// CLI tools and the server load their PocketBase connection on use.
 const loadPocketBaseConfig = (): PocketBaseConfig => {
     const url = process.env.POCKETBASE_URL ?? "";
     const email = process.env.POCKETBASE_SUPERUSER_EMAIL ?? "";
@@ -30,18 +29,6 @@ const loadPocketBaseConfig = (): PocketBaseConfig => {
     return { email, password, url: parsed.origin };
 };
 
-const ARTIST_METADATA_SOURCE = process.env.ARTIST_METADATA_SOURCE ?? "spotify";
-if (!["spotify", "pocketbase"].includes(ARTIST_METADATA_SOURCE)) {
-    throw new Error("Invalid ARTIST_METADATA_SOURCE.");
-}
-
-const SNAPSHOTS_USE_POCKETBASE_VALUE =
-    process.env.SNAPSHOTS_USE_POCKETBASE ?? "";
-if (!["", "false", "true"].includes(SNAPSHOTS_USE_POCKETBASE_VALUE)) {
-    throw new Error("Invalid SNAPSHOTS_USE_POCKETBASE.");
-}
-const SNAPSHOTS_USE_POCKETBASE = SNAPSHOTS_USE_POCKETBASE_VALUE === "true";
-
 const PORT = process.env.PORT ?? 3001;
 const TRUST_PROXY_HOPS = Number(process.env.TRUST_PROXY_HOPS ?? 0);
 if (!Number.isSafeInteger(TRUST_PROXY_HOPS) || TRUST_PROXY_HOPS < 0) {
@@ -59,22 +46,14 @@ if (
 ) {
     throw new Error("Invalid METRICS_PORT.");
 }
-const CLIENT_ID = process.env.CLIENT_ID ?? "";
-const CLIENT_SECRET = process.env.CLIENT_SECRET ?? "";
-const DATABASE_PATH = process.env.DATABASE_PATH ?? "";
 const POSTHOG_KEY = process.env.POSTHOG_KEY ?? "";
 
 export {
-    ARTIST_METADATA_SOURCE,
-    CLIENT_ID,
-    CLIENT_SECRET,
-    DATABASE_PATH,
     loadPocketBaseConfig,
     METRICS_HOST,
     METRICS_PORT,
     PORT,
     POSTHOG_KEY,
-    SNAPSHOTS_USE_POCKETBASE,
     TRUST_PROXY_HOPS,
 };
 export type { PocketBaseConfig };

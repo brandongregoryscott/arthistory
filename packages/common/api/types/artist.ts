@@ -16,16 +16,6 @@ type Artist = {
 };
 
 /**
- * Structure for the data captured on each sync for an individual artist
- */
-type ArtistSnapshotRow = {
-    followers: null | number;
-    id: string;
-    popularity: null | number;
-    timestamp: number;
-};
-
-/**
  * Transfer object for returning data to the frontend
  */
 type ArtistSnapshot = {
@@ -38,7 +28,7 @@ type ArtistSnapshot = {
 };
 
 /**
- * Historical availability (legacy isTracked) and optional owner-controlled collection state
+ * Historical availability (isTracked) and optional owner-controlled collection state
  */
 type ArtistWithTrackingStatus = {
     hasHistory?: boolean;
@@ -46,9 +36,4 @@ type ArtistWithTrackingStatus = {
     syncEnabled?: boolean;
 } & Artist;
 
-export type {
-    Artist,
-    ArtistSnapshot,
-    ArtistSnapshotRow,
-    ArtistWithTrackingStatus,
-};
+export type { Artist, ArtistSnapshot, ArtistWithTrackingStatus };

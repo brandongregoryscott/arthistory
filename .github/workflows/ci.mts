@@ -62,7 +62,7 @@ const containers = job("containers", {
     timeoutMinutes: 30,
     strategy: {
         failFast: false,
-        matrix: { image: ["api", "cron", "pocketbase"] },
+        matrix: { image: ["api", "pocketbase"] },
     },
     steps: [
         checkout,
@@ -82,19 +82,14 @@ const containers = job("containers", {
             },
         }),
         step({
+            name: "Check API bundle",
+            if: "matrix.image == 'api'",
+            run: "docker run --rm --entrypoint node ci-api:check --check dist/server.js",
+        }),
+        step({
             name: "Apply PocketBase migrations",
             if: "matrix.image == 'pocketbase'",
             run: "docker run --rm --entrypoint /usr/local/bin/pocketbase ci-pocketbase:check migrate up --dir /tmp/pb-smoke --migrationsDir /pb_migrations --hooksDir /pb_hooks",
-        }),
-        step({
-            name: "Load API SQLite binding",
-            if: "matrix.image == 'api'",
-            run: "docker run --rm --entrypoint node ci-api:check -e \"require('./build/Release/node_sqlite3.node')\"",
-        }),
-        step({
-            name: "Query cron SQLite database",
-            if: "matrix.image == 'cron'",
-            run: "docker run --rm --entrypoint node ci-cron:check -e \"const sqlite = require('/app/node_modules/sqlite3'); const db = new sqlite.Database(':memory:'); db.exec('CREATE TABLE smoke (id INTEGER)', error => { if (error) throw error; db.close(); });\"",
         }),
     ],
 });

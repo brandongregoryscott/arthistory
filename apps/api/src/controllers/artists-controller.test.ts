@@ -7,26 +7,16 @@ import { createResponse } from "./test-helpers";
 const cache = vi.hoisted(() => ({ list: vi.fn(), search: vi.fn() }));
 
 vi.mock("../config", () => ({
-    ARTIST_METADATA_SOURCE: "pocketbase",
     loadPocketBaseConfig: () => ({
         email: "owner@example.com",
         password: "test-password",
         url: "http://pocketbase.invalid",
     }),
-    SNAPSHOTS_USE_POCKETBASE: false,
 }));
 vi.mock("../artists/artist-cache", () => ({
     ArtistCache: class {
         list = cache.list;
         search = cache.search;
-    },
-}));
-vi.mock("../spotify", () => {
-    throw new Error("Spotify must not be imported for local metadata.");
-});
-vi.mock("../database", () => ({
-    getDb: () => {
-        throw new Error("Local metadata must not read legacy SQLite.");
     },
 }));
 vi.mock("../analytics", () => ({

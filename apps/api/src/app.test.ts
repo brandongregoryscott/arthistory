@@ -53,12 +53,15 @@ const respond =
         response.json({ route });
 
 beforeAll(async () => {
+    vi.stubEnv("POCKETBASE_URL", "http://pocketbase.invalid");
+    vi.stubEnv("POCKETBASE_SUPERUSER_EMAIL", "owner@example.com");
+    vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "test-password");
     vi.spyOn(posthog, "init").mockImplementation(() => posthog);
     const { ArtistsController } =
         await import("./controllers/artists-controller.js");
     const { MetaController } = await import("./controllers/meta-controller.js");
     // Stub dependencies before Express captures the controllers, then exercise
-    // the actual HTTP router without contacting Spotify or opening SQLite.
+    // the actual HTTP router without contacting PocketBase.
     vi.spyOn(MetaController, "latest").mockImplementation(respond("latest"));
     vi.spyOn(ArtistsController, "requestArtist").mockImplementation(
         respond("requestArtist")
@@ -96,6 +99,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
     for (const activeServer of [server, metricsServer]) {
         if (activeServer == null) {
             continue;

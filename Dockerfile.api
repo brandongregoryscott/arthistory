@@ -8,7 +8,6 @@ COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/common/package.json packages/common/
-COPY packages/scripts/package.json packages/scripts/
 COPY packages/typescript-config/package.json packages/typescript-config/
 COPY packages/ui/package.json packages/ui/
 
@@ -20,7 +19,7 @@ COPY packages/common/ packages/common/
 COPY packages/typescript-config/ packages/typescript-config/
 COPY tsconfig.json ./
 
-# Build the API (esbuild bundle + sqlite3 native rebuild via postbuild)
+# Build the API bundle
 RUN npm run build --workspace=api
 
 # Runtime stage
@@ -32,11 +31,9 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-# sqlite3's bindings package needs a package.json to locate the native addon
 RUN echo '{}' > package.json
 
 COPY --from=build /app/apps/api/dist/server.js dist/server.js
-COPY --from=build /app/apps/api/build/ build/
 
 EXPOSE 3001
 

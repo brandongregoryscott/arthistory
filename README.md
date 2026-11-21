@@ -1,328 +1,139 @@
-<h1 align="center">arthistory</h1>
+# ArtHistory
 
-<p align="center">
-   <a href="https://github.com/brandongregoryscott/arthistory/actions">
-        <img src="https://github.com/brandongregoryscott/arthistory/actions/workflows/build.yml/badge.svg">
-    </a>
-    <a href="https://github.com/prettier/prettier">
-        <img alt="code style: prettier" src="https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square"/>
-    </a>
-    <a href="http://www.typescriptlang.org/">
-        <img alt="TypeScript" src="https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg"/>
-    </a>
-</p>
+Historical Spotify artist audience data, served by an Express API and React frontend.
+PocketBase owns artist metadata, weekly snapshots, scheduled collection, the private
+owner dashboard and native backups. Search uses a bounded local Fuse.js index;
+browsers call Express and never need PocketBase credentials or Spotify API keys.
 
-Web application for viewing historical Spotify artist data.
+## Start a small deployment
 
-## Quick Start
+See [the deployment checklist](DEPLOYMENT.md) for PR merge order, manual cutover
+steps and rollback.
 
-The app can be accessed at [arthistory.brandonscott.me](https://arthistory.brandonscott.me).
-
-## About
-
-The Spotify API provides the current follower count and a popularity score for an artist, but does not provide any historical data. I always wanted to track how my favorite artists were growing over time, so maybe you'll find this app useful too.
-
-## How it works
-
-The Express API serves stored artist metadata and weekly snapshots from a PocketBase sidecar. The owner controls enrollment and collection policy in its private dashboard. Public search uses an in-memory name index; native PocketBase backups protect the application data.
-
-Not every artist on Spotify is tracked, but new artists can be requested through the web UI.
-
-## Development
-
-### PocketBase sidecar
-
-Set the server-side PocketBase credentials in the root .env (see
-apps/api/.env.example), then start the sidecar and API:
+Use Node from `.nvmrc`. Copy `apps/api/.env.example` to the root `.env`, configure
+server-side PocketBase credentials, and keep that file out of Git. Compose starts
+the persistent PocketBase sidecar and waits for it before starting the API.
 
 ```sh
-docker compose up -d --build pocketbase api
+npm ci
+docker compose up -d --build pocketbase
+npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZjjZFJs
+npm run add-artist -- --artist https://open.spotify.com/artist/5AyEXCtu3xnnsTGCo4RVZh
+npm run build --workspace web
 ```
 
-The owner dashboard is at /_/ on the PocketBase origin. To start its tunnel:
+Keep the current public API/frontend running while the sidecar and initial roster
+are prepared. After the dashboard checks below, start the new API/tunnel and publish
+the matching frontend build; the chart needs its sparse-series alignment code.
+Existing routes and response envelopes are preserved.
+
+The add command verifies one public artist page and creates a named artist with
+syncing **off**. It accepts an ID or URL, preserves existing owner records, and uses
+IDs compatible with a later history import. `inspect-artist` reads a page without
+writing anything. Neither command starts background collection.
+
+Open `/_/` on the private PocketBase origin. Its optional tunnel can be started with
+`docker compose --profile pocketbase-tunnel up -d pocketbase-tunnel`. Enroll only a
+small chosen roster with `artists.syncEnabled`, then enable `sync_settings.enabled`
+on the global record. Both are required. Confirm current-week snapshots, capture
+times, then cut over the API and matching frontend:
 
 ```sh
-docker compose --profile pocketbase-tunnel up -d pocketbase-tunnel
+docker compose up -d --build api tunnel
 ```
 
-The existing npm test command includes schema/rollback checks when
-POCKETBASE_TEST_BINARY points to the pinned PocketBase executable; otherwise it
-explicitly skips that integration test.
+Check Express/chart behavior before expanding enrollment. Public artist requests
+remain analytics-only and never enable syncing.
 
-### Preparing legacy data
+## Collection and name backfill
 
-Download the latest merged legacy backup from R2, then inspect and prepare that
-single SQLite file with explicit timestamp units:
+The `artist-sync` cron runs each minute and takes one due artist per invocation.
+It alternates collection/name-backfill priority, sharing persisted request spacing,
+leases and cooldowns. Configure `requestIntervalSeconds` and
+`requestTimeoutSeconds` in `sync_settings`. Startup inspects persisted due state;
+the next tick resumes it. Failed/interrupted attempts remain deferred for a day.
+HTTP 403/429 pauses automated page work for at least an hour; other failures pause
+it for five minutes. Longer Retry-After delays are preserved.
+
+Collection writes the current Monday-start UTC week and actual `capturedAt` time.
+Newer captures replace that week's complete metrics. Snapshot/success writes commit
+together. Missing followers/popularity/monthlyListeners remain null, measured zero
+remains zero, and missed weeks stay missing. Dashboard name corrections become
+owner metadata and are preserved, including edits during a fetch.
+
+Enable `sync_settings.namesBackfillEnabled` to fill unresolved artist names without
+enrolling them. Both jobs start disabled. Outcomes log coverage and HTTP status;
+filter the artists collection with `displayName = ""` to inspect unresolved IDs.
+The API rebuilds its cache every minute and retains the last complete index on a
+refresh failure. Search never scrapes; it covers stored names/aliases, supports
+typos such as Dustr → Duster, and preserves accents/non-Latin display names and
+distinct artist IDs. History availability (`isTracked`/`hasHistory`) and enrollment
+(`syncEnabled`) are separate.
+
+## Optional historical import
+
+A fresh small roster can collect before importing old history. Keep original
+backups and the previous deployment/image/configuration for rollback. Select the
+latest merged source backup by verified contents/timestamps, not filename or size.
+The isolated import bridge reads the old SQLite format; application reads and jobs
+use PocketBase exclusively.
 
 ```sh
 npm run prepare-import -- --source ./backup.db --timestamp-unit seconds --inventory
 npm run prepare-import -- --source ./backup.db --timestamp-unit seconds --output ./prepared-data
-```
-
-The tool opens the backup read-only and checks its integrity, row/artist counts
-and timestamp range. Verify that inventory before importing. SQLite sorting uses
-temporary disk space; allow free disk of several times the input size.
-JavaScript holds one row at a time.
-
-The export retains artists whose latest known non-null follower count meets the
-cutoff, preserving their earlier weekly history. Use --cutoff to change the
-threshold or repeat --keep-id to retain specific artists. Weekly snapshots use
-the latest complete capture, including null values. Ties prefer the larger
-rowid within the backup.
-
-The new output directory contains artists.jsonl, snapshots.jsonl,
-excluded-artists.jsonl and report.json. IDs are deterministic; imported artists
-have syncing disabled. Names remain unresolved and are counted in the report.
-Existing output directories are rejected. These files are preparation artifacts;
-the command does not load PocketBase or change any original database.
-
-### Loading prepared data
-
-Configure the server-side PocketBase connection in the root .env, then load a
-prepared export into an isolated migration target:
-
-```sh
 npm run import-data -- --input ./prepared-data
 ```
 
-The loader validates all records, relationships and report counts into a private
-temporary spool before contacting PocketBase. Allow temporary disk space for one
-additional copy of the prepared records. Writes use bounded, sequential batches
-through the built-in records API.
+Preparation opens the source read-only, checks integrity/counts/date range, and
+streams deterministic JSONL. SQLite sorting needs temporary disk space; allow
+several times the source size. The default cutoff retains artists whose latest
+known non-null follower count is **at least 10,000**, preserving their earlier weekly
+history. Override with `--cutoff` or repeated `--keep-id`. Latest complete captures
+win; ties use the larger source rowid. Nulls, timestamp units and provenance survive.
 
-Rerun the same export after interruption. Matching rows and newer captures are
-skipped; existing artist names, aliases and enrollment are preserved. Conflicts
-stop the load. Existing artists must have the deterministic IDs from preparation;
-a different ID for the same Spotify artist requires reconciliation before loading.
-The loader does not update snapshots with conflicting values or enable collection.
+The new output directory contains artists/snapshots, exclusions and report counts.
+Existing output paths are rejected. Loading preflights the full export in bounded
+memory, then uses sequential record batches. Rerun the same export after interruption:
+matching records/newer captures are skipped, owner metadata/enrollment is preserved,
+and conflicts stop the load. Imported artists remain disabled. Compare counts and
+coverage before enabling name backfill; never enroll the imported roster wholesale.
 
-The regular test command checks the SDK request contract with mocked fetch
-responses. With POCKETBASE_TEST_BINARY configured, it also loads prepared fixture
-records through the real PocketBase model layer and reports table/index storage
-and native backup size/time. Live HTTP loading, production-scale measurements and
-a complete restore still need verification before cutover.
+## Native backups and restore
 
-### Local artist metadata
+In PocketBase Settings > Backups, configure a daily schedule such as `0 3 * * *`
+and bounded retention such as seven scheduled backups. Use its native S3 destination
+for the `arthistory-backups` R2 bucket, account endpoint, region `auto` and
+backup-scoped credentials. Keep secrets/encryption keys outside Git and preserve
+matching environment secrets for restore. Do not reuse/delete migration source
+objects. No custom backup manifest or application backup endpoint is involved.
 
-Set ARTIST_METADATA_SOURCE=pocketbase to use stored artist display names and fuzzy
-search through Express. Populate names in PocketBase first; unresolved names are
-reported at startup and remain absent from name search. ID lookups retain an ID
-fallback for unresolved records. Searches never fetch artist pages.
+Before cutover, create a native backup and restore it into an isolated data copy
+with the matching PocketBase version and versioned hooks/migrations. Allow at least
+twice the backup size as free space. Native restore replaces the data directory and
+restarts the app. Start the rehearsal target with outbound network access blocked:
+restored settings may contain enabled jobs and the production R2 destination.
+Before reconnecting it, disable collection/backfill and native scheduled backups in
+the restored dashboard, and use an isolated backup destination for further tests.
+Verify records, nulls, settings, files, rebuilt search and chart queries before accepting it. Retain
+the previous image/configuration and original sources until recovery is verified.
 
-Artist records are cached in memory for ID lookups, with a Fuse.js search index
-over their names and aliases. This cache is loaded before startup and refreshed
-from PocketBase once per minute.
-Dashboard edits, missed notifications and restores are picked up by full refreshes.
-A failed refresh retains the last complete index and logs an error. Index budgets
-fail the rebuild rather than silently truncating the artist cache. Queries and results
-are bounded; exact, prefix and substring matches rank ahead of typo matches.
+The native test suite backs up disposable data, mutates it, invokes native restore,
+restarts and checks records/settings/files. Actual R2 access, retained database and
+index size, backup size/duration, real query latency and visual chart verification
+still require measurement on the deployment target.
 
-The existing route envelopes are preserved. The legacy isTracked field describes
-history availability; syncEnabled describes explicit enrollment. Unknown current
-metrics are null. Public artist requests remain analytics-only.
-
-This switch affects metadata and search only. Name backfill and the final backend
-cutover remain separate changes.
-
-### PocketBase snapshot reads
-
-After importing history, set SNAPSHOTS_USE_POCKETBASE=true to read snapshots and
-latest capture freshness through Express. The default retains SQLite reads.
-Responses keep the existing envelopes; snapshot timestamp is the UTC period start,
-and capturedAt reports the actual capture time. Missing audience metrics remain
-null. Each artist keeps its own available history, and the chart aligns months
-with null gaps. Monthly/quarterly/yearly responses retain the latest capture in
-each period, including that capture's unavailable metrics.
-
-Reads are paginated and bounded. Exceeding a read limit fails the request rather
-than returning partial history. This change does not enable collection.
-
-### Database
-
-The API requires a SQLite database to query. A small sample database is included in the repo: [`_spotify-data.db`](./_spotify-data.db).
-
-### Spotify API keys
-
-The `/artists` and `/artists/search` endpoints in the API hit the Spotify API, so you'll need API keys to run them. See the [Spotify API](https://developer.spotify.com/documentation/web-api/tutorials/getting-started) documentation on signing up for developer access.
-
-### Setup
+## Verification
 
 ```sh
-# Edit the environment file to add your Spotify API keys and path to the SQLite database file
-cp apps/api/.env.example apps/api/.env
-
-# The environment file for the web app probably doesn't need to be changed.
-cp apps/web/.env.example apps/web/.env
-
-# Install packages (ensure you are using Node v20+, run `nvm use` if you have `nvm` installed.)
-npm i
-
-# Run a build (This ensures sqlite is built and placed in the right location in the monorepo)
+npm run lint
+npm run typecheck
+npm test
 npm run build
-
-# Run the development servers for the web app and API
-npm run dev
-
-# Now, open http://localhost:3000 in your browser to view the app.
 ```
 
-## Issues
-
-If you find a bug, feel free to [open up an issue](https://github.com/brandongregoryscott/arthistory/issues/new) and try to describe it in detail with reproduction steps if possible.
-
-If you would like to see a feature, and it isn't [already documented](https://github.com/brandongregoryscott/arthistory/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement), feel free to open up a new issue and describe the desired behavior.
-
-## Debugging and server maintenance
-
-<details>
-
-<summary>Updating the production database
-</summary>
-
-Ensure you're using the correct node version
-
-```sh
-nvm use
-```
-
-Download all of the working snapshots from the `spotify-data` bucket
-
-```sh
-npm run download-dbs
-```
-
-Merge all of the working snapshots into one file
-
-```sh
-npm run merge-dbs
-```
-
-Stop the NodeJS process manager running the API instances - if the database file is replaced while it is running, it will crash loop
-
-```sh
-pm2 stop arthistory-api
-```
-
-Move the merged database file to the production filename
-
-```sh
-mv merged-spotify-data.db _spotify-data.db
-```
-
-Start the NodeJS process manager running the API instances
-
-```sh
-pm2 start arthistory-api
-```
-
-</details>
-
-<details>
-
-<summary>Updating API key permissions to include additional buckets (<code>403 Access Denied</code> error when trying to upload objects)
-</summary>
-
-- Go to the R2 Overview page: https://dash.cloudflare.com/{accountId}/r2/overview
-- Click on the **Manage** button under the **Account Details** > **API Tokens** section on the right to land on
-- Land on https://dash.cloudflare.com/{accountId}/r2/api-tokens and choose the API token to add additional buckets/permissions to
-
-</details>
-
-## API route convention
-
-Application routes are unversioned and start at the API origin, without an `/api` prefix. `GET /health` returns HTTP 200 with `{ "ok": true }`. Previous application paths have been removed; deploy the matching API and frontend builds together.
-
-The health check confirms the server responds; it does not probe external services or database availability.
-
-### Inspecting public artist metadata
-
-Run `npm run inspect-artist -- --artist <Spotify-ID-or-URL>` to inspect a public
-artist page without Spotify API credentials or PocketBase configuration. It prints
-the verified artist ID, display name and available audience counts as JSON. Missing
-counts and popularity remain null; measured zero remains zero.
-
-This command reads one page and does not save metadata or enable collection. It
-rejects redirects and oversized responses, bounds request duration, and reports
-HTTP status/Retry-After on failure without retrying. Automated name backfill uses
-the controls below; ongoing snapshot collection remains a separate step.
-
-### Filling missing artist names
-
-The PocketBase `artist-sync` cron fills one unresolved artist per invocation
-and runs once per minute. It starts disabled. After importing artists, enable
-`namesBackfillEnabled` on the global `sync_settings` record to begin; turn it off
-to stop. This setting is independent of snapshot collection and never enrolls artists.
-
-Backfill shares `requestIntervalSeconds`, `requestTimeoutSeconds` and the global
-`sync_state` request/lease/cooldown fields. Attempts are reserved before fetching;
-interrupted or failed artists remain deferred for a day. HTTP 403/429 pauses automated
-page work for at least an hour; other failures pause it for at least five minutes.
-Longer Retry-After delays are preserved. Owner names/aliases and enrollment remain
-untouched, including edits made while a page is being fetched.
-
-Each completed attempt logs named/unresolved coverage and HTTP status. To inspect
-unresolved IDs, filter the PocketBase artists collection with `displayName = ""`.
-The API's normal cache refresh picks up resolved names. No public search request
-fetches pages, and no historical snapshots are manufactured by backfill.
-
-### Collecting weekly snapshots
-
-Set `enabled` on the global `sync_settings` record and explicitly set `syncEnabled`
-on the artists to collect. Both are required. Start with a small roster. The
-`artist-sync` job takes one due artist per invocation, alternating priority between
-collection and name backfill each minute while sharing the same pacing, lease and
-cooldown state. Startup checks persisted due state; the next cron tick resumes it.
-
-A capture writes the current Monday UTC week and actual capture time, with nullable
-metrics. A newer capture updates that week's row. Snapshot and success state commit
-together. Missed weeks are left missing. Dashboard name edits become owner metadata
-and are preserved during subsequent collection. Disable the global policy or an
-artist to stop its collection; in-flight work rechecks that policy before writing.
-
-## Minimal PocketBase rollout
-
-Configure the root `.env` with the PocketBase server credentials and local CLI URL
-from `apps/api/.env.example`. Compose starts PocketBase with persistent storage and
-points the API metadata/history reads at it. Keep the existing deployment/image
-and original backup files available for rollback.
-
-```sh
-docker compose up -d --build pocketbase api tunnel
-npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZjjZFJs
-npm run add-artist -- --artist https://open.spotify.com/artist/5AyEXCtu3xnnsTGCo4RVZh
-```
-
-`add-artist` verifies one public page, then creates a named artist with syncing off.
-Existing artists and their owner metadata/enrollment are preserved. Its record IDs
-match the import tooling, so a minimal roster can collect before history is loaded.
-In the private PocketBase dashboard, enroll only that small roster and enable the
-global collection policy. Verify current-week snapshots and real capture times,
-then check the Express routes and chart before expanding enrollment.
-
-Historical import is optional for the initial rollout. When ready, inventory the
-latest merged R2 backup, prepare/load retained history with the commands above,
-and compare report counts and coverage. Imported artists remain disabled. Enable
-name backfill separately and monitor unresolved coverage and upstream cooldowns.
-Never delete original backups or enable the whole imported roster automatically.
-
-### Native backups and recovery
-
-Use PocketBase Settings > Backups to set a daily schedule (for example `0 3 * * *`)
-and bounded retention (for example seven scheduled backups). Configure its native
-S3 destination for the `arthistory-backups` R2 bucket with the account endpoint,
-region `auto`, and backup-scoped credentials. Keep credentials/encryption keys out
-of Git. Do not reuse or delete migration source objects. No custom backup manifest
-or application backup endpoint is needed.
-
-Before cutover, create a native backup and restore it into an isolated copy with
-the matching PocketBase version and deployed hooks/migrations. Allow at least twice
-the backup size as free space. Restore through PocketBase's native backup controls;
-it replaces the data directory and restarts the app. Keep collection/backfill off
-in the rehearsal copy. Verify records, null metrics, settings, files, search-index
-rebuild and chart queries after restart. Retain the old image/configuration and
-source backups until the restored application passes those checks.
-
-The native test suite rehearses backup, mutation, native restore/restart and
-verification of records/settings/storage files in a disposable directory. R2 access,
-pruned production database/index size, backup size/duration, real query latency and
-visual chart verification still need measurement on the deployment target.
+Set `POCKETBASE_TEST_BINARY` to the pinned executable to include native schema,
+transaction, collection/backfill, restart and full restore tests under `npm test`.
+Without it the native fixture explicitly skips; CI installs the pinned binary.
+Container CI builds API/PocketBase and checks migrations. No separate migration
+test command, Spotify Web API credential, fragment sync service or direct API access
+to PocketBase's SQLite files is needed.
