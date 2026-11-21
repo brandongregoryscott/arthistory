@@ -17,9 +17,10 @@ RUN npm ci
 COPY apps/api/ apps/api/
 COPY packages/common/ packages/common/
 COPY packages/typescript-config/ packages/typescript-config/
+COPY pocketbase/hooks/artist-page-parser.cjs pocketbase/hooks/artist-page-parser.cjs
 COPY tsconfig.json ./
 
-# Build the API bundle
+# Build the API and operational CLI bundles
 RUN npm run build --workspace=api
 
 # Runtime stage
@@ -31,9 +32,8 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-RUN echo '{}' > package.json
-
-COPY --from=build /app/apps/api/dist/server.js dist/server.js
+COPY apps/api/package.runtime.json package.json
+COPY --from=build /app/apps/api/dist/ dist/
 
 EXPOSE 6768
 

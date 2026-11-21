@@ -83,6 +83,23 @@ npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZj
 npm run add-artist -- --artist https://open.spotify.com/artist/5AyEXCtu3xnnsTGCo4RVZh
 ```
 
+Those commands run from the host checkout. The API image also ships the CLI
+bundles and npm scripts: in Coolify's API container terminal (`/app`), use the same
+`npm run add-artist -- --artist <id-or-url>` command. It uses the container's
+PocketBase credentials and internal service URL. For a running Compose deployment:
+
+```sh
+docker compose -f docker-compose.yml exec api npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZjjZFJs
+```
+
+If only PocketBase is running during preparation, use
+`docker compose -f docker-compose.yml run --rm --build --no-deps api npm run add-artist -- --artist <id-or-url>`.
+This runs the bundled CLI without starting the Express server or tunnels.
+`inspect-artist`, `prepare-import`, and `import-data` are also available in the
+image. For migration, explicitly mount the source/prepared data into the container
+(original sources read-only, output separately writable); use container paths in
+the CLI arguments and keep originals outside its disposable filesystem.
+
 The command creates named artists with syncing off. In the dashboard:
 
 1. Set `artists.syncEnabled` on only for the chosen few artists.

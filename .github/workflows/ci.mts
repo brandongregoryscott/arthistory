@@ -82,9 +82,26 @@ const containers = job("containers", {
             },
         }),
         step({
-            name: "Check API bundle",
+            name: "Check API bundle and runtime CLI commands",
             if: "matrix.image == 'api'",
-            run: "docker run --rm --entrypoint node ci-api:check --check dist/server.js",
+            run: `docker run --rm --network none --entrypoint node -i ci-api:check <<'NODE'
+const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
+assert.equal(spawnSync("node", ["--check", "dist/server.js"]).status, 0);
+const commands = {
+    "add-artist": "Provide --artist with a Spotify ID or URL.",
+    "inspect-artist": "Provide --artist with a Spotify artist ID or URL.",
+    "import-data": "Provide --input prepared-data-directory.",
+    "prepare-import": "Provide a filename and explicit timestamp unit.",
+};
+for (const [command, expected] of Object.entries(commands)) {
+    const result = spawnSync("npm", ["run", command, "--"], { encoding: "utf8" });
+    const output = result.stdout + result.stderr;
+    assert.equal(result.status, 1, output);
+    assert.ok(output.includes(expected), output);
+    console.log("PASS: " + command);
+}
+NODE`,
         }),
         step({
             name: "Apply PocketBase migrations",

@@ -39,6 +39,20 @@ syncing **off**. It accepts an ID or URL, preserves existing owner records, and 
 IDs compatible with a later history import. `inspect-artist` reads a page without
 writing anything. Neither command starts background collection.
 
+The API image includes bundled versions of `add-artist`, `inspect-artist`,
+`prepare-import`, and `import-data`. In Coolify's API container terminal at `/app`,
+run the same npm command directly:
+
+```sh
+npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZjjZFJs
+```
+
+From a Compose host, use `docker compose exec api npm run add-artist -- --artist <id>`.
+The container inherits its PocketBase credentials and internal URL from Compose.
+For import commands, source/prepared/output paths must be accessible inside the
+container; mount original SQLite sources read-only and keep output in a separate
+writable mount. The image contains compiled commands, not the repository or dev tools.
+
 Production Compose starts the PocketBase tuns.sh tunnel automatically, using
 `POCKETBASE_TUNNEL_NAME` (default `arthistory-pocketbase`) and the host's registered
 SSH key. Read its assigned HTTPS URL from the `pocketbase-tunnel` container logs,
