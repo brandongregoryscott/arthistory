@@ -87,6 +87,7 @@ const containers = job("containers", {
             run: `docker run --rm --network none --entrypoint node -i ci-api:check <<'NODE'
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
+assert.ok(require("node:fs").statSync("/etc/ssl/certs/ca-certificates.crt").size > 0);
 assert.equal(spawnSync("node", ["--check", "dist/server.js"]).status, 0);
 const commands = {
     "add-artist": "Provide --artist with a Spotify ID or URL.",

@@ -31,7 +31,7 @@ ENV APP_ENV=production APP_VERSION=$SOURCE_VERSION
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
 COPY apps/api/package.runtime.json package.json
 COPY --from=build /app/apps/api/dist/ dist/
