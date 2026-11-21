@@ -143,6 +143,11 @@ single verified merged backup, with confirmed timestamp units and enough tempora
 disk space. Use `--keep-id` for any defaults that must survive the pruning cutoff.
 Compare report counts, retained history and nulls after loading; rerunning the same
 export resumes safely. Existing enrollment is preserved; newly imported artists stay off.
+Restarting repeats full export validation and existing-record lookups; it does not
+resume from a saved cursor. Progress logs distinguish validation from writes. For
+terminal-independent imports with logs under `/migration`, use the
+[background command](README.md#optional-historical-import); a container restart
+still stops the process.
 
 Before loading, review preparation's `errors.jsonl` and `report.json` invalid-row
 count. Malformed IDs/timestamps/metrics are audited and skipped automatically;

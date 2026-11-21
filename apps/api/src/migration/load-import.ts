@@ -3,9 +3,11 @@ import { chunk, isEmpty } from "lodash";
 import { rmSync } from "node:fs";
 import type { PocketBaseClient } from "../storage/pocketbase";
 import type { ImportContext } from "./import-error";
+import type { ImportProgress } from "./import-progress";
 import type { ImportItem } from "./prepared-records";
 import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
 import { importError } from "./import-error";
+import { createImportProgressReporter } from "./import-progress";
 import { snapshotColumns } from "./prepared-records";
 import { readJsonLines, stageImport } from "./staged-import";
 
@@ -13,6 +15,7 @@ type LoadImportOptions = {
     batchSize?: number;
     client: PocketBaseClient;
     directory: string;
+    onProgress?: (progress: ImportProgress) => void;
 };
 
 type LoadBatchCounts = { created: number; skipped: number };
@@ -43,7 +46,8 @@ const loadImport = async (options: LoadImportOptions) => {
         );
     }
 
-    const staged = await stageImport(directory);
+    const reportProgress = createImportProgressReporter(options.onProgress);
+    const staged = await stageImport(directory, reportProgress);
     const counts = {
         artists: staged.artists,
         created: 0,
@@ -55,9 +59,21 @@ const loadImport = async (options: LoadImportOptions) => {
         records: [],
         stage: "Check PocketBase authentication and required collections",
     };
+    const total = counts.artists + counts.snapshots;
+    const progress = (phase: "complete" | "connecting" | "importing") =>
+        reportProgress({
+            batch: context.batch,
+            created: counts.created,
+            phase,
+            processed: counts.created + counts.skipped,
+            skipped: counts.skipped,
+            total,
+        });
 
     try {
+        progress("connecting");
         await client.ready();
+        progress("importing");
         let pending: ImportItem[] = [];
 
         for await (const item of readJsonLines<ImportItem>(staged.filename)) {
@@ -65,6 +81,7 @@ const loadImport = async (options: LoadImportOptions) => {
 
             if (pending.length === batchSize) {
                 await loadBatch({ client, context, counts, items: pending });
+                progress("importing");
                 pending = [];
             }
         }
@@ -73,6 +90,7 @@ const loadImport = async (options: LoadImportOptions) => {
             await loadBatch({ client, context, counts, items: pending });
         }
 
+        progress("complete");
         return counts;
     } catch (error) {
         throw importError(error, context, counts);

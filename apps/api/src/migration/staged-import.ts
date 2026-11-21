@@ -11,6 +11,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
+import type { ReportImportProgress } from "./import-progress";
 import type { ImportItem } from "./prepared-records";
 import { importId, validateArtist, validateSnapshot } from "./prepared-records";
 
@@ -19,7 +20,10 @@ const MAX_REPORT_BYTES = 64 * 1024;
 
 // Validate and freeze the full export before making any target requests. Private
 // spooling keeps memory bounded and isolates loading from concurrent input edits.
-const stageImport = async (directory: string) => {
+const stageImport = async (
+    directory: string,
+    reportProgress?: ReportImportProgress
+) => {
     const reportFile = resolve(directory, "report.json");
 
     if (statSync(reportFile).size > MAX_REPORT_BYTES) {
@@ -34,9 +38,16 @@ const stageImport = async (directory: string) => {
     let complete = false;
     let artists = 0;
     let snapshots = 0;
+    const total = counts.artists + counts.snapshots;
+    const progress = (force = false) =>
+        reportProgress?.(
+            { phase: "validating", processed: artists + snapshots, total },
+            force
+        );
 
     try {
         fd = openSync(filename, "wx", 0o600);
+        progress();
 
         const rows = readJsonLines<unknown>(
             resolve(directory, "snapshots.jsonl")
@@ -58,6 +69,7 @@ const stageImport = async (directory: string) => {
 
                 previousArtist = artist.spotifyId;
                 artists++;
+                progress();
                 writeFileSync(
                     fd,
                     JSON.stringify({
@@ -92,6 +104,7 @@ const stageImport = async (directory: string) => {
                     previousWeek = snapshot.weekStart;
                     artistSnapshots++;
                     snapshots++;
+                    progress();
                     writeFileSync(
                         fd,
                         JSON.stringify({
@@ -121,6 +134,7 @@ const stageImport = async (directory: string) => {
         }
 
         complete = true;
+        progress(true);
 
         return { artists, filename, snapshots, temporary };
     } finally {

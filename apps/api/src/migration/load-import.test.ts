@@ -218,6 +218,58 @@ describe("loadImport", () => {
         }
     );
 
+    it("reports validation before connecting and counts matching records on a restarted run", async () => {
+        const remote = mockPocketBase();
+        const onProgress = vi.fn();
+        const options = {
+            client: new PocketBaseClient(config),
+            directory,
+            onProgress,
+        };
+        await loadImport(options);
+        expect(onProgress.mock.calls.map(([event]) => event.phase)).toEqual([
+            "validating",
+            "validating",
+            "connecting",
+            "importing",
+            "complete",
+        ]);
+        expect(onProgress.mock.calls[0]?.[0]).toMatchObject({
+            phase: "validating",
+            processed: 0,
+            total: 6,
+        });
+        expect(onProgress.mock.calls[1]?.[0]).toMatchObject({
+            percent: 100,
+            phase: "validating",
+            processed: 6,
+        });
+        expect(onProgress).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                created: 6,
+                phase: "complete",
+                processed: 6,
+                skipped: 0,
+            })
+        );
+        const batches = remote.batches.length;
+        onProgress.mockClear();
+        await loadImport(options);
+        expect(onProgress.mock.calls[0]?.[0]).toMatchObject({
+            phase: "validating",
+            processed: 0,
+        });
+        expect(onProgress).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                created: 0,
+                phase: "complete",
+                processed: 6,
+                skipped: 6,
+            })
+        );
+        expect(remote.batches).toHaveLength(batches);
+    });
+
     it.each(["rejection", "lost response"] as const)(
         "recovers from %s without replaying ambiguous writes automatically",
         async (failure) => {

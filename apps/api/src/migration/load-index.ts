@@ -13,6 +13,15 @@ const main = async () => {
     const result = await loadImport({
         client: new PocketBaseClient(loadPocketBaseConfig()),
         directory: values.input,
+        onProgress: (progress) => {
+            process.stderr.write(
+                JSON.stringify({
+                    at: new Date().toISOString(),
+                    event: "import.progress",
+                    ...progress,
+                }) + "\n"
+            );
+        },
     });
 
     process.stdout.write(JSON.stringify(result, null, 4) + "\n");
