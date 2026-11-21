@@ -51,3 +51,28 @@ describe("PocketBase configuration", () => {
         expect(loadPocketBaseConfig().url).toBe("https://pb.example.com");
     });
 });
+
+describe("artist metadata configuration", () => {
+    it("preserves the existing metadata backend by default", async () => {
+        vi.stubEnv("ARTIST_METADATA_SOURCE", undefined);
+
+        const { ARTIST_METADATA_SOURCE } = await import("./config.js");
+
+        expect(ARTIST_METADATA_SOURCE).toBe("spotify");
+    });
+
+    it("accepts PocketBase explicitly and rejects unknown backends", async () => {
+        vi.stubEnv("ARTIST_METADATA_SOURCE", "pocketbase");
+
+        const { ARTIST_METADATA_SOURCE } = await import("./config.js");
+
+        expect(ARTIST_METADATA_SOURCE).toBe("pocketbase");
+
+        vi.resetModules();
+        vi.stubEnv("ARTIST_METADATA_SOURCE", "other");
+
+        await expect(import("./config.js")).rejects.toThrow(
+            "Invalid ARTIST_METADATA_SOURCE."
+        );
+    });
+});
