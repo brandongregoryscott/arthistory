@@ -96,9 +96,12 @@ If only PocketBase is running during preparation, use
 `docker compose -f docker-compose.yml run --rm --build --no-deps api npm run add-artist -- --artist <id-or-url>`.
 This runs the bundled CLI without starting the Express server or tunnels.
 `inspect-artist`, `prepare-import`, and `import-data` are also available in the
-image. For migration, explicitly mount the source/prepared data into the container
-(original sources read-only, output separately writable); use container paths in
-the CLI arguments and keep originals outside its disposable filesystem.
+image. Production Compose binds `/root/arthistory-migration` to `/migration` in
+the API container. Override the host path with `MIGRATION_DATA_PATH` if needed.
+Create the host directory and copy any backup held in the current container to it
+before redeploying. Prepare with `--source /migration/legacy-backup.db --output /migration/prepared-data`,
+then import with `--input /migration/prepared-data`. These files persist on the
+host across container replacements; preparation opens the source read-only.
 
 The command creates named artists with syncing off. In the dashboard:
 
