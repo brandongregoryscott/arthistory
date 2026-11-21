@@ -82,9 +82,28 @@ describe("loadImport", () => {
         ).toBe(true);
         expect(
             [...remote.records.snapshots.values()].some(
-                (row) => (row.metrics as Stored).followers === null
+                (row) => row.followers === -1
             )
         ).toBe(true);
+
+        const imported = [...remote.records.snapshots.values()];
+        expect(imported.every((row) => !Object.hasOwn(row, "metrics"))).toBe(
+            true
+        );
+        expect(imported).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    followers: 10000,
+                    monthlyListeners: -1,
+                    popularity: 0,
+                }),
+                expect.objectContaining({
+                    followers: 13000,
+                    monthlyListeners: -1,
+                    popularity: 20,
+                }),
+            ])
+        );
 
         const [artist] = remote.records.artists.values();
         if (artist == null) {
@@ -98,11 +117,11 @@ describe("loadImport", () => {
             throw new Error("Missing snapshot.");
         }
         snapshot.capturedAt = "2026-01-13 00:00:00.000Z";
-        snapshot.metrics = {
+        Object.assign(snapshot, {
             followers: 20000,
             monthlyListeners: 30000,
             popularity: 42,
-        };
+        });
         const batchCount = remote.batches.length;
 
         const second = await loadImport({
@@ -122,7 +141,7 @@ describe("loadImport", () => {
             displayName: "Owner correction",
             syncEnabled: true,
         });
-        expect(snapshot.metrics).toEqual({
+        expect(snapshot).toMatchObject({
             followers: 20000,
             monthlyListeners: 30000,
             popularity: 42,
@@ -171,11 +190,11 @@ describe("loadImport", () => {
         if (snapshot == null) {
             throw new Error("Missing snapshot.");
         }
-        snapshot.metrics = {
+        Object.assign(snapshot, {
             followers: 99,
-            monthlyListeners: null,
-            popularity: null,
-        };
+            monthlyListeners: -1,
+            popularity: -1,
+        });
         const batches = remote.batches.length;
 
         await expect(
@@ -183,10 +202,10 @@ describe("loadImport", () => {
         ).rejects.toThrow("Conflicting snapshots");
 
         expect(remote.batches).toHaveLength(batches);
-        expect(snapshot.metrics).toEqual({
+        expect(snapshot).toMatchObject({
             followers: 99,
-            monthlyListeners: null,
-            popularity: null,
+            monthlyListeners: -1,
+            popularity: -1,
         });
     });
 

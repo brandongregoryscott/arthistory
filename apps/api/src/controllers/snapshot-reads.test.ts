@@ -27,12 +27,11 @@ describe("PocketBase snapshot route contracts", () => {
             {
                 capturedAt: "2026-01-07 12:00:00.000Z",
                 expand: { artist: { spotifyId: id } },
+                followers: -1,
+
                 id: "111111111111111",
-                metrics: {
-                    followers: null,
-                    monthlyListeners: 0,
-                    popularity: null,
-                },
+                monthlyListeners: 0,
+                popularity: -1,
                 weekStart: "2026-01-05 00:00:00.000Z",
             },
         ]);
@@ -64,12 +63,11 @@ describe("PocketBase snapshot route contracts", () => {
             {
                 capturedAt: "2026-01-07 12:00:00.000Z",
                 expand: { artist: { spotifyId: id } },
+                followers: -1,
+
                 id: "111111111111111",
-                metrics: {
-                    followers: null,
-                    monthlyListeners: 0,
-                    popularity: null,
-                },
+                monthlyListeners: 0,
+                popularity: -1,
                 weekStart: "2026-01-05 00:00:00.000Z",
             },
         ]);
@@ -103,12 +101,11 @@ describe("PocketBase snapshot route contracts", () => {
                 {
                     capturedAt: "2026-01-07 12:00:00.000Z",
                     expand: { artist: { spotifyId: id } },
+                    followers: -1,
+
                     id: "111111111111111",
-                    metrics: {
-                        followers: null,
-                        monthlyListeners: 0,
-                        popularity: null,
-                    },
+                    monthlyListeners: 0,
+                    popularity: -1,
                     weekStart: "2026-01-05 00:00:00.000Z",
                 },
             ]);

@@ -39,6 +39,9 @@ test(
                 recursive: true,
             });
 
+            const columnsMigration = "1794900003_snapshot_columns.js";
+            rmSync(resolve(migrations, columnsMigration));
+
             const hooks = resolve(root, "hooks");
             cpSync(new URL("../hooks/", import.meta.url), hooks, {
                 recursive: true,
@@ -58,6 +61,10 @@ test(
             cpSync(
                 new URL("./restore-fixture.js", import.meta.url),
                 resolve(hooks, "restore-fixture.js")
+            );
+            cpSync(
+                new URL("./metric-columns-fixture.js", import.meta.url),
+                resolve(hooks, "metric-columns-fixture.js")
             );
             const restorePhase = resolve(root, "restore-phase");
             const pageFixture = readFileSync(
@@ -94,7 +101,23 @@ test(
                     .trim()
                     .split("\n")
                     .filter(Boolean)
-                    .map((line) => ({ collection, record: JSON.parse(line) }))
+                    .map((line) => ({
+                        collection,
+                        record:
+                            collection === "snapshots"
+                                ? (() => {
+                                      const { metrics, ...record } =
+                                          JSON.parse(line);
+                                      return {
+                                          ...record,
+                                          followers: metrics.followers ?? -1,
+                                          monthlyListeners:
+                                              metrics.monthlyListeners ?? -1,
+                                          popularity: metrics.popularity ?? -1,
+                                      };
+                                  })()
+                                : JSON.parse(line),
+                    }))
             );
             assert.ok(items.length > 0 && items.length < 1000);
             cpSync(
@@ -105,6 +128,9 @@ test(
             writeFileSync(
                 resolve(hooks, "test.pb.js"),
                 `
+            for (const phase of ["seed", "columns", "json", "cleanup"]) {
+                $app.rootCmd.addCommand(new Command({ use: "test-metrics-" + phase, run: () => { $app.bootstrap(); require(__hooks + "/metric-columns-fixture.js")($app, phase); } }));
+            }
             onRecordUpdate((e) => {
                 if (e.record.getString("attemptToken") === "" && e.record.original().getString("attemptToken") === "rollback-attempt") { throw new Error("Simulated completion save failure"); }
                 return e.next();
@@ -161,6 +187,17 @@ test(
                 return output;
             };
             run("migrate", "up");
+            run("test-metrics-seed");
+            cpSync(
+                new URL("../migrations/" + columnsMigration, import.meta.url),
+                resolve(migrations, columnsMigration)
+            );
+            run("migrate", "up");
+            run("test-metrics-columns");
+            run("migrate", "down", "1", "--automigrate=false");
+            run("test-metrics-json", "--automigrate=false");
+            run("migrate", "up");
+            run("test-metrics-cleanup");
             run("test-schema");
             process.stdout.write(run("test-prepared"));
             const backupBytes = statSync(
@@ -172,7 +209,7 @@ test(
             );
             assert.match(run("migrate", "up"), /No new migrations/);
             assert.match(
-                run("migrate", "down", "3", "--automigrate=false"),
+                run("migrate", "down", "4", "--automigrate=false"),
                 /Reverted 1794900000_collections.js/
             );
             run("migrate", "up");

@@ -13,12 +13,10 @@ const artistId = (number: number) => String(number).padStart(22, "0");
 const record = (number: number, artist = 1) => ({
     capturedAt: "2026-01-07 12:34:56.000Z",
     expand: { artist: { spotifyId: artistId(artist) } },
+    followers: -1,
     id: String(number).padStart(15, "0"),
-    metrics: {
-        followers: null as null | number,
-        monthlyListeners: null,
-        popularity: 0,
-    },
+    monthlyListeners: -1,
+    popularity: 0,
     weekStart: "2026-01-05 00:00:00.000Z",
 });
 
@@ -104,9 +102,31 @@ describe("ArtistSnapshotStore", () => {
         expect(source.calls[0]?.searchParams.get("skipTotal")).toBe("true");
     });
 
+    it("preserves measured zero and legacy popularity while translating only -1 to null", async () => {
+        remote([
+            {
+                ...record(1),
+                followers: 0,
+                monthlyListeners: 123,
+                popularity: 42,
+            },
+        ]);
+        const store = new ArtistSnapshotStore({
+            client: new PocketBaseClient(config),
+        });
+
+        expect(await store.list({ ids: [artistId(1)] })).toEqual([
+            expect.objectContaining({
+                followers: 0,
+                monthlyListeners: 123,
+                popularity: 42,
+            }),
+        ]);
+    });
+
     it("preserves the latest complete capture within a month, including unavailable metrics", async () => {
         const first = record(1);
-        first.metrics.followers = 100;
+        first.followers = 100;
         const latest = {
             ...record(2),
             capturedAt: "2026-01-14 00:00:00.000Z",

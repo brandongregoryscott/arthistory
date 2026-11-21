@@ -23,10 +23,7 @@ module.exports = (app, command, phasePath) => {
             "restored record counts"
         );
         const [snapshot] = app.findAllRecords("snapshots");
-        assert(
-            JSON.parse(snapshot.getString("metrics")).followers === null,
-            "restored null metrics"
-        );
+        assert(snapshot.getInt("followers") === -1, "restored null metrics");
         assert(
             toString($os.readFile(file)) === "original asset",
             "restored storage file"
@@ -49,7 +46,9 @@ module.exports = (app, command, phasePath) => {
         artist: artist.id,
         weekStart: "2026-01-05 00:00:00.000Z",
         capturedAt: "2026-01-07 12:00:00.000Z",
-        metrics: { followers: null, monthlyListeners: 100, popularity: null },
+        followers: -1,
+        monthlyListeners: 100,
+        popularity: -1,
         source: "restore-fixture",
     });
     app.save(snapshot);
@@ -58,11 +57,9 @@ module.exports = (app, command, phasePath) => {
     app.createBackup(command.context(), "restore-fixture.zip");
     artist.set("displayName", "After backup");
     app.save(artist);
-    snapshot.set("metrics", {
-        followers: 999,
-        monthlyListeners: null,
-        popularity: null,
-    });
+    snapshot.set("followers", 42);
+    snapshot.set("monthlyListeners", -1);
+    snapshot.set("popularity", -1);
     app.save(snapshot);
     const extra = new Record(app.findCollectionByNameOrId("artists"));
     extra.set("spotifyId", "5AyEXCtu3xnnsTGCo4RVZh");

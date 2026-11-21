@@ -1,5 +1,6 @@
 import { isArray, isPlainObject, isString } from "lodash";
 import { createHash } from "node:crypto";
+import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
 import {
     isPocketBaseRecordId,
     isSpotifyArtistId,
@@ -151,5 +152,14 @@ const isCanonicalDate = (input: unknown): input is string =>
     Number.isFinite(Date.parse(input)) &&
     new Date(input).toISOString() === input;
 
-export { importId, validateArtist, validateSnapshot };
+// Keep prepared exports compatible with existing files; only PocketBase storage
+// uses numeric columns with an explicit missing-metric sentinel.
+const snapshotColumns = ({ metrics, ...record }: PreparedSnapshot) => ({
+    ...record,
+    followers: metrics.followers ?? MISSING_METRIC,
+    monthlyListeners: metrics.monthlyListeners ?? MISSING_METRIC,
+    popularity: metrics.popularity ?? MISSING_METRIC,
+});
+
+export { importId, snapshotColumns, validateArtist, validateSnapshot };
 export type { ImportItem, PreparedArtist, PreparedSnapshot };

@@ -6,6 +6,7 @@
         "noEmit": true
     },
     "include": [
+        "hooks/snapshot-metrics.cjs",
         "hooks/validation.js",
         "hooks/artist-page-parser.cjs",
         "hooks/artist-sync.js",

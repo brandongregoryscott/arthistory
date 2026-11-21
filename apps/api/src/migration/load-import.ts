@@ -1,8 +1,10 @@
 import type { RecordModel } from "pocketbase";
-import { isEmpty, isEqual } from "lodash";
+import { isEmpty } from "lodash";
 import { rmSync } from "node:fs";
 import type { PocketBaseClient } from "../storage/pocketbase";
 import type { ImportItem } from "./prepared-records";
+import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
+import { snapshotColumns } from "./prepared-records";
 import { readJsonLines, stageImport } from "./staged-import";
 
 type LoadImportOptions = {
@@ -138,7 +140,13 @@ const loadBatch = async (options: LoadBatchOptions) => {
         const batch = pb.createBatch();
 
         for (const item of requests) {
-            batch.collection(item.collection).create(item.record);
+            batch
+                .collection(item.collection)
+                .create(
+                    item.collection === "snapshots"
+                        ? snapshotColumns(item.record)
+                        : item.record
+                );
         }
 
         return batch.send();
@@ -203,7 +211,12 @@ const canSkip = (item: ImportItem, existing: RecordModel | undefined) => {
     return (
         capture > Date.parse(incoming.capturedAt) ||
         (capture === Date.parse(incoming.capturedAt) &&
-            isEqual(existing.metrics, incoming.metrics) &&
+            existing.followers ===
+                (incoming.metrics.followers ?? MISSING_METRIC) &&
+            existing.monthlyListeners ===
+                (incoming.metrics.monthlyListeners ?? MISSING_METRIC) &&
+            existing.popularity ===
+                (incoming.metrics.popularity ?? MISSING_METRIC) &&
             existing.source === incoming.source)
     );
 };

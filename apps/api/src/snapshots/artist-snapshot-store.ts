@@ -2,15 +2,16 @@ import type { ArtistSnapshot, SnapshotResolution } from "@repo/common";
 import { bucketSnapshots, ValidationError } from "@repo/common";
 import { isEmpty, uniq } from "lodash";
 import type { PocketBaseClient } from "../storage/pocketbase";
+import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
 import { isSpotifyArtistId } from "../utilities/id-validation";
 
 type SnapshotRecord = {
     capturedAt: string;
     expand?: { artist?: { spotifyId: string } };
+    followers: number;
     id: string;
-    metrics: Required<
-        Pick<ArtistSnapshot, "followers" | "monthlyListeners" | "popularity">
-    >;
+    monthlyListeners: number;
+    popularity: number;
     weekStart: string;
 };
 
@@ -88,7 +89,7 @@ class ArtistSnapshotStore {
                     .collection("snapshots")
                     .getList<SnapshotRecord>(1, PAGE_SIZE, {
                         expand: "artist",
-                        fields: "id,weekStart,capturedAt,metrics,expand.artist.spotifyId",
+                        fields: "id,weekStart,capturedAt,followers,monthlyListeners,popularity,expand.artist.spotifyId",
                         filter,
                         signal,
                         skipTotal: true,
@@ -115,10 +116,19 @@ class ArtistSnapshotStore {
                 cursor = record.id;
                 snapshots.push({
                     capturedAt: new Date(record.capturedAt).toISOString(),
-                    followers: record.metrics.followers,
+                    followers:
+                        record.followers === MISSING_METRIC
+                            ? null
+                            : record.followers,
                     id,
-                    monthlyListeners: record.metrics.monthlyListeners,
-                    popularity: record.metrics.popularity,
+                    monthlyListeners:
+                        record.monthlyListeners === MISSING_METRIC
+                            ? null
+                            : record.monthlyListeners,
+                    popularity:
+                        record.popularity === MISSING_METRIC
+                            ? null
+                            : record.popularity,
                     timestamp: new Date(record.weekStart).toISOString(),
                 });
             }
