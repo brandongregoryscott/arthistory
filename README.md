@@ -39,8 +39,12 @@ syncing **off**. It accepts an ID or URL, preserves existing owner records, and 
 IDs compatible with a later history import. `inspect-artist` reads a page without
 writing anything. Neither command starts background collection.
 
-Open `/_/` on the private PocketBase origin. Its optional tunnel can be started with
-`docker compose --profile pocketbase-tunnel up -d pocketbase-tunnel`. Enroll only a
+Production Compose starts the PocketBase tuns.sh tunnel automatically, using
+`POCKETBASE_TUNNEL_NAME` (default `arthistory-pocketbase`) and the host's registered
+SSH key. Read its assigned HTTPS URL from the `pocketbase-tunnel` container logs,
+then open `/_/` and sign in with the PocketBase superuser
+credentials. The local override disables tunnels by default; opt in with
+`docker compose --profile tunnels up -d pocketbase-tunnel`. Enroll only a
 small chosen roster with `artists.syncEnabled`, then enable `sync_settings.enabled`
 on the global record. Both are required. Confirm current-week snapshots, capture
 times, then cut over the API and matching frontend:

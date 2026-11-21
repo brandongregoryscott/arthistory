@@ -3,6 +3,9 @@ services:
   tunnel:
     profiles: ["tunnels"]
 
+  pocketbase-tunnel:
+    profiles: ["tunnels"]
+
 networks:
   observability:
     external: false
