@@ -1,11 +1,5 @@
 import { createHash } from "node:crypto";
-import {
-    existsSync,
-    mkdtempSync,
-    readFileSync,
-    readdirSync,
-    rmSync,
-} from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -18,7 +12,7 @@ const id = (digit: string) => digit.repeat(22);
 
 const monday = Date.parse("2026-01-05T00:00:00Z") / 1000;
 
-type FixtureRow = [string, number, null | number, null | number];
+type FixtureRow = [null | string, number, null | number, null | number];
 
 type ExportSnapshot = {
     artist: string;
@@ -97,6 +91,7 @@ describe("prepareImport", () => {
             artists: 2,
             collapsedRows: 1,
             excludedArtists: 2,
+            invalidRows: 0,
             namedArtists: 0,
             retainedRows: 4,
             snapshots: 3,
@@ -203,24 +198,107 @@ describe("prepareImport", () => {
         { field: "popularity", value: 101 },
         { field: "timestamp", value: monday * 1000 },
     ])(
-        "rejects invalid $field without publishing partial output",
+        "records invalid $field and completes preparation without changing the source",
         ({ field, value }) => {
             const source = fixture("backup", [[id("1"), monday, 10000, 10]]);
             const db = new DatabaseSync(source.filename);
             db.prepare(`UPDATE artist_snapshots SET ${field} = ?`).run(value);
             db.close();
 
-            expect(() =>
-                prepareImport({
-                    output: resolve(root, "export"),
-                    source,
-                })
-            ).toThrow();
-
-            expect(existsSync(resolve(root, "export"))).toBe(false);
-            expect(readdirSync(root)).toEqual(["backup.db"]);
+            const before = digest(source.filename);
+            const output = resolve(root, "export");
+            const report = prepareImport({ output, source });
+            expect(report.counts).toMatchObject({
+                artists: 0,
+                invalidRows: 1,
+                snapshots: 0,
+                sourceRows: 1,
+            });
+            expect(readLines(resolve(output, "errors.jsonl"))).toEqual([
+                expect.objectContaining({
+                    [field]: value,
+                    reason: expect.stringContaining(
+                        field === "timestamp" ? "timestamp" : "metric"
+                    ),
+                    sourceRow: 1,
+                }),
+            ]);
+            expect(digest(source.filename)).toBe(before);
         }
     );
+
+    it("audits corrupt and missing IDs and continues exporting valid artists", () => {
+        const malformed = "60pYiTX6oPwi1jRQK1287825 +00:00";
+        const source = fixture("backup", [
+            [malformed, 1579814121, 50000, null],
+            [id("1"), monday, 10000, 0],
+            [null, monday, null, 0],
+            ["", monday, 9999, null],
+        ]);
+        const before = digest(source.filename);
+        const output = resolve(root, "export");
+        const report = prepareImport({ output, source });
+
+        expect(digest(source.filename)).toBe(before);
+        expect(report.counts).toMatchObject({
+            artists: 1,
+            invalidRows: 3,
+            snapshots: 1,
+            sourceRows: 4,
+        });
+        const errors = readLines(resolve(output, "errors.jsonl"));
+        expect(errors).toHaveLength(3);
+        expect(errors[0]).toEqual({
+            followers: 50000,
+            id: malformed,
+            popularity: null,
+            reason: "Invalid Spotify artist ID.",
+            sourceRow: 1,
+            timestamp: 1579814121,
+        });
+        expect(errors[1]).toMatchObject({
+            id: null,
+            popularity: 0,
+            sourceRow: 3,
+        });
+        expect(readLines(resolve(output, "artists.jsonl"))).toEqual([
+            expect.objectContaining({ spotifyId: id("1"), syncEnabled: false }),
+        ]);
+        prepareImport({ output: resolve(root, "second"), source });
+        for (const file of readdirSync(output)) {
+            expect(readFileSync(resolve(output, file))).toEqual(
+                readFileSync(resolve(root, "second", file))
+            );
+        }
+    });
+
+    it("excludes bad captures before follower pruning and weekly capture selection", () => {
+        const source = fixture("backup", [
+            [id("1"), monday - 7 * 86400, 5, 0],
+            [id("1"), monday, 10000, null],
+            [id("1"), monday + 1, 1, 101],
+            [id("2"), monday, 9999, 10],
+            [id("2"), monday + 1, 50000, -1],
+            [id("1"), monday * 1000, 1, 10],
+        ]);
+        const output = resolve(root, "export");
+        const report = prepareImport({ output, source });
+        expect(report.counts).toMatchObject({
+            artists: 1,
+            excludedArtists: 1,
+            invalidRows: 3,
+            snapshots: 2,
+            sourceRows: 6,
+        });
+        const snapshots = readLines(
+            resolve(output, "snapshots.jsonl")
+        ) as ExportSnapshot[];
+        expect(snapshots.map((row) => row.metrics)).toEqual([
+            { followers: 10000, monthlyListeners: null, popularity: null },
+            { followers: 5, monthlyListeners: null, popularity: 0 },
+        ]);
+        expect(readLines(resolve(output, "errors.jsonl"))).toHaveLength(3);
+    });
 
     it("rejects a roster-only database and existing output", () => {
         const source = fixture("backup", []);
