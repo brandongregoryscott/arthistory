@@ -233,3 +233,15 @@ pm2 start arthistory-api
 Application routes are unversioned and start at the API origin, without an `/api` prefix. `GET /health` returns HTTP 200 with `{ "ok": true }`. Previous application paths have been removed; deploy the matching API and frontend builds together.
 
 The health check confirms the server responds; it does not probe external services or database availability.
+
+### Inspecting public artist metadata
+
+Run `npm run inspect-artist -- --artist <Spotify-ID-or-URL>` to inspect a public
+artist page without Spotify API credentials or PocketBase configuration. It prints
+the verified artist ID, display name and available audience counts as JSON. Missing
+counts and popularity remain null; measured zero remains zero.
+
+This command reads one page and does not save metadata or enable collection. It
+rejects redirects and oversized responses, bounds request duration, and reports
+HTTP status/Retry-After on failure without retrying. Automated name backfill and
+collection will share persisted pacing and cooldown controls in a later layer.
