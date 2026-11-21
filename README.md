@@ -243,5 +243,24 @@ counts and popularity remain null; measured zero remains zero.
 
 This command reads one page and does not save metadata or enable collection. It
 rejects redirects and oversized responses, bounds request duration, and reports
-HTTP status/Retry-After on failure without retrying. Automated name backfill and
-collection will share persisted pacing and cooldown controls in a later layer.
+HTTP status/Retry-After on failure without retrying. Automated name backfill uses
+the controls below; ongoing snapshot collection remains a separate step.
+
+### Filling missing artist names
+
+The PocketBase `artist-name-backfill` cron fills one unresolved artist per invocation
+and runs once per minute. It starts disabled. After importing artists, enable
+`namesBackfillEnabled` on the global `sync_settings` record to begin; turn it off
+to stop. This setting is independent of snapshot collection and never enrolls artists.
+
+Backfill shares `requestIntervalSeconds`, `requestTimeoutSeconds` and the global
+`sync_state` request/lease/cooldown fields. Attempts are reserved before fetching;
+interrupted or failed artists remain deferred for a day. HTTP 403/429 pauses automated
+page work for at least an hour; other failures pause it for at least five minutes.
+Longer Retry-After delays are preserved. Owner names/aliases and enrollment remain
+untouched, including edits made while a page is being fetched.
+
+Each completed attempt logs named/unresolved coverage and HTTP status. To inspect
+unresolved IDs, filter the PocketBase artists collection with `displayName = ""`.
+The API's normal cache refresh picks up resolved names. No public search request
+fetches pages, and no historical snapshots are manufactured by backfill.

@@ -1,4 +1,7 @@
-import { isPlainObject, isString } from "lodash";
+import {
+    MAX_ARTIST_PAGE_BYTES,
+    parseArtistPage as parsePage,
+} from "../../../../pocketbase/hooks/artist-page-parser.cjs";
 import { isSpotifyArtistId } from "../utilities/id-validation";
 
 type ArtistPage = {
@@ -13,8 +16,6 @@ type ArtistPage = {
 
 type PageHttpErrorOptions = { retryAfterMs: null | number; status: number };
 
-const MAX_DISPLAY_NAME_LENGTH = 500;
-const MAX_ARTIST_PAGE_BYTES = 2 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 15000;
 
 class ArtistPageHttpError extends Error {
@@ -62,60 +63,13 @@ class ArtistPageClient {
 }
 
 const parseArtistPage = (html: string, id: string): ArtistPage => {
-    if (!isSpotifyArtistId(id)) {
-        throw new Error("Expected a Spotify artist ID.");
-    }
     if (Buffer.byteLength(html) > MAX_ARTIST_PAGE_BYTES) {
         throw new Error("Artist page exceeds the response size limit.");
     }
 
-    const script = [
-        ...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi),
-    ].find((match) =>
-        /(?:^|\s)id\s*=\s*["']initialState["']/i.test(match[1] ?? "")
+    return parsePage(html, id, (encoded) =>
+        Buffer.from(encoded, "base64").toString("utf8")
     );
-    if (script?.[2] == null || script[2].trim() === "") {
-        throw new Error("Artist page is missing initialState.");
-    }
-
-    let state: unknown;
-    try {
-        state = JSON.parse(
-            Buffer.from(script[2].trim(), "base64").toString("utf8")
-        );
-    } catch {
-        throw new Error("Artist page contains invalid initialState JSON.");
-    }
-
-    const uri = `spotify:artist:${id}`;
-    const artist = asRecord(
-        asRecord(asRecord(asRecord(state).entities).items)[uri]
-    );
-    if (artist.uri !== uri) {
-        throw new Error(
-            "Artist page identity did not match the requested artist."
-        );
-    }
-    const displayName = asRecord(artist.profile).name;
-    if (
-        !isString(displayName) ||
-        displayName.trim() === "" ||
-        displayName.length > MAX_DISPLAY_NAME_LENGTH
-    ) {
-        throw new Error("Artist page is missing a valid display name.");
-    }
-
-    const stats = asRecord(artist.stats);
-
-    return {
-        displayName: displayName.trim(),
-        metrics: {
-            followers: nullableCount(stats.followers),
-            monthlyListeners: nullableCount(stats.monthlyListeners),
-            popularity: null,
-        },
-        spotifyId: id,
-    };
 };
 
 const parseSpotifyArtistId = (input: string): string => {
@@ -190,14 +144,6 @@ const parseRetryAfter = (value: null | string): null | number => {
 
     return Number.isSafeInteger(delay) ? Math.max(0, delay) : null;
 };
-
-const asRecord = (value: unknown): Record<string, unknown> =>
-    isPlainObject(value) ? (value as Record<string, unknown>) : {};
-
-const nullableCount = (value: unknown): null | number =>
-    typeof value === "number" && Number.isSafeInteger(value) && value >= 0
-        ? value
-        : null;
 
 export {
     ArtistPageClient,

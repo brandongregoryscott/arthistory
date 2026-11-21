@@ -47,6 +47,27 @@ test(
                 new URL("./fixture.js", import.meta.url),
                 resolve(hooks, "fixture.js")
             );
+            cpSync(
+                new URL("./name-backfill-fixture.js", import.meta.url),
+                resolve(hooks, "name-backfill-fixture.js")
+            );
+            const pageFixture = readFileSync(
+                resolve("apps/api/src/artists/fixtures/artist.html"),
+                "utf8"
+            );
+            const state = JSON.parse(
+                Buffer.from(
+                    />([^<]+)</.exec(pageFixture)[1],
+                    "base64"
+                ).toString("utf8")
+            );
+            state.entities.items[
+                "spotify:artist:6lcwlkAjBPSKnFBZjjZFJs"
+            ].profile.name = "東京事変 & Sigur Rós";
+            const unicodeFixture =
+                '<script id="initialState">' +
+                Buffer.from(JSON.stringify(state)).toString("base64") +
+                "</script>";
             const prepared = resolve(root, "prepared");
             execFileSync(process.execPath, [
                 "--import",
@@ -75,6 +96,23 @@ test(
             writeFileSync(
                 resolve(hooks, "test.pb.js"),
                 `
+            onRecordUpdate((e) => {
+                if (e.record.getString("attemptToken") === "" && e.record.original().getString("attemptToken") === "rollback-attempt") { throw new Error("Simulated completion save failure"); }
+                return e.next();
+            }, "sync_state");
+            for (const mode of ["crash", "restart"]) {
+                $app.rootCmd.addCommand(new Command({
+                    use: "test-name-" + mode,
+                    run: () => { $app.bootstrap(); require(__hooks + "/name-backfill-fixture.js")[mode]($app); }
+                }));
+            }
+            $app.rootCmd.addCommand(new Command({
+                use: "test-name-backfill",
+                run: () => {
+                    $app.bootstrap();
+                    require(__hooks + "/name-backfill-fixture.js")($app, ${JSON.stringify(pageFixture)}, ${JSON.stringify(unicodeFixture)});
+                }
+            }));
             $app.rootCmd.addCommand(new Command({
                 use: "test-schema",
                 run: () => {
@@ -117,11 +155,14 @@ test(
             );
             assert.match(run("migrate", "up"), /No new migrations/);
             assert.match(
-                run("migrate", "down", "2", "--automigrate=false"),
+                run("migrate", "down", "3", "--automigrate=false"),
                 /Reverted 1794900000_collections.js/
             );
             run("migrate", "up");
             run("test-schema");
+            run("test-name-crash");
+            run("test-name-restart");
+            run("test-name-backfill");
         } finally {
             rmSync(root, { recursive: true, force: true });
         }
