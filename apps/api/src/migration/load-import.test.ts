@@ -527,6 +527,90 @@ describe("loadImport", () => {
 
         expect(result.created).toBe(6);
     });
+
+    it("skips whole-export preflight when requested and still reconciles existing records", async () => {
+        const remote = mockPocketBase();
+        const onProgress = vi.fn();
+        const options = {
+            client: new PocketBaseClient(config),
+            directory,
+            onProgress,
+            skipPreflight: true,
+        };
+        expect(await loadImport(options)).toMatchObject({
+            created: 6,
+            skipped: 0,
+        });
+        expect(onProgress.mock.calls.map(([event]) => event.phase)).toEqual([
+            "connecting",
+            "importing",
+            "complete",
+        ]);
+        const writes = remote.batches.length;
+        expect(await loadImport(options)).toMatchObject({
+            created: 0,
+            skipped: 6,
+        });
+        expect(remote.batches).toHaveLength(writes);
+    });
+
+    it.each(["metrics", "count", "orphan", "oversized"] as const)(
+        "stops on a late %s error in streaming mode after earlier valid batches",
+        async (problem) => {
+            const remote = mockPocketBase();
+            const file = resolve(directory, "snapshots.jsonl");
+            const original = readFileSync(file, "utf8");
+            const reportFile = resolve(directory, "report.json");
+            const originalReport = readFileSync(reportFile, "utf8");
+            if (problem === "count") {
+                const report = JSON.parse(originalReport);
+                report.counts.snapshots++;
+                writeFileSync(reportFile, JSON.stringify(report));
+            } else {
+                const rows = original
+                    .trim()
+                    .split("\n")
+                    .map((line) => JSON.parse(line));
+                if (problem === "metrics") {
+                    delete rows[rows.length - 1].metrics.followers;
+                } else if (problem === "orphan") {
+                    rows[rows.length - 1].artist = "orphanartist001";
+                }
+                const lines = rows.map((row) => JSON.stringify(row));
+                if (problem === "oversized") {
+                    lines[lines.length - 1] = "x".repeat(20000);
+                }
+                writeFileSync(file, lines.join("\n") + "\n");
+            }
+            const onProgress = vi.fn();
+            const options = {
+                batchSize: 2,
+                client: new PocketBaseClient(config),
+                directory,
+                onProgress,
+                skipPreflight: true,
+            };
+            await expect(loadImport(options)).rejects.toThrow(
+                "Read prepared export records"
+            );
+            expect(remote.batches.length).toBeGreaterThan(0);
+            const created =
+                remote.records.artists.size + remote.records.snapshots.size;
+            expect(created).toBeGreaterThan(0);
+            expect(created).toBeLessThanOrEqual(6);
+            expect(
+                onProgress.mock.calls.some(
+                    ([event]) => event.phase === "complete"
+                )
+            ).toBe(false);
+            writeFileSync(file, original);
+            writeFileSync(reportFile, originalReport);
+            expect(await loadImport(options)).toMatchObject({
+                created: 6 - created,
+                skipped: created,
+            });
+        }
+    );
 });
 
 const mockPocketBase = () => {

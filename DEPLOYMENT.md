@@ -143,8 +143,11 @@ single verified merged backup, with confirmed timestamp units and enough tempora
 disk space. Use `--keep-id` for any defaults that must survive the pruning cutoff.
 Compare report counts, retained history and nulls after loading; rerunning the same
 export resumes safely. Existing enrollment is preserved; newly imported artists stay off.
-Restarting repeats full export validation and existing-record lookups; it does not
-resume from a saved cursor. Progress logs distinguish validation from writes. For
+By default, restarting repeats full export validation and existing-record lookups;
+it does not resume from a saved cursor. Use `--skip-preflight` to omit the initial
+validation/spooling pass and validate records as they stream into import batches.
+Late errors can then leave earlier batches imported; keep the prepared files
+unchanged. Progress logs distinguish validation from writes. For
 terminal-independent imports with logs under `/migration`, use the
 [background command](README.md#optional-historical-import); a container restart
 still stops the process.
