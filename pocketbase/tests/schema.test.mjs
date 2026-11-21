@@ -55,6 +55,11 @@ test(
                 new URL("./collector-fixture.js", import.meta.url),
                 resolve(hooks, "collector-fixture.js")
             );
+            cpSync(
+                new URL("./restore-fixture.js", import.meta.url),
+                resolve(hooks, "restore-fixture.js")
+            );
+            const restorePhase = resolve(root, "restore-phase");
             const pageFixture = readFileSync(
                 resolve("apps/api/src/artists/fixtures/artist.html"),
                 "utf8"
@@ -104,6 +109,7 @@ test(
                 if (e.record.getString("attemptToken") === "" && e.record.original().getString("attemptToken") === "rollback-attempt") { throw new Error("Simulated completion save failure"); }
                 return e.next();
             }, "sync_state");
+            $app.rootCmd.addCommand(new Command({ use: "test-restore", run: (cmd) => { $app.bootstrap(); require(__hooks + "/restore-fixture.js")($app, cmd, ${JSON.stringify(restorePhase)}); } }));
             $app.rootCmd.addCommand(new Command({ use: "test-collector", run: () => { $app.bootstrap(); require(__hooks + "/collector-fixture.js")($app); } }));
             for (const phase of ["crash", "restart"]) {
                 $app.rootCmd.addCommand(new Command({ use: "test-collector-" + phase, run: () => { $app.bootstrap(); require(__hooks + "/name-backfill-fixture.js")[phase]($app, "snapshots"); } }));
@@ -177,6 +183,8 @@ test(
             run("test-collector");
             run("test-collector-crash");
             run("test-collector-restart");
+            run("test-restore");
+            assert.equal(readFileSync(restorePhase, "utf8"), "verified");
         } finally {
             rmSync(root, { recursive: true, force: true });
         }

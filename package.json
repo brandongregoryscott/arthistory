@@ -33,6 +33,7 @@
     "packageManager": "npm@11.20.0",
     "private": true,
     "scripts": {
+        "add-artist": "tsx apps/api/src/artists/add-artist.ts",
         "build": "turbo build",
         "build:force": "turbo build --force",
         "ci:check": "gagen --lint",

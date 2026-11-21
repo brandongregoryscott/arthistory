@@ -24,7 +24,7 @@ The Spotify API provides the current follower count and a popularity score for a
 
 ## How it works
 
-Artist data is synced and pushed to a SQLite database stored on S3 with scripts from the [scripts](https://github.com/brandongregoryscott/arthistory/blob/main/packages/scripts/src/sync/sync.ts) package in the repo. This database is pulled down and bundled with the API server on build.
+The Express API serves stored artist metadata and weekly snapshots from a PocketBase sidecar. The owner controls enrollment and collection policy in its private dashboard. Public search uses an in-memory name index; native PocketBase backups protect the application data.
 
 Not every artist on Spotify is tracked, but new artists can be requested through the web UI.
 
@@ -32,11 +32,11 @@ Not every artist on Spotify is tracked, but new artists can be requested through
 
 ### PocketBase sidecar
 
-The API currently uses the legacy database. To start the optional sidecar, set the
-server-side PocketBase credentials in the root .env (see apps/api/.env.example):
+Set the server-side PocketBase credentials in the root .env (see
+apps/api/.env.example), then start the sidecar and API:
 
 ```sh
-docker compose --profile pocketbase up -d --build pocketbase
+docker compose up -d --build pocketbase api
 ```
 
 The owner dashboard is at /_/ on the PocketBase origin. To start its tunnel:
@@ -278,3 +278,51 @@ metrics. A newer capture updates that week's row. Snapshot and success state com
 together. Missed weeks are left missing. Dashboard name edits become owner metadata
 and are preserved during subsequent collection. Disable the global policy or an
 artist to stop its collection; in-flight work rechecks that policy before writing.
+
+## Minimal PocketBase rollout
+
+Configure the root `.env` with the PocketBase server credentials and local CLI URL
+from `apps/api/.env.example`. Compose starts PocketBase with persistent storage and
+points the API metadata/history reads at it. Keep the existing deployment/image
+and original backup files available for rollback.
+
+```sh
+docker compose up -d --build pocketbase api tunnel
+npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZjjZFJs
+npm run add-artist -- --artist https://open.spotify.com/artist/5AyEXCtu3xnnsTGCo4RVZh
+```
+
+`add-artist` verifies one public page, then creates a named artist with syncing off.
+Existing artists and their owner metadata/enrollment are preserved. Its record IDs
+match the import tooling, so a minimal roster can collect before history is loaded.
+In the private PocketBase dashboard, enroll only that small roster and enable the
+global collection policy. Verify current-week snapshots and real capture times,
+then check the Express routes and chart before expanding enrollment.
+
+Historical import is optional for the initial rollout. When ready, inventory the
+latest merged R2 backup, prepare/load retained history with the commands above,
+and compare report counts and coverage. Imported artists remain disabled. Enable
+name backfill separately and monitor unresolved coverage and upstream cooldowns.
+Never delete original backups or enable the whole imported roster automatically.
+
+### Native backups and recovery
+
+Use PocketBase Settings > Backups to set a daily schedule (for example `0 3 * * *`)
+and bounded retention (for example seven scheduled backups). Configure its native
+S3 destination for the `arthistory-backups` R2 bucket with the account endpoint,
+region `auto`, and backup-scoped credentials. Keep credentials/encryption keys out
+of Git. Do not reuse or delete migration source objects. No custom backup manifest
+or application backup endpoint is needed.
+
+Before cutover, create a native backup and restore it into an isolated copy with
+the matching PocketBase version and deployed hooks/migrations. Allow at least twice
+the backup size as free space. Restore through PocketBase's native backup controls;
+it replaces the data directory and restarts the app. Keep collection/backfill off
+in the rehearsal copy. Verify records, null metrics, settings, files, search-index
+rebuild and chart queries after restart. Retain the old image/configuration and
+source backups until the restored application passes those checks.
+
+The native test suite rehearses backup, mutation, native restore/restart and
+verification of records/settings/storage files in a disposable directory. R2 access,
+pruned production database/index size, backup size/duration, real query latency and
+visual chart verification still need measurement on the deployment target.

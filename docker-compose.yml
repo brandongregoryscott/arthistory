@@ -1,90 +1,83 @@
 services:
-  # Opt in during migration; the existing API continues using its legacy DB.
-  pocketbase:
-    profiles: ["pocketbase", "pocketbase-tunnel"]
-    build:
-      context: .
-      dockerfile: Dockerfile.pocketbase
-    environment:
-      POCKETBASE_SUPERUSER_EMAIL: ${POCKETBASE_SUPERUSER_EMAIL:-}
-      POCKETBASE_SUPERUSER_PASSWORD: ${POCKETBASE_SUPERUSER_PASSWORD:-}
-    ports:
-      - "127.0.0.1:${POCKETBASE_PORT:-8090}:8090"
-    volumes:
-      - pocketbase-data:/pb_data
-    restart: unless-stopped
+    pocketbase:
+        build:
+            context: .
+            dockerfile: Dockerfile.pocketbase
+        environment:
+            POCKETBASE_SUPERUSER_EMAIL: ${POCKETBASE_SUPERUSER_EMAIL:-}
+            POCKETBASE_SUPERUSER_PASSWORD: ${POCKETBASE_SUPERUSER_PASSWORD:-}
+        ports:
+            - "127.0.0.1:${POCKETBASE_PORT:-8090}:8090"
+        volumes:
+            - pocketbase-data:/pb_data
+        restart: unless-stopped
 
-  pocketbase-tunnel:
-    profiles: ["pocketbase-tunnel"]
-    image: tuns-tunnel:latest # built locally on the host from the tuns-tunnel repo
-    pull_policy: never
-    environment:
-      TUNS_NAME: ${POCKETBASE_TUNNEL_NAME:-arthistory-pocketbase}
-      TARGET_HOST: pocketbase
-      TARGET_PORT: 8090
-    depends_on:
-      pocketbase:
-        condition: service_healthy
-    volumes:
-      - ${TUNS_SSH_KEY_PATH:-/root/.ssh/tuns_ed25519}:/root/.ssh/id_ed25519:ro
-    restart: unless-stopped
+    pocketbase-tunnel:
+        profiles: ["pocketbase-tunnel"]
+        image: tuns-tunnel:latest # built locally on the host from the tuns-tunnel repo
+        pull_policy: never
+        environment:
+            TUNS_NAME: ${POCKETBASE_TUNNEL_NAME:-arthistory-pocketbase}
+            TARGET_HOST: pocketbase
+            TARGET_PORT: 8090
+        depends_on:
+            pocketbase:
+                condition: service_healthy
+        volumes:
+            - ${TUNS_SSH_KEY_PATH:-/root/.ssh/tuns_ed25519}:/root/.ssh/id_ed25519:ro
+        restart: unless-stopped
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile.api
-    ports:
-      # Public requests must pass through the header-rewriting HTTP tunnel.
-      - "127.0.0.1:3001:3001"
-    env_file: .env
-    environment:
-      - TRUST_PROXY_HOPS=1
-      - PORT=3001
-      - DATABASE_PATH=/data/_spotify-data.db
-      - POCKETBASE_URL=http://pocketbase:8090
-      - METRICS_HOST=0.0.0.0
-      - METRICS_PORT=9464
-      - SOURCE_COMMIT=${SOURCE_COMMIT:-}
-    networks:
-      default:
-      observability:
-        aliases:
-          - arthistory-api-metrics
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    volumes:
-      - /home/brandon/arthistory/data:/data
+    api:
+        build:
+            context: .
+            dockerfile: Dockerfile.api
+        ports:
+            # Public requests must pass through the header-rewriting HTTP tunnel.
+            - "127.0.0.1:3001:3001"
+        env_file: .env
+        environment:
+            - TRUST_PROXY_HOPS=1
+            - PORT=3001
+            - DATABASE_PATH=/data/_spotify-data.db
+            - POCKETBASE_URL=http://pocketbase:8090
+            - ARTIST_METADATA_SOURCE=pocketbase
+            - SNAPSHOTS_USE_POCKETBASE=true
+            - METRICS_HOST=0.0.0.0
+            - METRICS_PORT=9464
+            - SOURCE_COMMIT=${SOURCE_COMMIT:-}
+        networks:
+            default:
+            observability:
+                aliases:
+                    - arthistory-api-metrics
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+            interval: 30s
+            timeout: 5s
+            retries: 3
+            start_period: 10s
+        depends_on:
+            pocketbase:
+                condition: service_healthy
 
-  # cron:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.cron
-  #   env_file: .env
-  #   volumes:
-  #     - /home/brandon/arthistory/data:/data
-
-  tunnel:
-    image: tuns-tunnel:latest # built locally on the host from the tuns-tunnel repo
-    pull_policy: never
-    environment:
-      - TUNS_NAME=arthistory-api
-      - TARGET_HOST=api
-      - TARGET_PORT=3001
-    depends_on:
-      - api
-    volumes:
-      - /root/.ssh/tuns_ed25519:/root/.ssh/id_ed25519:ro
-    restart: always
+    tunnel:
+        image: tuns-tunnel:latest # built locally on the host from the tuns-tunnel repo
+        pull_policy: never
+        environment:
+            - TUNS_NAME=arthistory-api
+            - TARGET_HOST=api
+            - TARGET_PORT=3001
+        depends_on:
+            - api
+        volumes:
+            - /root/.ssh/tuns_ed25519:/root/.ssh/id_ed25519:ro
+        restart: always
 
 volumes:
-  pocketbase-data:
-  data:
+    pocketbase-data:
+    data:
 
 networks:
-  observability:
-    external: true
-    name: observability
+    observability:
+        external: true
+        name: observability
