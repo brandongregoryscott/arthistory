@@ -2,8 +2,10 @@ import type { RecordModel } from "pocketbase";
 import { isEmpty } from "lodash";
 import { rmSync } from "node:fs";
 import type { PocketBaseClient } from "../storage/pocketbase";
+import type { ImportContext } from "./import-error";
 import type { ImportItem } from "./prepared-records";
 import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
+import { importError } from "./import-error";
 import { snapshotColumns } from "./prepared-records";
 import { readJsonLines, stageImport } from "./staged-import";
 
@@ -17,6 +19,7 @@ type LoadBatchCounts = { created: number; skipped: number };
 
 type LoadBatchOptions = {
     client: PocketBaseClient;
+    context: ImportContext;
     counts: LoadBatchCounts;
     items: ImportItem[];
 };
@@ -43,6 +46,11 @@ const loadImport = async (options: LoadImportOptions) => {
         skipped: 0,
         snapshots: staged.snapshots,
     };
+    const context: ImportContext = {
+        batch: 0,
+        records: [],
+        stage: "Check PocketBase authentication and required collections",
+    };
 
     try {
         await client.ready();
@@ -52,23 +60,26 @@ const loadImport = async (options: LoadImportOptions) => {
             pending.push(item);
 
             if (pending.length === batchSize) {
-                await loadBatch({ client, counts, items: pending });
+                await loadBatch({ client, context, counts, items: pending });
                 pending = [];
             }
         }
 
         if (!isEmpty(pending)) {
-            await loadBatch({ client, counts, items: pending });
+            await loadBatch({ client, context, counts, items: pending });
         }
 
         return counts;
+    } catch (error) {
+        throw importError(error, context, counts);
     } finally {
         rmSync(staged.temporary, { force: true, recursive: true });
     }
 };
 
 const loadBatch = async (options: LoadBatchOptions) => {
-    const { client, counts, items } = options;
+    const { client, context, counts, items } = options;
+    context.batch++;
 
     const missing = new Set<ImportItem>();
 
@@ -80,6 +91,11 @@ const loadBatch = async (options: LoadBatchOptions) => {
         if (isEmpty(records)) {
             continue;
         }
+        context.stage = `Look up existing ${collection} records`;
+        context.records = records.map((item) => ({
+            collection: item.collection,
+            id: item.record.id,
+        }));
 
         const result = await client.run((pb) => {
             const filter = records
@@ -136,6 +152,11 @@ const loadBatch = async (options: LoadBatchOptions) => {
     }
 
     const requests = items.filter((item) => missing.has(item));
+    context.stage = "Create PocketBase record batch";
+    context.records = requests.map((item) => ({
+        collection: item.collection,
+        id: item.record.id,
+    }));
     const results = await client.run((pb) => {
         const batch = pb.createBatch();
 
