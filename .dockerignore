@@ -8,3 +8,4 @@ build
 .turbo
 
 pocketbase/pb_data/
+migration-data/

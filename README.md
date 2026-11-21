@@ -49,9 +49,14 @@ npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZj
 
 From a Compose host, use `docker compose exec api npm run add-artist -- --artist <id>`.
 The container inherits its PocketBase credentials and internal URL from Compose.
-For import commands, source/prepared/output paths must be accessible inside the
-container; mount original SQLite sources read-only and keep output in a separate
-writable mount. The image contains compiled commands, not the repository or dev tools.
+Production Compose mounts `/root/arthistory-migration` on the host at `/migration`
+inside the API container, writable for prepared output. Set `MIGRATION_DATA_PATH`
+to override the host directory; local Compose defaults to `./migration-data`.
+Copy any backup held only in the old container to the host directory before
+redeploying. Use `--source /migration/legacy-backup.db --output /migration/prepared-data`
+for preparation, then `--input /migration/prepared-data` for import. The importer
+opens the source read-only. The image contains compiled commands, not the repository
+or dev tools.
 
 Production Compose starts the PocketBase tuns.sh tunnel automatically, using
 `POCKETBASE_TUNNEL_NAME` (default `arthistory-pocketbase`) and the host's registered
