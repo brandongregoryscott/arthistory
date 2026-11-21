@@ -6,7 +6,7 @@
     "private": true,
     "scripts": {
         "build": "vite build",
-        "dev": "vite --port 3000",
+        "dev": "vite --port 6767",
         "preview": "vite preview",
         "start": "vite preview",
         "typecheck": "tsc --noEmit"

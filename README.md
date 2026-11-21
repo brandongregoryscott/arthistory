@@ -14,6 +14,13 @@ Use Node from `.nvmrc`. Copy `apps/api/.env.example` to the root `.env`, configu
 server-side PocketBase credentials, and keep that file out of Git. Compose starts
 the persistent PocketBase sidecar and waits for it before starting the API.
 
+The default port set follows boilerplate's adjacent-port convention: web `6767`,
+API `6768`, and PocketBase `6769`. Compose host ports are configurable with `PORT`
+and `DB_PORT`; update the host-side URLs to match any overrides.
+PocketBase publishes on `127.0.0.1:6769` for host-side commands. If that port is
+occupied, set `DB_PORT` and the host-side `POCKETBASE_URL` to a free port in
+`.env`. The API container and dashboard tunnel use `pocketbase:8090` internally.
+
 ```sh
 npm ci
 docker compose up -d --build pocketbase
