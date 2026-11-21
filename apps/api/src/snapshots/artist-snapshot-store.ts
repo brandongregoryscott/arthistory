@@ -7,10 +7,10 @@ import { isSpotifyArtistId } from "../utilities/id-validation";
 type SnapshotRecord = {
     capturedAt: string;
     expand?: { artist?: { spotifyId: string } };
+    followers: number;
     id: string;
-    metrics: Required<
-        Pick<ArtistSnapshot, "followers" | "monthlyListeners" | "popularity">
-    >;
+    monthlyListeners: number;
+    popularity: number;
     weekStart: string;
 };
 
@@ -88,7 +88,7 @@ class ArtistSnapshotStore {
                     .collection("snapshots")
                     .getList<SnapshotRecord>(1, PAGE_SIZE, {
                         expand: "artist",
-                        fields: "id,weekStart,capturedAt,metrics,expand.artist.spotifyId",
+                        fields: "id,weekStart,capturedAt,followers,monthlyListeners,popularity,expand.artist.spotifyId",
                         filter,
                         signal,
                         skipTotal: true,
@@ -115,10 +115,15 @@ class ArtistSnapshotStore {
                 cursor = record.id;
                 snapshots.push({
                     capturedAt: new Date(record.capturedAt).toISOString(),
-                    followers: record.metrics.followers,
+                    followers:
+                        record.followers === -1 ? null : record.followers,
                     id,
-                    monthlyListeners: record.metrics.monthlyListeners,
-                    popularity: record.metrics.popularity,
+                    monthlyListeners:
+                        record.monthlyListeners === -1
+                            ? null
+                            : record.monthlyListeners,
+                    popularity:
+                        record.popularity === -1 ? null : record.popularity,
                     timestamp: new Date(record.weekStart).toISOString(),
                 });
             }

@@ -151,5 +151,14 @@ const isCanonicalDate = (input: unknown): input is string =>
     Number.isFinite(Date.parse(input)) &&
     new Date(input).toISOString() === input;
 
-export { importId, validateArtist, validateSnapshot };
+// Keep prepared exports compatible with existing files; only PocketBase storage
+// uses numeric columns. Missing metrics have the explicit -1 sentinel.
+const snapshotColumns = ({ metrics, ...record }: PreparedSnapshot) => ({
+    ...record,
+    followers: metrics.followers ?? -1,
+    monthlyListeners: metrics.monthlyListeners ?? -1,
+    popularity: metrics.popularity ?? -1,
+});
+
+export { importId, snapshotColumns, validateArtist, validateSnapshot };
 export type { ImportItem, PreparedArtist, PreparedSnapshot };

@@ -92,10 +92,7 @@ module.exports = (app) => {
         "canonical UTC Monday snapshot"
     );
     const firstId = rows[0].id;
-    assert(
-        JSON.parse(rows[0].getString("metrics")).followers === null,
-        "null does not become zero"
-    );
+    assert(rows[0].getInt("followers") === -1, "null does not become zero");
     artist = app.findRecordById("artists", artist.id);
     assert(
         artist.getString("lastSuccessAt") === "2026-01-05 12:00:00.000Z" &&
@@ -131,9 +128,8 @@ module.exports = (app) => {
     assert(
         rows.length === 1 &&
             rows[0].id === firstId &&
-            JSON.parse(rows[0].getString("metrics")).monthlyListeners ===
-                null &&
-            JSON.parse(rows[0].getString("metrics")).followers === 0,
+            rows[0].getInt("monthlyListeners") === -1 &&
+            rows[0].getInt("followers") === 0,
         "latest complete capture replaces same week's metrics"
     );
     artist = app.findRecordById("artists", artist.id);

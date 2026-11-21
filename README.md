@@ -82,8 +82,12 @@ it for five minutes. Longer Retry-After delays are preserved.
 
 Collection writes the current Monday-start UTC week and actual `capturedAt` time.
 Newer captures replace that week's complete metrics. Snapshot/success writes commit
-together. Missing followers/popularity/monthlyListeners remain null, measured zero
-remains zero, and missed weeks stay missing. Dashboard name corrections become
+together. Snapshots store `followers`, `monthlyListeners` and `popularity` in numeric
+columns; `-1` means unavailable and measured zero remains zero. HTML collection
+always writes `popularity = -1`; legacy imports retain available popularity values.
+Express translates `-1` to `null` so charts show gaps, and missed weeks stay missing.
+Prepared import JSONL retains its nullable metrics object for compatibility; the
+loader converts it to numeric columns before writing PocketBase records. Dashboard name corrections become
 owner metadata and are preserved, including edits during a fetch.
 
 Enable `sync_settings.namesBackfillEnabled` to fill unresolved artist names without

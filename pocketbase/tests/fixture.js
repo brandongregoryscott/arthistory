@@ -80,7 +80,9 @@ module.exports = (app) => {
         artist: artist.id,
         weekStart: "2026-01-05 00:00:00.000Z",
         capturedAt: "2026-01-07 12:34:56.000Z",
-        metrics: { followers: null, popularity: 0, monthlyListeners: null },
+        followers: -1,
+        popularity: 0,
+        monthlyListeners: -1,
         source: "fixture",
     };
     const row = create("snapshots", snapshot);
@@ -117,20 +119,18 @@ module.exports = (app) => {
             row.id,
         "capture freshness order"
     );
-    const stored = JSON.parse(
-        app.findRecordById("snapshots", row.id).getString("metrics")
-    );
+    const stored = app.findRecordById("snapshots", row.id);
     assert(
-        stored.followers === null &&
-            stored.popularity === 0 &&
-            stored.monthlyListeners === null,
-        "null and zero roundtrip"
+        stored.getInt("followers") === -1 &&
+            stored.getInt("popularity") === 0 &&
+            stored.getInt("monthlyListeners") === -1,
+        "missing sentinel and zero roundtrip"
     );
     rejects(() => create("snapshots", snapshot), "artist/week uniqueness");
     for (const metrics of [
-        { followers: 1, popularity: 101, monthlyListeners: null },
-        { followers: -1, popularity: null, monthlyListeners: null },
-        { followers: null, popularity: null },
+        { followers: 1, popularity: 101, monthlyListeners: -1 },
+        { followers: -2, popularity: -1, monthlyListeners: -1 },
+        { followers: 1.5, popularity: -1, monthlyListeners: -1 },
     ]) {
         rejects(
             () =>
@@ -138,7 +138,7 @@ module.exports = (app) => {
                     ...snapshot,
                     weekStart: "2026-01-12 00:00:00.000Z",
                     capturedAt: "2026-01-13 00:00:00.000Z",
-                    metrics,
+                    ...metrics,
                 }),
             "invalid metrics"
         );
@@ -184,11 +184,9 @@ module.exports = (app) => {
         "success rollback"
     );
     row.set("capturedAt", "2026-01-08 00:00:00.000Z");
-    row.set("metrics", {
-        followers: 10000,
-        popularity: null,
-        monthlyListeners: 42,
-    });
+    row.set("followers", 10000);
+    row.set("popularity", -1);
+    row.set("monthlyListeners", 42);
     app.save(row);
     assert(
         app.countRecords("snapshots") === 1,

@@ -65,7 +65,9 @@ module.exports = (app, items, command) => {
         const stored = app.findRecordById("snapshots", item.record.id);
 
         if (
-            stored.getString("metrics") !== JSON.stringify(item.record.metrics)
+            ["followers", "monthlyListeners", "popularity"].some(
+                (key) => stored.getInt(key) !== item.record[key]
+            )
         ) {
             throw new Error("Prepared metrics failed the native roundtrip.");
         }

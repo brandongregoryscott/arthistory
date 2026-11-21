@@ -105,7 +105,8 @@ The command creates named artists with syncing off. In the dashboard:
 1. Set `artists.syncEnabled` on only for the chosen few artists.
 2. Set `sync_settings.enabled` on; leave name backfill off for now.
 3. Wait a few minute ticks. Verify one snapshot per artist/current Monday-start UTC
-   week, a real `capturedAt`, nullable metrics and updated artist success/schedule fields.
+   week, a real `capturedAt`, numeric audience columns (`-1` when unavailable) and
+   updated artist success/schedule fields.
 4. Check logs for errors or cooldowns. Do not clear persisted cooldowns to force retries.
 
 Configure native daily backups and bounded retention in Settings > Backups. Verify
@@ -148,3 +149,21 @@ If cutover fails, turn off both jobs, restore the previous API/frontend/configur
 and leave the PocketBase volume intact. Re-enable the old collector only after the
 new collector is stopped. Keep original sources and rollback artifacts until recovery
 has been verified. Never use `docker compose down -v` as a rollback step.
+
+## Snapshot numeric-column upgrade
+
+Migration `1794900003_snapshot_columns.js` replaces the JSON `metrics` field with
+`followers`, `monthlyListeners`, and `popularity` number fields. It preserves IDs,
+weekly identity, timestamps, provenance, and all available values, including legacy
+popularity and measured zeros. JSON nulls become `-1`. HTML captures always use
+`popularity = -1`. In the dashboard, enter `-1` for unavailable values; PocketBase's
+number fields otherwise default to zero. The Express response still uses nulls.
+
+Take a native backup, pause collection, and stop Express before upgrading the
+sidecar and API together: the old API/collector expects JSON, while the new code
+expects columns. PocketBase applies the conversion transactionally at startup;
+allow temporary disk space for schema changes and verify row counts and sample
+values before resuming service/collection. Prepared legacy exports remain compatible.
+For rollback, stop the API/collector, run `pocketbase migrate down 1` with the matching
+data/migrations directories, then deploy the previous application version. The down
+migration reconstructs nullable JSON metrics. Retain the backup until verification.

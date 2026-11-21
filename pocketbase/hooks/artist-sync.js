@@ -224,7 +224,13 @@ const saveSnapshot = (app, artist, metrics, now) => {
     row.set("artist", artist.id);
     row.set("weekStart", week);
     row.set("capturedAt", date(now));
-    row.set("metrics", metrics);
+    for (const key of /** @type {const} */ ([
+        "followers",
+        "monthlyListeners",
+        "popularity",
+    ])) {
+        row.set(key, metrics[key] ?? -1);
+    }
     row.set("source", "spotify-public-page");
     app.save(row);
 
