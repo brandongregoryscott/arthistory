@@ -6,7 +6,7 @@ const {
 
 /**
  * @param {{ id: string, timeoutSeconds: number, execute: (args: string[]) => string, now: () => number }} options
- * @returns {import("./backfill-types.js").PageResult}
+ * @returns {import("./artist-sync-types.js").PageResult}
  */
 const readArtistName = ({ id, timeoutSeconds, execute, now }) => {
     if (
@@ -75,7 +75,12 @@ const readArtistName = ({ id, timeoutSeconds, execute, now }) => {
 
     const page = parseArtistPage(body, id);
 
-    return { displayName: page.displayName, retryAfterMs: null, status };
+    return {
+        displayName: page.displayName,
+        metrics: page.metrics,
+        retryAfterMs: null,
+        status,
+    };
 };
 
 module.exports = { readArtistName };

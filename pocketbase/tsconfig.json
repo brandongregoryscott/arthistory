@@ -8,8 +8,8 @@
     "include": [
         "hooks/validation.js",
         "hooks/artist-page-parser.cjs",
-        "hooks/name-backfill.js",
-        "hooks/backfill-types.d.ts",
+        "hooks/artist-sync.js",
+        "hooks/artist-sync-types.d.ts",
         "hooks/artist-page-http.js"
     ]
 }

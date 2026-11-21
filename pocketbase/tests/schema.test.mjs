@@ -51,6 +51,10 @@ test(
                 new URL("./name-backfill-fixture.js", import.meta.url),
                 resolve(hooks, "name-backfill-fixture.js")
             );
+            cpSync(
+                new URL("./collector-fixture.js", import.meta.url),
+                resolve(hooks, "collector-fixture.js")
+            );
             const pageFixture = readFileSync(
                 resolve("apps/api/src/artists/fixtures/artist.html"),
                 "utf8"
@@ -100,6 +104,10 @@ test(
                 if (e.record.getString("attemptToken") === "" && e.record.original().getString("attemptToken") === "rollback-attempt") { throw new Error("Simulated completion save failure"); }
                 return e.next();
             }, "sync_state");
+            $app.rootCmd.addCommand(new Command({ use: "test-collector", run: () => { $app.bootstrap(); require(__hooks + "/collector-fixture.js")($app); } }));
+            for (const phase of ["crash", "restart"]) {
+                $app.rootCmd.addCommand(new Command({ use: "test-collector-" + phase, run: () => { $app.bootstrap(); require(__hooks + "/name-backfill-fixture.js")[phase]($app, "snapshots"); } }));
+            }
             for (const mode of ["crash", "restart"]) {
                 $app.rootCmd.addCommand(new Command({
                     use: "test-name-" + mode,
@@ -129,8 +137,8 @@ test(
             }));
         `
             );
-            const run = (...args) =>
-                execFileSync(
+            const run = (...args) => {
+                const output = execFileSync(
                     binary,
                     [
                         ...args,
@@ -143,6 +151,9 @@ test(
                     ],
                     { encoding: "utf8", input: "y\n" }
                 );
+                assert.doesNotMatch(output, /failed to execute .*\.pb\.js/i);
+                return output;
+            };
             run("migrate", "up");
             run("test-schema");
             process.stdout.write(run("test-prepared"));
@@ -163,6 +174,9 @@ test(
             run("test-name-crash");
             run("test-name-restart");
             run("test-name-backfill");
+            run("test-collector");
+            run("test-collector-crash");
+            run("test-collector-restart");
         } finally {
             rmSync(root, { recursive: true, force: true });
         }

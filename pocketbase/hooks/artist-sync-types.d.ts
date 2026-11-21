@@ -3,11 +3,13 @@ type DataRecord = {
     getInt(field: string): number;
     getString(field: string): string;
     id: string;
+    original(): DataRecord;
     set(field: string, value: unknown): void;
 };
 
 type BackfillApp = {
     countRecords(collection: string, filter?: unknown): number;
+    findCollectionByNameOrId(collection: string): unknown;
     findFirstRecordByData(
         collection: string,
         field: string,
@@ -28,6 +30,11 @@ type BackfillApp = {
 
 type PageResult = {
     displayName: null | string;
+    metrics?: {
+        followers: null | number;
+        monthlyListeners: null | number;
+        popularity: null | number;
+    };
     retryAfterMs: null | number;
     status: number;
 };
@@ -40,7 +47,9 @@ type BackfillDependencies = {
 
 type Claim = {
     artistId: string;
+    displayName: string;
     intervalMs: number;
+    metadataUpdatedAt: string;
     spotifyId: string;
     timeoutSeconds: number;
     token: string;
@@ -55,5 +64,6 @@ export type {
 };
 
 declare global {
+    const Record: { new (collection: unknown): DataRecord };
     const $dbx: { hashExp(values: Record<string, unknown>): unknown };
 }
