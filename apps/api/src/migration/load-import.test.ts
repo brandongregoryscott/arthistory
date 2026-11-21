@@ -148,6 +148,76 @@ describe("loadImport", () => {
         });
     });
 
+    it.each([50, 100])(
+        "bounds identity filters independently of %i-record write batches",
+        async (batchSize) => {
+            const source = {
+                filename: resolve(root, "legacy.db"),
+                timestampUnit: "seconds" as const,
+            };
+            const db = new DatabaseSync(source.filename);
+            db.exec("DELETE FROM artist_snapshots");
+            const insert = db.prepare(
+                "INSERT INTO artist_snapshots VALUES (?, ?, ?, ?)"
+            );
+            for (let week = 0; week < 120; week++) {
+                insert.run(
+                    "1111111111111111111111",
+                    1768176000 - week * 604800,
+                    10000,
+                    null
+                );
+            }
+            db.close();
+            rmSync(directory, { recursive: true });
+            prepareImport({ output: directory, source });
+            const remote = mockPocketBase();
+            const options = {
+                batchSize,
+                client: new PocketBaseClient(config),
+                directory,
+            };
+
+            expect(await loadImport(options)).toMatchObject({
+                created: 121,
+                skipped: 0,
+            });
+            expect(
+                remote.batches.some((batch) => batch.length === batchSize)
+            ).toBe(true);
+            const writes = remote.batches.length;
+            expect(await loadImport(options)).toMatchObject({
+                created: 0,
+                skipped: 121,
+            });
+            expect(remote.batches).toHaveLength(writes);
+            const lookups = remote.fetch.mock.calls
+                .map((call) =>
+                    new URL(String(call[0])).searchParams.get("filter")
+                )
+                .filter((filter) => filter != null);
+            expect(lookups.length).toBeGreaterThan(4);
+            expect(
+                lookups.every((filter) => Buffer.byteLength(filter) <= 3500)
+            ).toBe(true);
+
+            const snapshot = [...remote.records.snapshots.values()].find(
+                (_, index) => index === 25
+            );
+            if (snapshot == null) {
+                throw new Error("Missing fixture snapshot.");
+            }
+            remote.records.snapshots.set("foreignrecordid", {
+                ...snapshot,
+                id: "foreignrecordid",
+            });
+            await expect(loadImport(options)).rejects.toThrow(
+                "Conflicting snapshots record"
+            );
+            expect(remote.batches).toHaveLength(writes);
+        }
+    );
+
     it.each(["rejection", "lost response"] as const)(
         "recovers from %s without replaying ambiguous writes automatically",
         async (failure) => {
@@ -495,6 +565,16 @@ const mockPocketBase = () => {
             ? "artists"
             : "snapshots";
         const filter = url.searchParams.get("filter") ?? "";
+        // PocketBase v0.40.6 tools/search.Provider rejects filters over 3500 bytes.
+        if (Buffer.byteLength(filter) > 3500) {
+            return Response.json(
+                {
+                    message:
+                        "Something went wrong while processing your request.",
+                },
+                { status: 400 }
+            );
+        }
         const ids = [...filter.matchAll(/\bid = "([^"]+)"/g)].map(
             (match) => match[1]
         );
