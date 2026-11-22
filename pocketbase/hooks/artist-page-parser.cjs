@@ -55,8 +55,48 @@ const parseArtistPage = (html, id, decodeBase64 = decodePageState) => {
             monthlyListeners: nullableCount(stats.monthlyListeners),
             popularity: null,
         },
+        songs: parseSongs(artist),
         spotifyId: id,
     };
+};
+
+// Only inspect the top tracks embedded in this artist's page; never resolve links.
+/** @param {Record<string, unknown>} artist */
+const parseSongs = (artist) => {
+    const items = asRecord(asRecord(artist.discography).topTracks).items;
+    if (!Array.isArray(items)) {
+        return null;
+    }
+    /** @type {{ spotifyId: string, name: string, listenCount: null | number }[]} */
+    const songs = [];
+    const seen = new Set();
+    for (const item of items) {
+        const track = asRecord(asRecord(item).track);
+        const id =
+            typeof track.uri === "string"
+                ? /^spotify:track:([A-Za-z0-9]{22})$/.exec(track.uri)?.[1]
+                : undefined;
+        if (
+            id == null ||
+            seen.has(id) ||
+            typeof track.name !== "string" ||
+            track.name.trim() === "" ||
+            track.name.length > MAX_DISPLAY_NAME_LENGTH
+        ) {
+            continue;
+        }
+        const count =
+            typeof track.playcount === "string" && /^\d+$/.test(track.playcount)
+                ? Number(track.playcount)
+                : track.playcount;
+        songs.push({
+            spotifyId: id,
+            name: track.name.trim(),
+            listenCount: nullableCount(count),
+        });
+        seen.add(id);
+    }
+    return songs;
 };
 
 /** @param {unknown} value @returns {Record<string, unknown>} */

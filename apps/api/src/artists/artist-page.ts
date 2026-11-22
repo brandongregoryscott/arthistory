@@ -11,6 +11,7 @@ type ArtistPage = {
         monthlyListeners: null | number;
         popularity: null;
     };
+    songs: ReturnType<typeof parsePage>["songs"];
     spotifyId: string;
 };
 

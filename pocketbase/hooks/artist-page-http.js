@@ -78,6 +78,7 @@ const readArtistName = ({ id, timeoutSeconds, execute, now }) => {
     return {
         displayName: page.displayName,
         metrics: page.metrics,
+        songs: page.songs,
         retryAfterMs: null,
         status,
     };

@@ -155,7 +155,7 @@ const run = ({ app, dependencies, mode }) => {
                     artist.set("metadataNextAttemptAt", "");
                 }
                 if (mode === "snapshots" && page.metrics != null) {
-                    const capture = saveSnapshot(tx, artist, page.metrics, now);
+                    const capture = saveSnapshot(tx, artist, page, now);
                     artist.set(
                         "lastSuccessAt",
                         date(
@@ -204,8 +204,8 @@ const run = ({ app, dependencies, mode }) => {
     return { status, artistId: claim.artistId, httpStatus: page.status };
 };
 
-/** @param {BackfillApp} app @param {import("./artist-sync-types.js").DataRecord} artist @param {NonNullable<import("./artist-sync-types.js").PageResult["metrics"]>} metrics @param {number} now */
-const saveSnapshot = (app, artist, metrics, now) => {
+/** @param {BackfillApp} app @param {import("./artist-sync-types.js").DataRecord} artist @param {import("./artist-sync-types.js").PageResult} page @param {number} now */
+const saveSnapshot = (app, artist, page, now) => {
     const week = date(monday(now));
     const [existing] = app.findRecordsByFilter(
         "snapshots",
@@ -230,8 +230,9 @@ const saveSnapshot = (app, artist, metrics, now) => {
         "monthlyListeners",
         "popularity",
     ])) {
-        row.set(key, metrics[key] ?? MISSING_METRIC);
+        row.set(key, page.metrics?.[key] ?? MISSING_METRIC);
     }
+    row.set("songs", page.songs ?? null);
     row.set("source", "spotify-public-page");
     app.save(row);
 

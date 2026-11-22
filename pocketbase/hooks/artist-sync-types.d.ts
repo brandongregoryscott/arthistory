@@ -1,3 +1,5 @@
+import type { parseArtistPage } from "./artist-page-parser.cjs";
+
 type DataRecord = {
     getBool(field: string): boolean;
     getInt(field: string): number;
@@ -36,6 +38,7 @@ type PageResult = {
         popularity: null | number;
     };
     retryAfterMs: null | number;
+    songs?: ReturnType<typeof parseArtistPage>["songs"];
     status: number;
 };
 
