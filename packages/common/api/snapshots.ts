@@ -1,5 +1,5 @@
-import type { SnapshotResolution } from "./snapshot-resolution";
-import type { ArtistSnapshot } from "./types";
+import type { SnapshotResolution } from "./snapshot-resolution.js";
+import type { ArtistSnapshot } from "./types/index.js";
 
 const MAX_CHART_MONTHS = 100 * 12;
 

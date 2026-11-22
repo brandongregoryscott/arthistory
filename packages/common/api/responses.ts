@@ -1,4 +1,4 @@
-import type { ApiError } from "./errors";
+import type { ApiError } from "./errors.js";
 
 type ApiSuccessResponse<TData> = {
     data: TData;

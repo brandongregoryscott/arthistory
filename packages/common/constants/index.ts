@@ -1,1 +1,1 @@
-export * from "./default-artist-ids";
+export * from "./default-artist-ids.js";

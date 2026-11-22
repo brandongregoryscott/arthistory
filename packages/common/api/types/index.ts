@@ -1,2 +1,2 @@
-export type * from "./artist";
-export type * from "./entity";
+export type * from "./artist.js";
+export type * from "./entity.js";

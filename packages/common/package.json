@@ -1,5 +1,5 @@
 {
-    "type": "commonjs",
+    "type": "module",
     "description": "Shared API types and utilities",
     "main": "index.ts",
     "name": "@repo/common",
