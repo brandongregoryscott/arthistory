@@ -31,8 +31,6 @@ services:
         build:
             context: .
             dockerfile: Dockerfile.api
-        volumes:
-            - ${MIGRATION_DATA_PATH:-/root/arthistory-migration}:/migration
         ports:
             # Public requests must pass through the header-rewriting HTTP tunnel.
             - "127.0.0.1:${PORT:-6768}:6768"

@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { importId } from "../migration/prepared-records";
 import { PocketBaseClient } from "../storage/pocketbase";
 import { ArtistRegistry } from "./artist-registry";
 
@@ -62,7 +61,6 @@ describe("ArtistRegistry", () => {
             spotifyId: ID,
             syncEnabled: false,
         });
-        expect(result.id).toBe(importId(`artist:${ID}`));
         stored = { ...stored, displayName: "Owner name", syncEnabled: true };
 
         const repeated = await registry.add(ID);
@@ -81,59 +79,56 @@ describe("ArtistRegistry", () => {
         ).toHaveLength(1);
     });
 
-    it.each(["spotifyId", "id"])(
-        "preserves a concurrent owner create reported by %s",
-        async (field) => {
-            let lookups = 0;
-            const existing = {
-                displayName: "Concurrent owner name",
-                id: importId(`artist:${ID}`),
-                spotifyId: ID,
-                syncEnabled: true,
-            };
-            const fetch = vi.fn(async (url: string, options: RequestInit) => {
-                if (url.includes("auth-with-password")) {
-                    return Response.json({
-                        record: { id: "owner" },
-                        token: TOKEN,
-                    });
-                }
-                if (options.method === "POST") {
-                    return Response.json(
-                        {
-                            data: {
-                                [field]: { code: "validation_not_unique" },
-                            },
-                        },
-                        { status: 400 }
-                    );
-                }
+    it("preserves a concurrent owner create", async () => {
+        let lookups = 0;
+        const existing = {
+            displayName: "Concurrent owner name",
+            id: "111111111111111",
+            spotifyId: ID,
+            syncEnabled: true,
+        };
+        const fetch = vi.fn(async (url: string, options: RequestInit) => {
+            if (url.includes("auth-with-password")) {
                 return Response.json({
-                    items: ++lookups === 1 ? [] : [existing],
+                    record: { id: "owner" },
+                    token: TOKEN,
                 });
-            });
-            vi.stubGlobal("fetch", fetch);
-            const pages = {
-                read: vi.fn(async () => ({
-                    displayName: "Alex G",
-                    metrics: {
-                        followers: null,
-                        monthlyListeners: null,
-                        popularity: null,
+            }
+            if (options.method === "POST") {
+                return Response.json(
+                    {
+                        data: {
+                            spotifyId: { code: "validation_not_unique" },
+                        },
                     },
-                    spotifyId: ID,
-                })),
-            };
+                    { status: 400 }
+                );
+            }
+            return Response.json({
+                items: ++lookups === 1 ? [] : [existing],
+            });
+        });
+        vi.stubGlobal("fetch", fetch);
+        const pages = {
+            read: vi.fn(async () => ({
+                displayName: "Alex G",
+                metrics: {
+                    followers: null,
+                    monthlyListeners: null,
+                    popularity: null,
+                },
+                spotifyId: ID,
+            })),
+        };
 
-            const result = await new ArtistRegistry({
-                client: new PocketBaseClient(CONFIG),
-                pages,
-            }).add(ID);
+        const result = await new ArtistRegistry({
+            client: new PocketBaseClient(CONFIG),
+            pages,
+        }).add(ID);
 
-            expect(result).toMatchObject(existing);
-            expect(lookups).toBe(2);
-        }
-    );
+        expect(result).toMatchObject(existing);
+        expect(lookups).toBe(2);
+    });
 
     it("does not create an artist when page validation fails", async () => {
         const fetch = vi.fn(async (url: string) =>
