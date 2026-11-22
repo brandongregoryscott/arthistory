@@ -42,7 +42,7 @@ module.exports = (app, items, command) => {
 
     const withHistory = app.findRecordsByFilter(
         "artists",
-        "snapshots_via_artist.id != ''",
+        "snapshots_via_artist.artist ?!= ''",
         "id",
         500,
         0
@@ -54,9 +54,7 @@ module.exports = (app, items, command) => {
     );
 
     if (withHistory.length !== artistIds.size) {
-        throw new Error(
-            "History back-relation must return one row per artist."
-        );
+        throw new Error("History filter must return one row per artist.");
     }
 
     for (const item of items.filter(

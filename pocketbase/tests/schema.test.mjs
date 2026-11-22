@@ -66,6 +66,10 @@ test(
                 new URL("./metric-columns-fixture.js", import.meta.url),
                 resolve(hooks, "metric-columns-fixture.js")
             );
+            cpSync(
+                new URL("./history-fixture.js", import.meta.url),
+                resolve(hooks, "history-fixture.js")
+            );
             const restorePhase = resolve(root, "restore-phase");
             const pageFixture = readFileSync(
                 resolve("apps/api/src/artists/fixtures/artist.html"),
@@ -128,6 +132,7 @@ test(
             writeFileSync(
                 resolve(hooks, "test.pb.js"),
                 `
+            $app.rootCmd.addCommand(new Command({ use: "test-history", run: () => { $app.bootstrap(); require(__hooks + "/history-fixture.js")($app); } }));
             for (const phase of ["seed", "columns", "json", "cleanup"]) {
                 $app.rootCmd.addCommand(new Command({ use: "test-metrics-" + phase, run: () => { $app.bootstrap(); require(__hooks + "/metric-columns-fixture.js")($app, phase); } }));
             }
@@ -199,6 +204,7 @@ test(
             run("migrate", "up");
             run("test-metrics-cleanup");
             run("test-schema");
+            run("test-history");
             process.stdout.write(run("test-prepared"));
             const backupBytes = statSync(
                 resolve(root, "data", "backups", "prepared-fixture.zip")

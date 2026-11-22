@@ -84,7 +84,9 @@ class ArtistCache {
                 const filters = [pb.filter("id > {:cursor}", { cursor })];
 
                 if (historyOnly) {
-                    filters.push("snapshots_via_artist.id != ''");
+                    // Any matching back-relation is enough. Filtering its artist
+                    // field lets PocketBase use the covering artist/week index.
+                    filters.push("snapshots_via_artist.artist ?!= ''");
                 }
 
                 return pb

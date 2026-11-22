@@ -45,11 +45,32 @@ describe("ArtistCache", () => {
                 filter.includes('id > "000000000000500"')
             )
         ).toBe(true);
+        expect(remote.collections.every((name) => name === "artists")).toBe(
+            true
+        );
+        expect(remote.filters).toContain(
+            "id > \"\" && snapshots_via_artist.artist ?!= ''"
+        );
+    });
+
+    it("paginates history artists independently without losing their tracking status", async () => {
+        const remote = source(501);
+        remote.history = new Set(remote.records.map((row) => row.id));
+        const cache = new ArtistCache({
+            client: new PocketBaseClient(config),
+        });
+
+        await cache.refresh();
+
         expect(
-            remote.filters.some((filter) =>
-                filter.includes("snapshots_via_artist")
-            )
-        ).toBe(true);
+            cache.list([record(1).spotifyId, record(501).spotifyId])
+        ).toMatchObject({
+            [record(1).spotifyId]: { hasHistory: true },
+            [record(501).spotifyId]: { hasHistory: true },
+        });
+        expect(remote.filters).toContain(
+            "id > \"000000000000500\" && snapshots_via_artist.artist ?!= ''"
+        );
     });
 
     it("reconciles dashboard renames/deletions, missed notifications and restored records on a full refresh", async () => {
@@ -181,6 +202,7 @@ const record = (number: number): RecordData => ({
 
 const source = (count: number) => {
     const state = {
+        collections: [] as string[],
         fail: false,
         fetch: vi.fn(),
         filters: [] as string[],
@@ -198,6 +220,8 @@ const source = (count: number) => {
         }
 
         const query = new URL(url).searchParams;
+        const collection = /collections\/([^/]+)\//.exec(url)?.[1] ?? "";
+        state.collections.push(collection);
         const filter = query.get("filter") ?? "";
         state.filters.push(filter);
         const cursor = /id > "([^"]*)"/.exec(filter)?.[1] ?? "";
@@ -205,7 +229,7 @@ const source = (count: number) => {
             .filter(
                 (row) =>
                     row.id > cursor &&
-                    (!filter.includes("snapshots_via_artist") ||
+                    (!filter.includes("snapshots_via_artist.artist ?!= ''") ||
                         state.history.has(row.id))
             )
             .slice(0, 500);
