@@ -1,5 +1,5 @@
 import type { RecordModel } from "pocketbase";
-import { chunk, isEmpty } from "lodash";
+import { isEmpty } from "lodash";
 import { rmSync } from "node:fs";
 import type { PocketBaseClient } from "../storage/pocketbase";
 import type { ImportContext } from "./import-error";
@@ -9,6 +9,7 @@ import type { ImportSource } from "./staged-import";
 import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
 import { ImportCheckpoint } from "./import-checkpoint";
 import { importError } from "./import-error";
+import { lookupImportRecords } from "./import-lookup";
 import { createImportProgressReporter } from "./import-progress";
 import { snapshotColumns } from "./prepared-records";
 import { readPreparedImport, stageImport } from "./staged-import";
@@ -33,10 +34,6 @@ type LoadBatchOptions = {
 };
 
 const MAX_BATCH_SIZE = 100;
-// PocketBase v0.40.6 limits list filters to 3500 bytes. Each validated snapshot
-// identity uses three comparisons and about 102 bytes; keep lookups below both
-// the filter-length and expression limits independently of write batch size.
-const MAX_LOOKUP_RECORDS = 20;
 
 const loadImport = async (options: LoadImportOptions) => {
     const { batchSize = 50, client, directory } = options;
@@ -212,66 +209,36 @@ const loadBatch = async (options: LoadBatchOptions) => {
         if (isEmpty(records)) {
             continue;
         }
-        for (const lookupRecords of chunk(records, MAX_LOOKUP_RECORDS)) {
-            context.stage = `Look up existing ${collection} records`;
-            context.records = lookupRecords.map((item) => ({
-                collection: item.collection,
-                id: item.record.id,
-            }));
+        context.stage = `Look up existing ${collection} records`;
+        const found = await lookupImportRecords({
+            client,
+            onQuery: (items) => {
+                context.records = items.map((item) => ({
+                    collection: item.collection,
+                    id: item.record.id,
+                }));
+            },
+            records,
+        });
 
-            const result = await client.run((pb) => {
-                const filter = lookupRecords
-                    .map((item) => {
-                        if (item.collection === "artists") {
-                            return pb.filter(
-                                "(id = {:id} || spotifyId = {:spotifyId})",
-                                item.record
-                            );
-                        }
+        for (const item of records) {
+            const matches = found.filter((existing) =>
+                matchesIdentity(item, existing)
+            );
 
-                        return pb.filter(
-                            "(id = {:id} || (artist = {:artist} && weekStart = {:weekStart}))",
-                            {
-                                ...item.record,
-                                weekStart: item.record.weekStart.replace(
-                                    "T",
-                                    " "
-                                ),
-                            }
-                        );
-                    })
-                    .join(" || ");
-
-                return pb
-                    .collection(collection)
-                    .getList<RecordModel>(1, lookupRecords.length * 2, {
-                        filter,
-                    });
-            });
-
-            if (result.totalItems > lookupRecords.length * 2) {
-                throw new Error("Unexpected import identity matches.");
+            if (matches.length === 0) {
+                // Preserve original stream order when constructing the batch.
+                missing.add(item);
+                continue;
             }
 
-            for (const item of lookupRecords) {
-                const matches = result.items.filter((existing) =>
-                    matchesIdentity(item, existing)
+            if (matches.length !== 1 || !canSkip(item, matches[0])) {
+                throw new Error(
+                    `Conflicting ${collection} record ${item.record.id}; import stopped without overwriting it.`
                 );
-
-                if (matches.length === 0) {
-                    // Preserve original stream order when constructing the batch.
-                    missing.add(item);
-                    continue;
-                }
-
-                if (matches.length !== 1 || !canSkip(item, matches[0])) {
-                    throw new Error(
-                        `Conflicting ${collection} record ${item.record.id}; import stopped without overwriting it.`
-                    );
-                }
-
-                counts.skipped++;
             }
+
+            counts.skipped++;
         }
     }
 
