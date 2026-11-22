@@ -3,11 +3,19 @@ import { bucketSnapshots, ValidationError } from "@repo/common";
 import { isEmpty, uniq } from "lodash";
 import type { PocketBaseClient } from "../storage/pocketbase";
 import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
-import { isSpotifyArtistId } from "../utilities/id-validation";
+import {
+    isPocketBaseRecordId,
+    isSpotifyArtistId,
+} from "../utilities/id-validation";
+
+type ArtistIdentityRecord = {
+    id: string;
+    spotifyId: string;
+};
 
 type SnapshotRecord = {
+    artist: string;
     capturedAt: string;
-    expand?: { artist?: { spotifyId: string } };
     followers: number;
     id: string;
     monthlyListeners: number;
@@ -76,67 +84,101 @@ class ArtistSnapshotStore {
 
         const signal = AbortSignal.timeout(READ_TIMEOUT_MS);
         const snapshots: ArtistSnapshot[] = [];
-        let cursor = "";
+        const artists = await this.#client.run((pb) =>
+            pb
+                .collection("artists")
+                .getList<ArtistIdentityRecord>(1, MAX_ARTISTS_PER_REQUEST, {
+                    fields: "id,spotifyId",
+                    filter: requestedIds
+                        .map((id) => pb.filter("spotifyId = {:id}", { id }))
+                        .join(" || "),
+                    signal,
+                    skipTotal: true,
+                    sort: "spotifyId",
+                })
+        );
+        const seen = new Set<string>();
 
-        while (true) {
-            const page = await this.#client.run((pb) => {
-                const artists = requestedIds.map((id) =>
-                    pb.filter("artist.spotifyId = {:id}", { id })
+        for (const artist of artists.items) {
+            if (
+                !isPocketBaseRecordId(artist.id) ||
+                !requestedIds.includes(artist.spotifyId) ||
+                seen.has(artist.spotifyId)
+            ) {
+                throw new Error(
+                    "Snapshot lookup returned an invalid artist identity."
                 );
-                const filter = `(${artists.join(" || ")}) && ${pb.filter("id > {:cursor}", { cursor })}`;
-
-                return pb
-                    .collection("snapshots")
-                    .getList<SnapshotRecord>(1, PAGE_SIZE, {
-                        expand: "artist",
-                        fields: "id,weekStart,capturedAt,followers,monthlyListeners,popularity,expand.artist.spotifyId",
-                        filter,
-                        signal,
-                        skipTotal: true,
-                        sort: "id",
-                    });
-            });
-
-            for (const record of page.items) {
-                const id = record.expand?.artist?.spotifyId;
-                if (!isSpotifyArtistId(id) || !requestedIds.includes(id)) {
-                    throw new Error(
-                        "Snapshot has no matching artist relation."
-                    );
-                }
-                if (
-                    record.id <= cursor ||
-                    snapshots.length >= this.#maxSnapshots
-                ) {
-                    throw new Error(
-                        "Snapshot pagination exceeded its read limit or did not advance."
-                    );
-                }
-
-                cursor = record.id;
-                snapshots.push({
-                    capturedAt: new Date(record.capturedAt).toISOString(),
-                    followers:
-                        record.followers === MISSING_METRIC
-                            ? null
-                            : record.followers,
-                    id,
-                    monthlyListeners:
-                        record.monthlyListeners === MISSING_METRIC
-                            ? null
-                            : record.monthlyListeners,
-                    popularity:
-                        record.popularity === MISSING_METRIC
-                            ? null
-                            : record.popularity,
-                    timestamp: new Date(record.weekStart).toISOString(),
-                });
             }
+            seen.add(artist.spotifyId);
+            let cursor = "";
 
-            if (page.items.length < PAGE_SIZE) {
-                return bucketSnapshots(snapshots, resolution);
+            while (true) {
+                const page = await this.#client.run((pb) => {
+                    const filters = [
+                        pb.filter("artist = {:id}", { id: artist.id }),
+                    ];
+                    if (cursor !== "") {
+                        filters.push(
+                            pb.filter("weekStart > {:cursor}", { cursor })
+                        );
+                    }
+
+                    return pb
+                        .collection("snapshots")
+                        .getList<SnapshotRecord>(1, PAGE_SIZE, {
+                            fields: "id,artist,weekStart,capturedAt,followers,monthlyListeners,popularity",
+                            filter: filters.join(" && "),
+                            signal,
+                            skipTotal: true,
+                            sort: "weekStart",
+                        });
+                });
+
+                for (const record of page.items) {
+                    if (record.artist !== artist.id) {
+                        throw new Error(
+                            "Snapshot has no matching artist relation."
+                        );
+                    }
+                    if (
+                        !Number.isFinite(Date.parse(record.weekStart)) ||
+                        (cursor !== "" &&
+                            Date.parse(record.weekStart) <=
+                                Date.parse(cursor)) ||
+                        snapshots.length >= this.#maxSnapshots
+                    ) {
+                        throw new Error(
+                            "Snapshot pagination exceeded its read limit or did not advance."
+                        );
+                    }
+
+                    cursor = record.weekStart;
+                    snapshots.push({
+                        capturedAt: new Date(record.capturedAt).toISOString(),
+                        followers:
+                            record.followers === MISSING_METRIC
+                                ? null
+                                : record.followers,
+                        id: artist.spotifyId,
+                        monthlyListeners:
+                            record.monthlyListeners === MISSING_METRIC
+                                ? null
+                                : record.monthlyListeners,
+                        popularity:
+                            record.popularity === MISSING_METRIC
+                                ? null
+                                : record.popularity,
+                        timestamp: new Date(record.weekStart).toISOString(),
+                    });
+                }
+
+                if (page.items.length < PAGE_SIZE) {
+                    break;
+                }
             }
         }
+
+        return bucketSnapshots(snapshots, resolution);
     }
 }
 

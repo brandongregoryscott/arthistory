@@ -104,15 +104,42 @@ module.exports = (app) => {
     );
     const selected = app.findRecordsByFilter(
         "snapshots",
-        "(artist.spotifyId = {:spotifyId}) && id > {:cursor}",
-        "id",
+        "artist = {:artist} && weekStart > {:cursor}",
+        "weekStart",
         500,
         0,
-        { spotifyId: artist.getString("spotifyId"), cursor: "" }
+        { artist: artist.id, cursor: "" }
     );
     assert(
         selected.length === 1 && selected[0].id === row.id,
-        "snapshot artist relation/cursor filter"
+        "snapshot artist/week cursor filter"
+    );
+    const plan = arrayOf(
+        new DynamicModel({ id: 0, parent: 0, notused: 0, detail: "" })
+    );
+    app.db()
+        .newQuery(
+            `EXPLAIN QUERY PLAN SELECT snapshots.* FROM snapshots
+        WHERE artist = {:artist} AND weekStart > {:cursor}
+        ORDER BY weekStart LIMIT 500`
+        )
+        .bind({ artist: artist.id, cursor: row.getString("weekStart") })
+        .all(plan);
+    assert(
+        plan.some(
+            (step) =>
+                step.detail.includes("SEARCH snapshots") &&
+                step.detail.includes("snapshots_artist_week")
+        ),
+        "snapshot pagination must search the artist/week index"
+    );
+    assert(
+        !plan.some(
+            (step) =>
+                step.detail.includes("SCAN snapshots") ||
+                step.detail.includes("TEMP B-TREE")
+        ),
+        "snapshot pagination must avoid global scans and temporary sorting"
     );
     assert(
         app.findRecordsByFilter("snapshots", "", "-capturedAt", 1, 0)[0].id ===
