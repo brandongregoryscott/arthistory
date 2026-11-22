@@ -1,9 +1,9 @@
-import type { ApiErrorResponse, ApiSuccessResponse } from "../responses";
+import type { ApiErrorResponse, ApiSuccessResponse } from "../responses.js";
 import type {
     Artist,
     ArtistSnapshot,
     ArtistWithTrackingStatus,
-} from "../types";
+} from "../types/index.js";
 
 type GetLatestMetaResult =
     ApiErrorResponse | ApiSuccessResponse<Pick<ArtistSnapshot, "timestamp">>;
