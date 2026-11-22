@@ -40,9 +40,7 @@ test(
             });
 
             const columnsMigration = "1794900003_snapshot_columns.js";
-            const historyMigration = "1794900004_artists_with_snapshots.js";
             rmSync(resolve(migrations, columnsMigration));
-            rmSync(resolve(migrations, historyMigration));
 
             const hooks = resolve(root, "hooks");
             cpSync(new URL("../hooks/", import.meta.url), hooks, {
@@ -205,11 +203,6 @@ test(
             run("test-metrics-json", "--automigrate=false");
             run("migrate", "up");
             run("test-metrics-cleanup");
-            cpSync(
-                new URL("../migrations/" + historyMigration, import.meta.url),
-                resolve(migrations, historyMigration)
-            );
-            run("migrate", "up");
             run("test-schema");
             run("test-history");
             process.stdout.write(run("test-prepared"));
@@ -222,7 +215,7 @@ test(
             );
             assert.match(run("migrate", "up"), /No new migrations/);
             assert.match(
-                run("migrate", "down", "5", "--automigrate=false"),
+                run("migrate", "down", "4", "--automigrate=false"),
                 /Reverted 1794900000_collections.js/
             );
             run("migrate", "up");

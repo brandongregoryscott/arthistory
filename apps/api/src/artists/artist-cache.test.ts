@@ -45,8 +45,31 @@ describe("ArtistCache", () => {
                 filter.includes('id > "000000000000500"')
             )
         ).toBe(true);
-        expect(remote.collections.includes("artists_with_snapshots")).toBe(
+        expect(remote.collections.every((name) => name === "artists")).toBe(
             true
+        );
+        expect(remote.filters).toContain(
+            "id > \"\" && snapshots_via_artist.artist ?!= ''"
+        );
+    });
+
+    it("paginates history artists independently without losing their tracking status", async () => {
+        const remote = source(501);
+        remote.history = new Set(remote.records.map((row) => row.id));
+        const cache = new ArtistCache({
+            client: new PocketBaseClient(config),
+        });
+
+        await cache.refresh();
+
+        expect(
+            cache.list([record(1).spotifyId, record(501).spotifyId])
+        ).toMatchObject({
+            [record(1).spotifyId]: { hasHistory: true },
+            [record(501).spotifyId]: { hasHistory: true },
+        });
+        expect(remote.filters).toContain(
+            "id > \"000000000000500\" && snapshots_via_artist.artist ?!= ''"
         );
     });
 
@@ -206,7 +229,7 @@ const source = (count: number) => {
             .filter(
                 (row) =>
                     row.id > cursor &&
-                    (collection !== "artists_with_snapshots" ||
+                    (!filter.includes("snapshots_via_artist.artist ?!= ''") ||
                         state.history.has(row.id))
             )
             .slice(0, 500);

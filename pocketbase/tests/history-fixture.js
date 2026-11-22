@@ -4,20 +4,13 @@ module.exports = (app) => {
             throw new Error(message);
         }
     };
-    const view = app.findCollectionByNameOrId("artists_with_snapshots");
-    assert(
-        view.type === "view" &&
-            view.listRule === null &&
-            view.viewRule === null,
-        "history view must be private"
-    );
     const artist = new Record(app.findCollectionByNameOrId("artists"));
     artist.set("spotifyId", "9999999999999999999999");
     app.save(artist);
     const list = () =>
         app.findRecordsByFilter(
-            "artists_with_snapshots",
-            "id = {:id}",
+            "artists",
+            "id = {:id} && snapshots_via_artist.artist ?!= ''",
             "id",
             500,
             0,
@@ -52,20 +45,29 @@ module.exports = (app) => {
     );
     app.db()
         .newQuery(
-            "EXPLAIN QUERY PLAN SELECT id FROM artists_with_snapshots WHERE id > '' ORDER BY id LIMIT 500"
+            // SQL emitted by PocketBase 0.40.6 for the history filter. The any
+            // operator avoids its extra all-related-records subquery.
+            `EXPLAIN QUERY PLAN SELECT DISTINCT artists.* FROM artists
+            LEFT JOIN snapshots history ON history.artist = artists.id
+            WHERE artists.id > '' AND history.artist IS NOT '' AND history.artist IS NOT NULL
+            ORDER BY artists.id LIMIT 500`
         )
         .all(plan);
     assert(
         plan.some(
             (row) =>
-                row.detail.includes("SEARCH snapshots") &&
-                row.detail.includes("snapshots_artist_week")
+                row.detail.includes("SEARCH history") &&
+                row.detail.includes("COVERING INDEX snapshots_artist_week")
         ),
         "history existence must use the artist/week index"
     );
     assert(
-        !plan.some((row) => row.detail.includes("SCAN snapshots")),
-        "history must not scan all snapshots"
+        !plan.some(
+            (row) =>
+                row.detail.includes("SCAN history") ||
+                row.detail.includes("CORRELATED")
+        ),
+        "history must not scan all snapshots or add an all-records subquery"
     );
     app.delete(artist);
 };
