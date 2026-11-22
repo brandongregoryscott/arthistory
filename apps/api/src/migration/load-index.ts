@@ -6,7 +6,9 @@ import { loadImport } from "./load-import";
 const main = async () => {
     const { values } = parseArgs({
         options: {
+            checkpoint: { type: "string" },
             input: { type: "string" },
+            "resume-after": { type: "string" },
             "skip-preflight": { type: "boolean" },
         },
     });
@@ -14,8 +16,15 @@ const main = async () => {
     if (values.input == null) {
         throw new Error("Provide --input prepared-data-directory.");
     }
+    const resume = values["resume-after"];
+    if (resume != null && !/^\d+$/.test(resume)) {
+        throw new Error(
+            "Provide --resume-after with a confirmed processed record count."
+        );
+    }
 
     const result = await loadImport({
+        checkpointPath: values.checkpoint,
         client: new PocketBaseClient(loadPocketBaseConfig()),
         directory: values.input,
         onProgress: (progress) => {
@@ -27,6 +36,7 @@ const main = async () => {
                 }) + "\n"
             );
         },
+        resumeAfter: resume == null ? undefined : Number(resume),
         skipPreflight: values["skip-preflight"],
     });
 

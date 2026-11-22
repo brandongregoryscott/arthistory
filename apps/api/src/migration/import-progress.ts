@@ -1,8 +1,9 @@
 type ImportProgressUpdate = {
     batch?: number;
     created?: number;
-    phase: "complete" | "connecting" | "importing" | "validating";
+    phase: "complete" | "connecting" | "importing" | "seeking" | "validating";
     processed: number;
+    resumed?: number;
     skipped?: number;
     total: number;
 };
@@ -23,6 +24,7 @@ const createImportProgressReporter = (
 ): ReportImportProgress => {
     const started = Date.now();
     let phaseStarted = started;
+    let phaseStartProcessed = 0;
     let phase: ImportProgressUpdate["phase"] | undefined;
     let lastReport = started;
 
@@ -36,6 +38,7 @@ const createImportProgressReporter = (
         if (changed) {
             if (update.phase !== "complete") {
                 phaseStarted = now;
+                phaseStartProcessed = update.processed;
             }
             phase = nextPhase;
         }
@@ -57,7 +60,10 @@ const createImportProgressReporter = (
                       ),
             recordsPerSecond:
                 phaseSeconds > 0
-                    ? Math.round(update.processed / phaseSeconds)
+                    ? Math.round(
+                          (update.processed - phaseStartProcessed) /
+                              phaseSeconds
+                      )
                     : 0,
         });
     };

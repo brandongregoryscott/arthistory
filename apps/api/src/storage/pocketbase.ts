@@ -27,6 +27,10 @@ class PocketBaseClient {
         };
     }
 
+    get origin() {
+        return new URL(this.#config.url).origin;
+    }
+
     async ready() {
         for (const name of [
             "artists",

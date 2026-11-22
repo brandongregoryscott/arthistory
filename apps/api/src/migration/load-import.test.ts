@@ -554,6 +554,163 @@ describe("loadImport", () => {
         expect(remote.batches).toHaveLength(writes);
     });
 
+    it.each(["LF", "CRLF", "unterminated"])(
+        "resumes %s files at byte offsets and replays an unconfirmed batch",
+        async (format) => {
+            for (const name of ["artists.jsonl", "snapshots.jsonl"]) {
+                const file = resolve(directory, name);
+                const value = readFileSync(file, "utf8");
+                let contents = value;
+                if (format === "CRLF") {
+                    contents = value.replaceAll("\n", "\r\n");
+                } else if (format === "unterminated") {
+                    contents = value.trimEnd();
+                }
+                writeFileSync(file, contents);
+            }
+            const remote = mockPocketBase();
+            const checkpointPath = resolve(root, "checkpoint.json");
+            remote.onBatch = () => {
+                if (remote.batches.length === 3) {
+                    remote.failure = "lost response";
+                }
+            };
+            const options = {
+                batchSize: 2,
+                checkpointPath,
+                client: new PocketBaseClient(config),
+                directory,
+            };
+            await expect(loadImport(options)).rejects.toThrow();
+            const saved = JSON.parse(readFileSync(checkpointPath, "utf8"));
+            expect(saved.cursor).toMatchObject({ artists: 1, snapshots: 2 });
+            expect(saved.cursor.artistsOffset).toBeGreaterThan(0);
+            expect(saved.cursor.snapshotsOffset).toBeGreaterThan(0);
+            expect(
+                remote.records.artists.size + remote.records.snapshots.size
+            ).toBe(6);
+            remote.onBatch = () => {};
+            const writes = remote.batches.length;
+            expect(await loadImport(options)).toMatchObject({
+                created: 0,
+                resumed: 3,
+                skipped: 3,
+            });
+            expect(remote.batches).toHaveLength(writes);
+            remote.fetch.mockClear();
+            expect(await loadImport(options)).toMatchObject({
+                created: 0,
+                resumed: 6,
+                skipped: 0,
+            });
+            expect(remote.batches).toHaveLength(writes);
+            expect(
+                remote.fetch.mock.calls.filter(([url]) =>
+                    new URL(String(url)).searchParams.has("filter")
+                )
+            ).toHaveLength(1);
+        }
+    );
+
+    it("seeds a checkpoint from a confirmed progress count without replaying earlier lookups", async () => {
+        const remote = mockPocketBase();
+        remote.onBatch = () => {
+            if (remote.batches.length === 2) {
+                remote.failure = "rejection";
+            }
+        };
+        const client = new PocketBaseClient(config);
+        await expect(
+            loadImport({ batchSize: 2, client, directory })
+        ).rejects.toThrow();
+        expect(
+            remote.records.artists.size + remote.records.snapshots.size
+        ).toBe(2);
+        remote.onBatch = () => {};
+        remote.fetch.mockClear();
+        const checkpointPath = resolve(root, "checkpoint.json");
+        const onProgress = vi.fn();
+        const result = await loadImport({
+            batchSize: 2,
+            checkpointPath,
+            client,
+            directory,
+            onProgress,
+            resumeAfter: 2,
+        });
+        expect(result).toMatchObject({ created: 4, resumed: 2, skipped: 0 });
+        expect(
+            remote.fetch.mock.calls.some(
+                ([url]) =>
+                    new URL(String(url)).searchParams
+                        .get("filter")
+                        ?.includes('spotifyId = "1111111111111111111111"') ??
+                    false
+            )
+        ).toBe(false);
+        expect(
+            onProgress.mock.calls.some(([event]) => event.phase === "seeking")
+        ).toBe(true);
+        expect(onProgress).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                phase: "complete",
+                processed: 6,
+                resumed: 2,
+            })
+        );
+    });
+
+    it.each(["source", "target", "restored", "cursor"] as const)(
+        "refuses a stale or invalid %s checkpoint",
+        async (problem) => {
+            const remote = mockPocketBase();
+            const checkpointPath = resolve(root, "checkpoint.json");
+            const options = {
+                checkpointPath,
+                client: new PocketBaseClient(config),
+                directory,
+            };
+            await loadImport(options);
+            const writes = remote.batches.length;
+            if (problem === "source") {
+                const file = resolve(directory, "report.json");
+                writeFileSync(file, readFileSync(file, "utf8") + " ");
+            } else if (problem === "target") {
+                options.client = new PocketBaseClient({
+                    ...config,
+                    url: "http://different.invalid",
+                });
+            } else if (problem === "restored") {
+                remote.records.snapshots.clear();
+            } else {
+                const checkpoint = JSON.parse(
+                    readFileSync(checkpointPath, "utf8")
+                );
+                checkpoint.cursor.snapshotsOffset = -1;
+                writeFileSync(checkpointPath, JSON.stringify(checkpoint));
+            }
+            await expect(loadImport(options)).rejects.toThrow(
+                /Checkpoint|checkpoint/
+            );
+            expect(remote.batches).toHaveLength(writes);
+        }
+    );
+
+    it.each([-1, NaN, 1.1, 7])(
+        "rejects invalid resume count %s before target requests",
+        async (resumeAfter) => {
+            const remote = mockPocketBase();
+            await expect(
+                loadImport({
+                    client: new PocketBaseClient(config),
+                    directory,
+                    resumeAfter,
+                })
+            ).rejects.toThrow();
+            expect(remote.fetch).not.toHaveBeenCalled();
+        }
+    );
+
     it.each(["metrics", "count", "orphan", "oversized"] as const)(
         "stops on a late %s error in streaming mode after earlier valid batches",
         async (problem) => {
@@ -623,6 +780,7 @@ const mockPocketBase = () => {
         failure: "" as "" | "lost response" | "rejection",
         fetch: vi.fn(),
         onAuth: () => {},
+        onBatch: () => {},
         records,
     };
 
@@ -644,6 +802,7 @@ const mockPocketBase = () => {
                 String(form.get("@jsonPayload"))
             ) as { requests: Request[] };
             remote.batches.push(requests);
+            remote.onBatch();
             const { failure } = remote;
             remote.failure = "";
 

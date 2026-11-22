@@ -4,6 +4,7 @@ import { ClientResponseError } from "pocketbase";
 type ImportContext = {
     batch: number;
     records: { collection: string; id: string }[];
+    resumed?: number;
     stage: string;
 };
 

@@ -72,4 +72,27 @@ describe("createImportProgressReporter", () => {
             })
         ).not.toThrow();
     });
+
+    it("excludes the resumed prefix from throughput", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        const onProgress = vi.fn();
+        const report = createImportProgressReporter(onProgress);
+        report({
+            phase: "importing",
+            processed: 1000,
+            resumed: 1000,
+            total: 2000,
+        });
+        vi.setSystemTime(10000);
+        report({
+            phase: "importing",
+            processed: 1100,
+            resumed: 1000,
+            total: 2000,
+        });
+        expect(onProgress).toHaveBeenLastCalledWith(
+            expect.objectContaining({ percent: 55, recordsPerSecond: 10 })
+        );
+    });
 });

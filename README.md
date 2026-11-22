@@ -140,12 +140,12 @@ and conflicts stop the load. Imported artists remain disabled. Compare counts an
 coverage before enabling name backfill; never enroll the imported roster wholesale.
 
 Import progress is written to stderr as JSON lines, with separate `validating`,
-`connecting`, `importing`, and `complete` phases. Updates include processed/total
+`connecting`, `seeking`, `importing`, and `complete` phases. Updates include processed/total
 records, percent, elapsed seconds and records per second; importing also reports
 the batch and created/skipped counts. Phase transitions print immediately and
 record updates are throttled to once per five seconds. By default, every restart revalidates
 and stages the entire export before contacting PocketBase, then checks/skips
-existing records from the beginning. There is no saved cursor.
+existing records from the beginning unless a checkpoint is supplied.
 
 Add `--skip-preflight` to start writing without first validating and spooling the
 entire export. Records, relationships, ordering and counts are checked while
@@ -153,10 +153,30 @@ streaming instead; a late error can stop the run after earlier valid batches
 have been imported. Keep the prepared files unchanged during the run. This skips
 the initial pass, not existing-record lookups or conflict checks.
 
+Use `--checkpoint /migration/import-checkpoint.json` for fast restarts. This
+automatically streams the export and saves a cursor at completed-artist boundaries
+after confirmed batches, at most once per five seconds and at completion. Restart
+with the same checkpoint to seek directly into both JSONL files; a small suffix
+may be replayed. The checkpoint checks file identity/size/timestamps, the report
+digest and PocketBase origin, and verifies a saved snapshot against PocketBase.
+Keep the same prepared files and target database. After restore/deletion of earlier
+records, reconcile from the beginning with a new checkpoint; the snapshot check
+does not audit every earlier record.
+
+For a run started before checkpoint support, `--resume-after N` skips a confirmed
+prefix locally without looking up those earlier records in PocketBase. Use only
+the last `processed` count from a successful progress line for this same export
+and target. It counts artists **and** snapshots; do not infer it from database row
+counts or an error's partially processed batch. This one-time local seek validates
+the prefix but avoids its HTTP requests. Combine it with `--checkpoint` to save
+byte offsets for subsequent restarts. Progress reports the prefix as `resumed`,
+separately from this run's `created` and `skipped` counts.
+
 To survive a terminal disconnect, run from `/app` in the API container:
 
 ```sh
-nohup node dist/cli/migration/load-index.js --input /migration/prepared-data --skip-preflight \
+nohup node dist/cli/migration/load-index.js --input /migration/prepared-data \
+  --checkpoint /migration/import-checkpoint.json \
   >> /migration/import.log 2>&1 < /dev/null &
 echo $! > /migration/import.pid
 tail -f /migration/import.log

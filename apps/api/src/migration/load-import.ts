@@ -5,7 +5,9 @@ import type { PocketBaseClient } from "../storage/pocketbase";
 import type { ImportContext } from "./import-error";
 import type { ImportProgress } from "./import-progress";
 import type { ImportItem } from "./prepared-records";
+import type { ImportSource } from "./staged-import";
 import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
+import { ImportCheckpoint } from "./import-checkpoint";
 import { importError } from "./import-error";
 import { createImportProgressReporter } from "./import-progress";
 import { snapshotColumns } from "./prepared-records";
@@ -13,9 +15,11 @@ import { readPreparedImport, stageImport } from "./staged-import";
 
 type LoadImportOptions = {
     batchSize?: number;
+    checkpointPath?: string;
     client: PocketBaseClient;
     directory: string;
     onProgress?: (progress: ImportProgress) => void;
+    resumeAfter?: number;
     skipPreflight?: boolean;
 };
 
@@ -48,9 +52,32 @@ const loadImport = async (options: LoadImportOptions) => {
     }
 
     const reportProgress = createImportProgressReporter(options.onProgress);
-    const input =
-        options.skipPreflight === true
-            ? readPreparedImport(directory)
+    if (
+        options.resumeAfter != null &&
+        (!Number.isSafeInteger(options.resumeAfter) || options.resumeAfter < 0)
+    ) {
+        throw new Error(
+            "--resume-after must be a nonnegative safe integer from a confirmed progress log."
+        );
+    }
+    const checkpoint =
+        options.checkpointPath == null
+            ? undefined
+            : new ImportCheckpoint(
+                  directory,
+                  options.checkpointPath,
+                  client.origin
+              );
+    const checkpointPrefix =
+        checkpoint?.cursor == null
+            ? 0
+            : checkpoint.cursor.artists + checkpoint.cursor.snapshots;
+    const resumed = Math.max(options.resumeAfter ?? 0, checkpointPrefix);
+    const input: ImportSource =
+        options.skipPreflight === true ||
+        checkpoint != null ||
+        options.resumeAfter != null
+            ? readPreparedImport(directory, checkpoint?.cursor)
             : await stageImport(directory, reportProgress);
     const counts = {
         artists: input.artists,
@@ -61,15 +88,22 @@ const loadImport = async (options: LoadImportOptions) => {
     const context: ImportContext = {
         batch: 0,
         records: [],
+        ...(resumed > 0 ? { resumed } : {}),
         stage: "Check PocketBase authentication and required collections",
     };
     const total = counts.artists + counts.snapshots;
+    if (resumed > total) {
+        throw new Error(
+            "Resume position exceeds the prepared export record count."
+        );
+    }
     const progress = (phase: "complete" | "connecting" | "importing") =>
         reportProgress({
             batch: context.batch,
             created: counts.created,
             phase,
-            processed: counts.created + counts.skipped,
+            processed: resumed + counts.created + counts.skipped,
+            ...(resumed > 0 ? { resumed } : {}),
             skipped: counts.skipped,
             total,
         });
@@ -77,15 +111,69 @@ const loadImport = async (options: LoadImportOptions) => {
     try {
         progress("connecting");
         await client.ready();
-        progress("importing");
+        const anchor = checkpoint?.cursor?.anchor;
+        if (anchor != null) {
+            context.stage = "Verify checkpoint against PocketBase";
+            context.records = [{ collection: "snapshots", id: anchor.id }];
+            const result = await client.run((pb) =>
+                pb.collection("snapshots").getList<RecordModel>(1, 2, {
+                    filter: pb.filter(
+                        "(id = {:id} || (artist = {:artist} && weekStart = {:weekStart}))",
+                        {
+                            ...anchor,
+                            weekStart: anchor.weekStart.replace("T", " "),
+                        }
+                    ),
+                })
+            );
+            const item: ImportItem = {
+                collection: "snapshots",
+                record: anchor,
+            };
+            if (result.items.length !== 1 || !canSkip(item, result.items[0])) {
+                throw new Error(
+                    "Checkpoint anchor no longer matches PocketBase; reconcile from the beginning without the checkpoint after restore/deletion."
+                );
+            }
+        }
+        let toSkip = resumed - checkpointPrefix;
+        if (toSkip === 0) {
+            progress("importing");
+        } else {
+            reportProgress({
+                phase: "seeking",
+                processed: checkpointPrefix,
+                total: resumed,
+            });
+        }
         let pending: ImportItem[] = [];
         context.stage = "Read prepared export records";
+        context.records = [];
+        const saveCheckpoint = (force = false) => {
+            if (checkpoint != null && input.cursor != null) {
+                context.stage = "Save import checkpoint";
+                checkpoint.save(input.cursor(), force);
+            }
+        };
 
         for await (const item of input.records) {
+            if (toSkip > 0) {
+                toSkip--;
+                reportProgress({
+                    phase: "seeking",
+                    processed: resumed - toSkip,
+                    total: resumed,
+                });
+                if (toSkip === 0) {
+                    progress("importing");
+                }
+                continue;
+            }
             pending.push(item);
 
             if (pending.length === batchSize) {
                 await loadBatch({ client, context, counts, items: pending });
+                saveCheckpoint();
                 progress("importing");
                 pending = [];
                 context.stage = "Read prepared export records";
@@ -97,13 +185,14 @@ const loadImport = async (options: LoadImportOptions) => {
             await loadBatch({ client, context, counts, items: pending });
         }
 
+        saveCheckpoint(true);
         progress("complete");
-        return counts;
+        return resumed > 0 ? { ...counts, resumed } : counts;
     } catch (error) {
         throw importError(error, context, counts);
     } finally {
         await input.records.return(undefined);
-        if ("temporary" in input && typeof input.temporary === "string") {
+        if (input.temporary != null) {
             rmSync(input.temporary, { force: true, recursive: true });
         }
     }
