@@ -9,6 +9,7 @@
         "dev": "vite --port 6767",
         "preview": "vite preview",
         "start": "vite preview",
+        "test": "node --import tsx --test utils/*.test.ts",
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {

@@ -7,6 +7,7 @@ import {
     EmptyState,
     Flex,
     Spinner,
+    Switch,
     Text,
     Theme,
     useToken,
@@ -35,6 +36,7 @@ import {
     useRequestArtist,
     useSearchArtistsByName,
 } from "@/hooks";
+import { hideEmptyFollowerMonths } from "@/utils/follower-chart";
 import { humanizeNumber } from "@/utils/number-utils";
 
 ChartJS.register(
@@ -51,6 +53,7 @@ const EMPTY_ARTISTS: Record<string, Artist> = {};
 const HomePage: React.FC = () => {
     const breakpoint = useBreakpoint();
     const [darkMode, setDarkMode] = useState<boolean>(getDefaultDarkMode);
+    const [hideGaps, setHideGaps] = useState(false);
     const [searchValue, setSearchValue] = useState<string>("");
     const [selectedArtistIds, setSelectedArtistIds] =
         useState<string[]>(DEFAULT_ARTIST_IDS);
@@ -103,10 +106,13 @@ const HomePage: React.FC = () => {
     }, [isLoading]);
 
     const data = useMemo(() => {
-        const { timestamps, values } = alignMonthlyFollowers(
+        const monthlyFollowers = alignMonthlyFollowers(
             snapshots ?? [],
             selectedArtistIds
         );
+        const { timestamps, values } = hideGaps
+            ? hideEmptyFollowerMonths(monthlyFollowers)
+            : monthlyFollowers;
         const labels = timestamps.map((timestamp) =>
             new Date(timestamp).toLocaleDateString(undefined, {
                 dateStyle: breakpoint === "mobile" ? "short" : undefined,
@@ -128,7 +134,7 @@ const HomePage: React.FC = () => {
         });
 
         return { datasets: compact(datasets), labels: compact(labels) };
-    }, [snapshots, selectedArtistIds, breakpoint, artists, darkMode]);
+    }, [snapshots, selectedArtistIds, breakpoint, artists, darkMode, hideGaps]);
 
     const [
         lightText,
@@ -353,22 +359,37 @@ const HomePage: React.FC = () => {
                         </EmptyState.Content>
                     </EmptyState.Root>
                 ) : (
-                    <Box
-                        h={{
-                            base: "480px",
-                            md: "min(65vh, 800px)",
-                        }}
-                        minW="0"
-                        position="relative"
-                        w="full">
-                        <Bar
-                            aria-label="Spotify followers over time"
-                            data={data}
-                            key={breakpoint}
-                            options={options}
-                            role="img"
-                        />
-                    </Box>
+                    <>
+                        <Switch.Root
+                            alignSelf="flex-start"
+                            checked={hideGaps}
+                            colorPalette="teal"
+                            onCheckedChange={({ checked }) =>
+                                setHideGaps(checked)
+                            }>
+                            <Switch.HiddenInput />
+                            <Switch.Control>
+                                <Switch.Thumb />
+                            </Switch.Control>
+                            <Switch.Label>Hide gaps</Switch.Label>
+                        </Switch.Root>
+                        <Box
+                            h={{
+                                base: "480px",
+                                md: "min(65vh, 800px)",
+                            }}
+                            minW="0"
+                            position="relative"
+                            w="full">
+                            <Bar
+                                aria-label="Spotify followers over time"
+                                data={data}
+                                key={breakpoint}
+                                options={options}
+                                role="img"
+                            />
+                        </Box>
+                    </>
                 )}
             </>
         );
