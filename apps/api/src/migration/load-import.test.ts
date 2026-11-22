@@ -424,6 +424,53 @@ describe("loadImport", () => {
         });
     });
 
+    it("uses separately indexed ID and natural-key reads without total counts", async () => {
+        const remote = mockPocketBase();
+        await loadImport({ client: new PocketBaseClient(config), directory });
+        const queries = remote.fetch.mock.calls
+            .map(([url]) => new URL(String(url)))
+            .filter((url) => url.searchParams.has("filter"));
+        expect(queries.length).toBeGreaterThan(2);
+        for (const url of queries) {
+            const filter = url.searchParams.get("filter") ?? "";
+            const sort = url.searchParams.get("sort");
+            expect(url.searchParams.get("skipTotal")).toBe("true");
+            if (/\bid = /.test(filter)) {
+                expect(filter).not.toContain("artist =");
+                expect(filter).not.toContain("spotifyId =");
+                expect(sort).toBe("id");
+            } else if (filter.includes("spotifyId =")) {
+                expect(sort).toBe("spotifyId");
+            } else {
+                expect(filter.match(/artist =/g)).toHaveLength(1);
+                expect(sort).toBe("artist,weekStart");
+            }
+        }
+    });
+
+    it("still detects an incoming snapshot ID already used by a different artist", async () => {
+        const remote = mockPocketBase();
+        const [line] = readFileSync(
+            resolve(directory, "snapshots.jsonl"),
+            "utf8"
+        ).split("\n");
+        if (line == null) {
+            throw new Error("Missing fixture snapshot.");
+        }
+        const incoming = JSON.parse(line);
+        remote.records.snapshots.set(incoming.id, {
+            ...incoming,
+            artist: "otherartist0001",
+        });
+        await expect(
+            loadImport({ client: new PocketBaseClient(config), directory })
+        ).rejects.toThrow("Conflicting snapshots record");
+        expect(remote.batches).toHaveLength(0);
+        expect(remote.records.snapshots.get(incoming.id)?.artist).toBe(
+            "otherartist0001"
+        );
+    });
+
     it("recognizes an existing weekly row under a different ID and native date format", async () => {
         const remote = mockPocketBase();
         await loadImport({ client: new PocketBaseClient(config), directory });
@@ -876,27 +923,41 @@ const mockPocketBase = () => {
         const spotifyIds = [...filter.matchAll(/spotifyId = "([^"]+)"/g)].map(
             (match) => match[1]
         );
-        const weeks = [
-            ...filter.matchAll(/artist = "([^"]+)" && weekStart = "([^"]+)"/g),
-        ];
+        const artist = /artist = "([^"]+)"/.exec(filter)?.[1];
+        const weeks = [...filter.matchAll(/weekStart = "([^"]+)"/g)].map(
+            (match) => match[1]
+        );
         const items = [...records[collection].values()].filter(
             (record) =>
                 filter === "" ||
                 ids.includes(record.id) ||
                 spotifyIds.includes(String(record.spotifyId)) ||
-                weeks.some(
-                    (match) =>
-                        record.artist === match[1] &&
-                        String(record.weekStart).replace("T", " ") === match[2]
-                )
+                (record.artist === artist &&
+                    weeks.includes(String(record.weekStart).replace("T", " ")))
         );
 
+        const fields = url.searchParams.get("fields")?.split(",");
         return Response.json({
-            items,
+            items:
+                fields == null
+                    ? items
+                    : items.map((record) =>
+                          Object.fromEntries(
+                              Object.entries(record).filter(([key]) =>
+                                  fields.includes(key)
+                              )
+                          )
+                      ),
             page: 1,
             perPage: 200,
-            totalItems: items.length,
-            totalPages: Math.ceil(items.length / 200),
+            totalItems:
+                url.searchParams.get("skipTotal") === "true"
+                    ? -1
+                    : items.length,
+            totalPages:
+                url.searchParams.get("skipTotal") === "true"
+                    ? -1
+                    : Math.ceil(items.length / 200),
         });
     });
 
