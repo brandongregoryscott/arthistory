@@ -116,3 +116,31 @@ Tests cover the API services, artist search/cache, artist-page parser, snapshot
 storage/series, request handling and monitoring. Container CI builds the API and
 PocketBase images and checks that schema migrations apply. PocketBase schema
 migrations remain versioned deployment assets.
+
+## Extract one artist from a legacy backup
+
+Run this TypeScript script on your laptop using Node from `.nvmrc` and the
+repository’s `tsx` dependency (`npm ci` if dependencies are not installed). It opens the legacy backup
+read-only and keeps the latest capture per Monday-start UTC week (larger source
+rowid wins timestamp ties). There is no follower cutoff. Missing metrics become
+`-1`, and the original capture time and row provenance are preserved.
+
+```sh
+npx tsx scripts/extract-artist-snapshots.ts \
+  ~/arthistory/merged-spotify-data_1769922000.db \
+  3AzjK40JembVLZUh90slUW --output artist-snapshots.json
+```
+
+To also import, add `--pocketbase https://YOUR-POCKETBASE-HOST` to the command
+(use the dashboard origin without `/_/`). Email and password are prompted locally;
+the password is hidden and never saved. Omit `--output` when rerunning an import,
+since existing output files are never overwritten. No SSH or server-side script is
+needed. The default timestamp unit is seconds; use `--timestamp-unit milliseconds`
+only for a source that stores milliseconds.
+
+The importer uses PocketBase's built-in authenticated record endpoints. It finds
+or creates the artist with syncing off, preserves existing artist metadata and
+enrollment, and skips every existing artist/week. It never overwrites live captures.
+If interrupted, rerun to fill the remaining weeks. New artists have a blank name;
+set their display name in the dashboard afterward. Without `--pocketbase`, the
+script only extracts data and makes no network requests.
