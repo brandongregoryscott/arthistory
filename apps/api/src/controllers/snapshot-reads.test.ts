@@ -25,8 +25,8 @@ describe("PocketBase snapshot route contracts", () => {
     it("preserves the single snapshot route envelope and actual capture time", async () => {
         mockRecords([
             {
+                artist: "111111111111111",
                 capturedAt: "2026-01-07 12:00:00.000Z",
-                expand: { artist: { spotifyId: id } },
                 followers: -1,
 
                 id: "111111111111111",
@@ -61,8 +61,8 @@ describe("PocketBase snapshot route contracts", () => {
     it("preserves the multiple snapshot route envelope and actual capture time", async () => {
         mockRecords([
             {
+                artist: "111111111111111",
                 capturedAt: "2026-01-07 12:00:00.000Z",
-                expand: { artist: { spotifyId: id } },
                 followers: -1,
 
                 id: "111111111111111",
@@ -99,8 +99,8 @@ describe("PocketBase snapshot route contracts", () => {
         async (resolution) => {
             mockRecords([
                 {
+                    artist: "111111111111111",
                     capturedAt: "2026-01-07 12:00:00.000Z",
-                    expand: { artist: { spotifyId: id } },
                     followers: -1,
 
                     id: "111111111111111",
@@ -179,19 +179,21 @@ describe("PocketBase snapshot route contracts", () => {
 });
 
 const mockRecords = (items: unknown[]) => {
-    const fetch = vi.fn(async (url: string) =>
-        Response.json(
-            url.includes("auth-with-password")
-                ? { record: { id: "owner" }, token }
-                : {
-                      items,
-                      page: 1,
-                      perPage: 500,
-                      totalItems: -1,
-                      totalPages: -1,
-                  }
-        )
-    );
+    const fetch = vi.fn(async (url: string) => {
+        if (url.includes("auth-with-password")) {
+            return Response.json({ record: { id: "owner" }, token });
+        }
+
+        return Response.json({
+            items: url.includes("/collections/artists/")
+                ? [{ id: "111111111111111", spotifyId: id }]
+                : items,
+            page: 1,
+            perPage: 500,
+            totalItems: -1,
+            totalPages: -1,
+        });
+    });
     vi.stubGlobal("fetch", fetch);
 
     return fetch;
