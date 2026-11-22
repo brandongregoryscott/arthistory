@@ -81,19 +81,15 @@ class ArtistCache {
 
         while (true) {
             const result = await this.#client.run((pb) => {
-                const filters = [pb.filter("id > {:cursor}", { cursor })];
-
-                if (historyOnly) {
-                    filters.push("snapshots_via_artist.id != ''");
-                }
-
                 return pb
-                    .collection("artists")
+                    .collection(
+                        historyOnly ? "artists_with_snapshots" : "artists"
+                    )
                     .getList<RecordModel>(1, PAGE_SIZE, {
                         fields: historyOnly
                             ? "id"
                             : "id,spotifyId,displayName,aliases,syncEnabled",
-                        filter: filters.join(" && "),
+                        filter: pb.filter("id > {:cursor}", { cursor }),
                         signal,
                         skipTotal: true,
                         sort: "id",

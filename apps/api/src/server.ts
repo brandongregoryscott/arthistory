@@ -56,5 +56,5 @@ void main().catch((error: unknown) => {
         { err: error, event: "startup-failed" },
         "API initialization failed"
     );
-    process.exitCode = 1;
+    process.exit(1);
 });

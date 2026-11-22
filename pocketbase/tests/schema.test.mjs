@@ -40,7 +40,9 @@ test(
             });
 
             const columnsMigration = "1794900003_snapshot_columns.js";
+            const historyMigration = "1794900004_artists_with_snapshots.js";
             rmSync(resolve(migrations, columnsMigration));
+            rmSync(resolve(migrations, historyMigration));
 
             const hooks = resolve(root, "hooks");
             cpSync(new URL("../hooks/", import.meta.url), hooks, {
@@ -65,6 +67,10 @@ test(
             cpSync(
                 new URL("./metric-columns-fixture.js", import.meta.url),
                 resolve(hooks, "metric-columns-fixture.js")
+            );
+            cpSync(
+                new URL("./history-fixture.js", import.meta.url),
+                resolve(hooks, "history-fixture.js")
             );
             const restorePhase = resolve(root, "restore-phase");
             const pageFixture = readFileSync(
@@ -128,6 +134,7 @@ test(
             writeFileSync(
                 resolve(hooks, "test.pb.js"),
                 `
+            $app.rootCmd.addCommand(new Command({ use: "test-history", run: () => { $app.bootstrap(); require(__hooks + "/history-fixture.js")($app); } }));
             for (const phase of ["seed", "columns", "json", "cleanup"]) {
                 $app.rootCmd.addCommand(new Command({ use: "test-metrics-" + phase, run: () => { $app.bootstrap(); require(__hooks + "/metric-columns-fixture.js")($app, phase); } }));
             }
@@ -198,7 +205,13 @@ test(
             run("test-metrics-json", "--automigrate=false");
             run("migrate", "up");
             run("test-metrics-cleanup");
+            cpSync(
+                new URL("../migrations/" + historyMigration, import.meta.url),
+                resolve(migrations, historyMigration)
+            );
+            run("migrate", "up");
             run("test-schema");
+            run("test-history");
             process.stdout.write(run("test-prepared"));
             const backupBytes = statSync(
                 resolve(root, "data", "backups", "prepared-fixture.zip")
@@ -209,7 +222,7 @@ test(
             );
             assert.match(run("migrate", "up"), /No new migrations/);
             assert.match(
-                run("migrate", "down", "4", "--automigrate=false"),
+                run("migrate", "down", "5", "--automigrate=false"),
                 /Reverted 1794900000_collections.js/
             );
             run("migrate", "up");
