@@ -63,11 +63,11 @@ const parseArtistPage = (html, id, decodeBase64 = decodePageState) => {
 // Only inspect the top tracks embedded in this artist's page; never resolve links.
 /** @param {Record<string, unknown>} artist */
 const parseSongs = (artist) => {
-    const {items} = asRecord(asRecord(artist.discography).topTracks);
+    const { items } = asRecord(asRecord(artist.discography).topTracks);
     if (!Array.isArray(items)) {
         return null;
     }
-    /** @type {{ spotifyId: string, name: string, listenCount: null | number }[]} */
+    /** @type {import("@repo/common").SongStatistics[]} */
     const songs = [];
     const seen = new Set();
     for (const item of items) {

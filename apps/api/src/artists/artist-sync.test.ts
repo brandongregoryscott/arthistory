@@ -14,7 +14,7 @@ const SONG = {
 };
 
 class TestRecord implements DataRecord {
-    id = "artist-record";
+    id = "";
     values: Record<string, unknown> = {};
     constructor(readonly collection: unknown) {}
     getBool(field: string) {
@@ -46,26 +46,77 @@ const setup = () => {
     };
     const state = new TestRecord("sync_state");
     const snapshots: TestRecord[] = [];
+    const songs: TestRecord[] = [];
+    const songSnapshots: TestRecord[] = [];
+    const tables: Record<string, TestRecord[]> = {
+        artists: [artist],
+        snapshots,
+        song_snapshots: songSnapshots,
+        songs,
+    };
+    const table = (name: string) => {
+        const rows = tables[name];
+        if (rows == null) {
+            throw new Error(`Unknown table: ${name}`);
+        }
+        return rows;
+    };
+    artist.id = "artist-record";
+    let sequence = 0;
     const app: BackfillApp = {
         countRecords: () => 1,
+        delete: (row) => {
+            const rows = table(String((row as TestRecord).collection));
+            rows.splice(rows.indexOf(row as TestRecord), 1);
+        },
         findCollectionByNameOrId: (name) => name,
         findFirstRecordByData: (name) =>
             name === "sync_settings" ? settings : state,
         findRecordById: () => artist,
-        findRecordsByFilter: (name, _filter, _sort, _limit, _offset, params) =>
-            name === "artists"
-                ? [artist]
-                : snapshots.filter(
-                      (row) => row.getString("weekStart") === params?.week
-                  ),
-        runInTransaction: (operation) => operation(app),
+        findRecordsByFilter: (name, _filter, _sort, limit, _offset, params) => {
+            const rows = table(name).filter(
+                (row) =>
+                    (params?.week == null ||
+                        row.getString("weekStart") === params.week) &&
+                    (params?.artist == null ||
+                        row.getString("artist") === params.artist) &&
+                    (params?.id == null ||
+                        (name === "songs"
+                            ? row.getString("spotifyId")
+                            : row.id) === params.id)
+            );
+            return limit === 0 ? rows : rows.slice(0, limit);
+        },
+        runInTransaction: (operation) => {
+            const saved = Object.values(tables)
+                .flat()
+                .concat(state, settings)
+                .map((row) => ({ row, values: structuredClone(row.values) }));
+            const contents = Object.fromEntries(
+                Object.entries(tables).map(([key, rows]) => [key, [...rows]])
+            );
+            try {
+                operation(app);
+            } catch (error) {
+                for (const { row, values } of saved) {
+                    row.values = values;
+                }
+                for (const [key, rows] of Object.entries(contents)) {
+                    table(key).splice(0, table(key).length, ...rows);
+                }
+                throw error;
+            }
+        },
         save: (row) => {
             if (
                 row instanceof TestRecord &&
-                row.collection === "snapshots" &&
-                !snapshots.includes(row)
+                tables[String(row.collection)] != null
             ) {
-                snapshots.push(row);
+                const rows = table(String(row.collection));
+                if (!rows.includes(row)) {
+                    row.id = `record-${++sequence}`;
+                    rows.push(row);
+                }
             }
         },
     };
@@ -88,21 +139,49 @@ const setup = () => {
         page = nextPage;
         state.set("nextRequestAt", "");
     };
-    return { advance, app, artist, dependencies, snapshots };
+    return {
+        advance,
+        app,
+        artist,
+        dependencies,
+        snapshots,
+        songs,
+        songSnapshots,
+    };
 };
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("weekly song collection", () => {
-    it("saves songs with artist metrics and replaces only the current week's complete list", () => {
-        const { advance, app, artist, dependencies, snapshots } = setup();
+    it("stores queryable song identities and weekly observations using one artist-page read", () => {
+        const {
+            advance,
+            app,
+            artist,
+            dependencies,
+            snapshots,
+            songs,
+            songSnapshots,
+        } = setup();
         expect(collect(app, dependencies).status).toBe("collected");
         expect(dependencies.readPage).toHaveBeenCalledExactlyOnceWith(ID, 20);
         expect(snapshots[0]?.values).toMatchObject({
             artist: artist.id,
-            capturedAt: "2026-11-18 12:00:00.000Z",
             followers: 10,
-            songs: [SONG],
+        });
+        expect(snapshots[0]?.values).not.toHaveProperty("songs");
+        expect(songs).toHaveLength(1);
+        expect(songs[0]?.values).toEqual({
+            name: SONG.name,
+            spotifyId: SONG.spotifyId,
+        });
+        expect(songSnapshots[0]?.values).toEqual({
+            artist: artist.id,
+            capturedAt: "2026-11-18 12:00:00.000Z",
+            listenCount: 123,
+            name: SONG.name,
+            song: songs[0]?.id,
+            source: "spotify-public-page",
             weekStart: "2026-11-16 00:00:00.000Z",
         });
         expect(artist.getString("nextAttemptAt")).toBe(
@@ -116,25 +195,75 @@ describe("weekly song collection", () => {
                 popularity: null,
             },
             retryAfterMs: null,
-            songs: [],
+            songs: [{ ...SONG, listenCount: 0, name: "Renamed" }],
             status: 200,
         });
         collect(app, dependencies);
         expect(snapshots).toHaveLength(1);
-        expect(snapshots[0]?.values).toMatchObject({
-            followers: 11,
-            songs: [],
+        expect(songs).toHaveLength(1);
+        expect(songs[0]?.getString("name")).toBe("Renamed");
+        expect(songSnapshots).toHaveLength(1);
+        expect(songSnapshots[0]?.values).toMatchObject({
+            listenCount: 0,
+            name: "Renamed",
         });
-        advance("2026-11-25T12:00:00Z");
+        advance("2026-11-25T12:00:00Z", {
+            displayName: "Alex G",
+            metrics: {
+                followers: 12,
+                monthlyListeners: null,
+                popularity: null,
+            },
+            retryAfterMs: null,
+            songs: [{ ...SONG, listenCount: null }],
+            status: 200,
+        });
         collect(app, dependencies);
         expect(snapshots).toHaveLength(2);
-        expect(snapshots[0]?.getString("capturedAt")).toBe(
-            "2026-11-19 12:00:00.000Z"
-        );
+        expect(songs).toHaveLength(1);
+        expect(songSnapshots).toHaveLength(2);
+        expect(songSnapshots[0]?.values).toMatchObject({
+            listenCount: 0,
+            name: "Renamed",
+        });
+        expect(songSnapshots[1]?.values).toMatchObject({
+            listenCount: -1,
+            name: SONG.name,
+        });
     });
 
-    it("keeps newer captures and their song list when an older result arrives", () => {
-        const { advance, app, dependencies, snapshots } = setup();
+    it.each([[], null])(
+        "preserves earlier weeks and song identities when songs leave the page: %j",
+        (list) => {
+            const { advance, app, dependencies, songs, songSnapshots } =
+                setup();
+            collect(app, dependencies);
+            advance("2026-11-25T12:00:00Z");
+            collect(app, dependencies);
+            expect(songSnapshots).toHaveLength(2);
+            advance("2026-11-26T12:00:00Z", {
+                displayName: "Alex G",
+                metrics: {
+                    followers: 11,
+                    monthlyListeners: null,
+                    popularity: null,
+                },
+                retryAfterMs: null,
+                songs: list,
+                status: 200,
+            });
+            collect(app, dependencies);
+            expect(songs).toHaveLength(1);
+            expect(songSnapshots).toHaveLength(1);
+            expect(songSnapshots[0]?.getString("weekStart")).toBe(
+                "2026-11-16 00:00:00.000Z"
+            );
+        }
+    );
+
+    it("keeps newer captures when an older result arrives", () => {
+        const { advance, app, dependencies, snapshots, songSnapshots } =
+            setup();
         collect(app, dependencies);
         advance("2026-11-17T12:00:00Z", {
             displayName: "Alex G",
@@ -144,16 +273,51 @@ describe("weekly song collection", () => {
             status: 200,
         });
         collect(app, dependencies);
-        expect(snapshots[0]?.values).toMatchObject({
-            followers: 10,
-            songs: [SONG],
-        });
+        expect(snapshots[0]?.values).toMatchObject({ followers: 10 });
+        expect(songSnapshots[0]?.values).toMatchObject({ listenCount: 123 });
     });
 
-    it("does not save snapshots for name backfill or failed page reads", () => {
-        const { advance, app, dependencies, snapshots } = setup();
-        expect(tick(app, dependencies).status).toBe("resolved");
+    it("shares song identity across artist pages while keeping independent observations", () => {
+        const { advance, app, artist, dependencies, songs, songSnapshots } =
+            setup();
+        collect(app, dependencies);
+        // Reuse the fixture artist selection to simulate another artist's claim.
+        artist.id = "second-artist";
+        advance("2026-11-19T12:00:00Z");
+        collect(app, dependencies);
+        expect(songs).toHaveLength(1);
+        expect(songSnapshots).toHaveLength(2);
+        expect(songSnapshots.map((row) => row.getString("artist"))).toEqual([
+            "artist-record",
+            "second-artist",
+        ]);
+        expect(songSnapshots.map((row) => row.getString("song"))).toEqual([
+            songs[0]?.id,
+            songs[0]?.id,
+        ]);
+    });
+
+    it("rolls back artist metrics, song writes and success state if a song snapshot save fails", () => {
+        const { app, artist, dependencies, snapshots, songs, songSnapshots } =
+            setup();
+        const { save } = app;
+        app.save = (row) => {
+            if ((row as TestRecord).collection === "song_snapshots") {
+                throw new Error("storage failure");
+            }
+            save(row);
+        };
+        expect(() => collect(app, dependencies)).toThrow("storage failure");
         expect(snapshots).toEqual([]);
+        expect(songs).toEqual([]);
+        expect(songSnapshots).toEqual([]);
+        expect(artist.getString("lastSuccessAt")).toBe("");
+    });
+
+    it("does not save song data for name backfill or failed page reads", () => {
+        const { advance, app, dependencies, snapshots, songs, songSnapshots } =
+            setup();
+        expect(tick(app, dependencies).status).toBe("resolved");
         advance("2026-11-19T12:00:00Z", {
             displayName: null,
             retryAfterMs: null,
@@ -161,5 +325,7 @@ describe("weekly song collection", () => {
         });
         expect(collect(app, dependencies).status).toBe("failed");
         expect(snapshots).toEqual([]);
+        expect(songs).toEqual([]);
+        expect(songSnapshots).toEqual([]);
     });
 });

@@ -232,11 +232,53 @@ const saveSnapshot = (app, artist, page, now) => {
     ])) {
         row.set(key, page.metrics?.[key] ?? MISSING_METRIC);
     }
-    row.set("songs", page.songs ?? null);
     row.set("source", "spotify-public-page");
     app.save(row);
+    saveSongSnapshots(app, artist.id, page.songs ?? [], week, now);
 
     return now;
+};
+
+/** @param {BackfillApp} app @param {string} artistId @param {import("@repo/common").SongStatistics[]} songs @param {string} week @param {number} now */
+const saveSongSnapshots = (app, artistId, songs, week, now) => {
+    // Replace this capture's observations atomically with the artist snapshot.
+    // Keep song identities and all earlier weeks even when tracks leave the page.
+    const previous = app.findRecordsByFilter(
+        "song_snapshots",
+        "artist = {:artist} && weekStart = {:week}",
+        "",
+        0,
+        0,
+        { artist: artistId, week }
+    );
+    for (const row of previous) {
+        app.delete(row);
+    }
+    for (const observation of songs) {
+        const [existing] = app.findRecordsByFilter(
+            "songs",
+            "spotifyId = {:id}",
+            "",
+            1,
+            0,
+            { id: observation.spotifyId }
+        );
+        const song =
+            existing ?? new Record(app.findCollectionByNameOrId("songs"));
+        song.set("spotifyId", observation.spotifyId);
+        song.set("name", observation.name);
+        app.save(song);
+
+        const row = new Record(app.findCollectionByNameOrId("song_snapshots"));
+        row.set("artist", artistId);
+        row.set("song", song.id);
+        row.set("name", observation.name);
+        row.set("weekStart", week);
+        row.set("capturedAt", date(now));
+        row.set("listenCount", observation.listenCount ?? MISSING_METRIC);
+        row.set("source", "spotify-public-page");
+        app.save(row);
+    }
 };
 
 /** @param {number} timestamp */

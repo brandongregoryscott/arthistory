@@ -71,13 +71,16 @@ Collection writes the current Monday-start UTC week and actual `capturedAt` time
 Newer captures replace that week's complete metrics. Snapshot/success writes commit
 together. Snapshots store `followers`, `monthlyListeners` and `popularity` in numeric
 columns; `-1` means unavailable and measured zero remains zero. HTML collection
-always writes `popularity = -1`. Each snapshot also stores a `songs` JSON list
-from the artist page's embedded top tracks, with `spotifyId`, `name`, and cumulative
-`listenCount` (null when unavailable). No track, album, or other detail pages are
-requested. Songs share the artist's weekly capture and transaction; a newer capture
-replaces the list, preserving older weeks when songs leave the page. A null list
-means no embedded list was available (including older snapshots); `[]` means the
-page supplied an empty list. This is a partial song list, not the full catalog.
+always writes `popularity = -1`. Song identities live in `songs` (unique Spotify ID
+and current name). `song_snapshots` stores one observation per artist/song/UTC week,
+with numeric `listenCount`, `capturedAt`, the observed name, and source. A count of
+`-1` means unavailable; measured zero remains zero. Song and artist snapshots
+commit together. Newer captures replace that artist's current-week observations;
+older weeks and song identities remain when songs leave the page. A shared track
+has one song identity and separate observations for each artist page.
+Only top tracks embedded in the fetched artist page are collected. No track,
+album, or other detail pages are requested. This is a partial list, not the full
+catalog. Missing or empty lists produce no song observations for that capture.
 `inspect-artist` includes these same song statistics without writing them.
 Express translates `-1` to `null` so charts show gaps, and missed weeks stay missing.
 Dashboard name corrections become owner metadata and are preserved, including

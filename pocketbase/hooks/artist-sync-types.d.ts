@@ -1,4 +1,4 @@
-import type { parseArtistPage } from "./artist-page-parser.cjs";
+import type { SongStatistics } from "@repo/common";
 
 type DataRecord = {
     getBool(field: string): boolean;
@@ -11,6 +11,7 @@ type DataRecord = {
 
 type BackfillApp = {
     countRecords(collection: string, filter?: unknown): number;
+    delete(record: DataRecord): void;
     findCollectionByNameOrId(collection: string): unknown;
     findFirstRecordByData(
         collection: string,
@@ -38,7 +39,7 @@ type PageResult = {
         popularity: null | number;
     };
     retryAfterMs: null | number;
-    songs?: ReturnType<typeof parseArtistPage>["songs"];
+    songs?: null | SongStatistics[];
     status: number;
 };
 
