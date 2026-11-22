@@ -1,5 +1,5 @@
 #!/usr/bin/env -S tsx
-// Run with the Node version in .nvmrc and the repository's tsx dependency.
+
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
@@ -16,9 +16,13 @@ type Snapshot = {
     source: string;
     weekStart: string;
 };
+
 type ExtractedHistory = { snapshots: Snapshot[]; spotifyId: string };
+
 type Credentials = { identity: string; password: string };
+
 type RecordIdentity = { id: string };
+
 type LegacyRow = {
     followers: null | number;
     popularity: null | number;
@@ -26,7 +30,65 @@ type LegacyRow = {
     timestamp: number;
 };
 
-const report = (message: string) => process.stdout.write(message + "\n");
+/**
+ * @example
+  npx tsx scripts/extract-artist-snapshots.ts \
+    ~/arthistory/merged-spotify-data_1769922000.db \
+    3AzjK40JembVLZUh90slUW \
+    --pocketbase https://bscott-arthistory-pocketbase.tuns.sh
+ */
+async function main() {
+    const { positionals, values } = parseArgs({
+        allowPositionals: true,
+        options: {
+            email: { type: "string" },
+            help: { short: "h", type: "boolean" },
+            output: { type: "string" },
+            pocketbase: { type: "string" },
+            "timestamp-unit": { default: "seconds", type: "string" },
+        },
+    });
+    if (values.help === true) {
+        report(
+            "Usage: npx tsx scripts/extract-artist-snapshots.ts SOURCE ARTIST_ID [--output FILE] [--timestamp-unit seconds|milliseconds] [--pocketbase HTTPS_ORIGIN] [--email EMAIL]\nOmit --pocketbase to extract without network access. Import credentials are prompted locally; the password is hidden."
+        );
+        return;
+    }
+
+    const [source, spotifyId] = positionals;
+    if (positionals.length !== 2 || source == null || spotifyId == null) {
+        throw new Error("Provide SOURCE and ARTIST_ID; use --help for usage");
+    }
+
+    if (values.pocketbase != null) {
+        validateOrigin(values.pocketbase);
+    }
+
+    const data = extract(source, spotifyId, values["timestamp-unit"]);
+    if (data.snapshots.length === 0) {
+        throw new Error("No snapshots found for this artist; nothing imported");
+    }
+
+    const json = JSON.stringify(data, null, 2) + "\n";
+    if (values.output != null) {
+        writeFileSync(values.output, json, { flag: "wx" });
+    }
+
+    report(
+        `Extracted ${data.snapshots.length} weekly snapshots for ${data.spotifyId}.`
+    );
+
+    if (values.pocketbase != null) {
+        await importSnapshots(
+            values.pocketbase,
+            await credentials(values.email),
+            data
+        );
+        return;
+    }
+
+    process.stdout.write(json);
+}
 
 function extract(
     source: string,
@@ -39,9 +101,11 @@ function extract(
     if (!["seconds", "milliseconds"].includes(unit)) {
         throw new Error("--timestamp-unit must be seconds or milliseconds");
     }
+
     const multiplier = unit === "seconds" ? 1000 : 1;
     const snapshots = new Map<string, Snapshot>();
     const db = new DatabaseSync(resolve(source), { readOnly: true });
+
     try {
         db.exec("PRAGMA temp_store=FILE; PRAGMA cache_size=-32768");
         const rows = db.prepare(`
@@ -123,6 +187,7 @@ async function credentials(email?: string): Promise<Credentials> {
         throw new Error("Enter import credentials in an interactive terminal");
     }
     let hidden = false;
+
     const output = new Writable({
         write(chunk, encoding, done) {
             if (!hidden) {
@@ -131,15 +196,18 @@ async function credentials(email?: string): Promise<Credentials> {
             done();
         },
     });
+
     const rl = createInterface({
         historySize: 0,
         input: process.stdin,
         output,
         terminal: true,
     });
+
     const abort = new AbortController();
     rl.on("SIGINT", () => abort.abort());
     rl.on("close", () => abort.abort());
+
     try {
         const identity =
             email == null || email.length === 0
@@ -165,12 +233,13 @@ async function importSnapshots(
 ) {
     const base = validateOrigin(url);
     let token = "";
+
     async function request<T = unknown>(
         method: string,
         path: string,
         body?: unknown
     ): Promise<T> {
-        const response = await fetch(base + path, {
+        const response = await fetch(`${base}${path}`, {
             body: body === undefined ? undefined : JSON.stringify(body),
             headers: {
                 Authorization: token,
@@ -187,6 +256,7 @@ async function importSnapshots(
         }
         return (await response.json()) as T;
     }
+
     async function find(collection: string, filter: string) {
         const query = new URLSearchParams({
             filter,
@@ -200,6 +270,7 @@ async function importSnapshots(
         );
         return items[0];
     }
+
     ({ token } = await request<{ token: string }>(
         "POST",
         "/api/collections/_superusers/auth-with-password",
@@ -216,6 +287,7 @@ async function importSnapshots(
                 syncEnabled: false,
             }
         ));
+
     let created = 0;
     for (const snapshot of data.snapshots) {
         // Never overwrite an existing week, including newer live captures.
@@ -243,50 +315,8 @@ async function importSnapshots(
     return { created, skipped };
 }
 
-async function main() {
-    const { positionals, values } = parseArgs({
-        allowPositionals: true,
-        options: {
-            email: { type: "string" },
-            help: { short: "h", type: "boolean" },
-            output: { type: "string" },
-            pocketbase: { type: "string" },
-            "timestamp-unit": { default: "seconds", type: "string" },
-        },
-    });
-    if (values.help === true) {
-        report(
-            "Usage: npx tsx scripts/extract-artist-snapshots.ts SOURCE ARTIST_ID [--output FILE] [--timestamp-unit seconds|milliseconds] [--pocketbase HTTPS_ORIGIN] [--email EMAIL]\nOmit --pocketbase to extract without network access. Import credentials are prompted locally; the password is hidden."
-        );
-        return;
-    }
-    const [source, spotifyId] = positionals;
-    if (positionals.length !== 2 || source == null || spotifyId == null) {
-        throw new Error("Provide SOURCE and ARTIST_ID; use --help for usage");
-    }
-    if (values.pocketbase != null) {
-        validateOrigin(values.pocketbase);
-    }
-    const data = extract(source, spotifyId, values["timestamp-unit"]);
-    if (data.snapshots.length === 0) {
-        throw new Error("No snapshots found for this artist; nothing imported");
-    }
-    const json = JSON.stringify(data, null, 2) + "\n";
-    if (values.output != null) {
-        writeFileSync(values.output, json, { flag: "wx" });
-    }
-    report(
-        `Extracted ${data.snapshots.length} weekly snapshots for ${data.spotifyId}.`
-    );
-    if (values.pocketbase != null) {
-        await importSnapshots(
-            values.pocketbase,
-            await credentials(values.email),
-            data
-        );
-    } else if (values.output == null) {
-        process.stdout.write(json);
-    }
+function report(message: string) {
+    process.stdout.write(message + "\n");
 }
 
 if (
@@ -300,5 +330,3 @@ if (
         process.exitCode = 1;
     });
 }
-
-export { extract, importSnapshots };
