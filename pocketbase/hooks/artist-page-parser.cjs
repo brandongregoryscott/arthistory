@@ -63,7 +63,7 @@ const parseArtistPage = (html, id, decodeBase64 = decodePageState) => {
 // Only inspect the top tracks embedded in this artist's page; never resolve links.
 /** @param {Record<string, unknown>} artist */
 const parseSongs = (artist) => {
-    const items = asRecord(asRecord(artist.discography).topTracks).items;
+    const {items} = asRecord(asRecord(artist.discography).topTracks);
     if (!Array.isArray(items)) {
         return null;
     }
