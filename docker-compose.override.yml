@@ -1,9 +1,5 @@
 # Local development uses an isolated network and opts into tunnels explicitly.
 services:
-  api:
-    volumes:
-      - ${MIGRATION_DATA_PATH:-./migration-data}:/migration
-
   tunnel:
     profiles: ["tunnels"]
 

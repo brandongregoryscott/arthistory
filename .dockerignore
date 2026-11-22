@@ -1,7 +1,7 @@
 node_modules
 .next
-dist
-build
+**/dist
+**/build
 .env
 .git
 *.db

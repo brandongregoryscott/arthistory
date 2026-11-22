@@ -31,7 +31,7 @@
     "private": true,
     "scripts": {
         "build": "esbuild src/server.ts --bundle --platform=node --target=node26 --outfile=dist/server.js && npm run build:cli",
-        "build:cli": "esbuild src/artists/add-artist.ts src/artists/inspect-artist.ts src/migration/index.ts src/migration/load-index.ts --bundle --platform=node --target=node26 --outbase=src --outdir=dist/cli",
+        "build:cli": "esbuild src/artists/add-artist.ts src/artists/inspect-artist.ts --bundle --platform=node --target=node26 --outbase=src --outdir=dist/cli",
         "clean": "rm -rf dist",
         "dev": "concurrently --names esbuild,nodemon \"npm run build -- --watch\" \"nodemon -q dist/server.js\"",
         "start": "node dist/server.js",

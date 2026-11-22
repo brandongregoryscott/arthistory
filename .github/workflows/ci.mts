@@ -41,15 +41,6 @@ const checks = job("checks", {
     },
     steps: [
         step.dependsOn(install)({
-            name: "Install pinned PocketBase for native tests",
-            if: "matrix.script == 'test'",
-            run: `version=$(sed -n 's/^ARG PB_VERSION=//p' Dockerfile.pocketbase)
-mkdir -p /tmp/pocketbase
-curl --fail --location --retry 3 "https://github.com/pocketbase/pocketbase/releases/download/v\${version}/pocketbase_\${version}_linux_amd64.zip" -o /tmp/pocketbase.zip
-unzip /tmp/pocketbase.zip pocketbase -d /tmp/pocketbase
-printf 'POCKETBASE_TEST_BINARY=/tmp/pocketbase/pocketbase\n' >> "$GITHUB_ENV"`,
-        }),
-        step.dependsOn(install)({
             name: "Run check",
             run: "npm run ${{ matrix.script }}",
         }),
@@ -91,8 +82,6 @@ assert.equal(spawnSync("node", ["--check", "dist/server.js"]).status, 0);
 const commands = {
     "add-artist": "Provide --artist with a Spotify ID or URL.",
     "inspect-artist": "Provide --artist with a Spotify artist ID or URL.",
-    "import-data": "Provide --input prepared-data-directory.",
-    "prepare-import": "Provide a filename and explicit timestamp unit.",
 };
 for (const [command, expected] of Object.entries(commands)) {
     const result = spawnSync("npm", ["run", command, "--"], { encoding: "utf8" });

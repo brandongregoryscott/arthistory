@@ -7,9 +7,6 @@ browsers call Express and never need PocketBase credentials or Spotify API keys.
 
 ## Start a small deployment
 
-See [the deployment checklist](DEPLOYMENT.md) for PR merge order, manual cutover
-steps and rollback.
-
 Use Node from `.nvmrc`. Copy `apps/api/.env.example` to the root `.env`, configure
 server-side PocketBase credentials, and keep that file out of Git. Compose starts
 the persistent PocketBase sidecar and waits for it before starting the API.
@@ -29,19 +26,13 @@ npm run add-artist -- --artist https://open.spotify.com/artist/5AyEXCtu3xnnsTGCo
 npm run build --workspace web
 ```
 
-Keep the current public API/frontend running while the sidecar and initial roster
-are prepared. After the dashboard checks below, start the new API/tunnel and publish
-the matching frontend build; the chart needs its sparse-series alignment code.
-Existing routes and response envelopes are preserved.
-
 The add command verifies one public artist page and creates a named artist with
 syncing **off**. It accepts an ID or URL, preserves existing owner records, and uses
-IDs compatible with a later history import. `inspect-artist` reads a page without
+PocketBase-generated record IDs. `inspect-artist` reads a page without
 writing anything. Neither command starts background collection.
 
-The API image includes bundled versions of `add-artist`, `inspect-artist`,
-`prepare-import`, and `import-data`. In Coolify's API container terminal at `/app`,
-run the same npm command directly:
+The API image includes bundled versions of `add-artist` and `inspect-artist`.
+In Coolify's API container terminal at `/app`, run the same npm command directly:
 
 ```sh
 npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZjjZFJs
@@ -49,15 +40,6 @@ npm run add-artist -- --artist https://open.spotify.com/artist/6lcwlkAjBPSKnFBZj
 
 From a Compose host, use `docker compose exec api npm run add-artist -- --artist <id>`.
 The container inherits its PocketBase credentials and internal URL from Compose.
-Production Compose mounts `/root/arthistory-migration` on the host at `/migration`
-inside the API container, writable for prepared output. Set `MIGRATION_DATA_PATH`
-to override the host directory; local Compose defaults to `./migration-data`.
-Copy any backup held only in the old container to the host directory before
-redeploying. Use `--source /migration/legacy-backup.db --output /migration/prepared-data`
-for preparation, then `--input /migration/prepared-data` for import. The importer
-opens the source read-only. The image contains compiled commands, not the repository
-or dev tools.
-
 Production Compose starts the PocketBase tuns.sh tunnel automatically, using
 `POCKETBASE_TUNNEL_NAME` (default `arthistory-pocketbase`) and the host's registered
 SSH key. Read its assigned HTTPS URL from the `pocketbase-tunnel` container logs,
@@ -66,7 +48,7 @@ credentials. The local override disables tunnels by default; opt in with
 `docker compose --profile tunnels up -d pocketbase-tunnel`. Enroll only a
 small chosen roster with `artists.syncEnabled`, then enable `sync_settings.enabled`
 on the global record. Both are required. Confirm current-week snapshots, capture
-times, then cut over the API and matching frontend:
+times, then start the API:
 
 ```sh
 docker compose up -d --build api tunnel
@@ -89,11 +71,10 @@ Collection writes the current Monday-start UTC week and actual `capturedAt` time
 Newer captures replace that week's complete metrics. Snapshot/success writes commit
 together. Snapshots store `followers`, `monthlyListeners` and `popularity` in numeric
 columns; `-1` means unavailable and measured zero remains zero. HTML collection
-always writes `popularity = -1`; legacy imports retain available popularity values.
+always writes `popularity = -1`.
 Express translates `-1` to `null` so charts show gaps, and missed weeks stay missing.
-Prepared import JSONL retains its nullable metrics object for compatibility; the
-loader converts it to numeric columns before writing PocketBase records. Dashboard name corrections become
-owner metadata and are preserved, including edits during a fetch.
+Dashboard name corrections become owner metadata and are preserved, including
+edits during a fetch.
 
 Enable `sync_settings.namesBackfillEnabled` to fill unresolved artist names without
 enrolling them. Both jobs start disabled. Outcomes log coverage and HTTP status;
@@ -104,98 +85,15 @@ typos such as Dustr → Duster, and preserves accents/non-Latin display names an
 distinct artist IDs. History availability (`isTracked`/`hasHistory`) and enrollment
 (`syncEnabled`) are separate.
 
-## Optional historical import
-
-A fresh small roster can collect before importing old history. Keep original
-backups and the previous deployment/image/configuration for rollback. Select the
-latest merged source backup by verified contents/timestamps, not filename or size.
-The isolated import bridge reads the old SQLite format; application reads and jobs
-use PocketBase exclusively.
-
-```sh
-npm run prepare-import -- --source ./backup.db --timestamp-unit seconds --inventory
-npm run prepare-import -- --source ./backup.db --timestamp-unit seconds --output ./prepared-data
-npm run import-data -- --input ./prepared-data
-```
-
-Preparation opens the source read-only, checks integrity/counts/date range, and
-streams deterministic JSONL. SQLite sorting needs temporary disk space; allow
-several times the source size. The default cutoff retains artists whose latest
-known non-null follower count is **at least 10,000**, preserving their earlier weekly
-history. Override with `--cutoff` or repeated `--keep-id`. Latest complete captures
-win; ties use the larger source rowid. Nulls, timestamp units and provenance survive.
-
-The new output directory contains artists/snapshots, exclusions and report counts.
-Invalid IDs, timestamps and metrics are recorded with their source row numbers,
-original values and validation reasons in `errors.jsonl`; preparation continues
-with valid rows. Invalid captures are excluded before follower pruning and weekly
-selection. Review `report.json` (`counts.invalidRows`) and `errors.jsonl` before
-importing, especially if an incorrect timestamp unit excluded most or all rows.
-The command prints its final report and warns when rows were skipped. Schema,
-integrity, disk and other operational failures still stop preparation.
-Existing output paths are rejected. Loading preflights the full export in bounded
-memory, then uses sequential record batches. Rerun the same export after interruption:
-matching records/newer captures are skipped, owner metadata/enrollment is preserved,
-and conflicts stop the load. Imported artists remain disabled. Compare counts and
-coverage before enabling name backfill; never enroll the imported roster wholesale.
-
-Import progress is written to stderr as JSON lines, with separate `validating`,
-`connecting`, `seeking`, `importing`, and `complete` phases. Updates include processed/total
-records, percent, elapsed seconds and records per second; importing also reports
-the batch and created/skipped counts. Phase transitions print immediately and
-record updates are throttled to once per five seconds. By default, every restart revalidates
-and stages the entire export before contacting PocketBase, then checks/skips
-existing records from the beginning unless a checkpoint is supplied.
-
-Add `--skip-preflight` to start writing without first validating and spooling the
-entire export. Records, relationships, ordering and counts are checked while
-streaming instead; a late error can stop the run after earlier valid batches
-have been imported. Keep the prepared files unchanged during the run. This skips
-the initial pass, not existing-record lookups or conflict checks.
-
-Use `--checkpoint /migration/import-checkpoint.json` for fast restarts. This
-automatically streams the export and saves a cursor at completed-artist boundaries
-after confirmed batches, at most once per five seconds and at completion. Restart
-with the same checkpoint to seek directly into both JSONL files; a small suffix
-may be replayed. The checkpoint checks file identity/size/timestamps, the report
-digest and PocketBase origin, and verifies a saved snapshot against PocketBase.
-Keep the same prepared files and target database. After restore/deletion of earlier
-records, reconcile from the beginning with a new checkpoint; the snapshot check
-does not audit every earlier record.
-
-For a run started before checkpoint support, `--resume-after N` skips a confirmed
-prefix locally without looking up those earlier records in PocketBase. Use only
-the last `processed` count from a successful progress line for this same export
-and target. It counts artists **and** snapshots; do not infer it from database row
-counts or an error's partially processed batch. This one-time local seek validates
-the prefix but avoids its HTTP requests. Combine it with `--checkpoint` to save
-byte offsets for subsequent restarts. Progress reports the prefix as `resumed`,
-separately from this run's `created` and `skipped` counts.
-
-To survive a terminal disconnect, run from `/app` in the API container:
-
-```sh
-nohup node dist/cli/migration/load-index.js --input /migration/prepared-data \
-  --checkpoint /migration/import-checkpoint.json \
-  >> /migration/import.log 2>&1 < /dev/null &
-echo $! > /migration/import.pid
-tail -f /migration/import.log
-```
-
-Start only one import process at a time. Disconnecting from the log viewer does
-not stop the import. Container replacement/restart or a host reboot still stops
-the process; rerun the same command against the persistent export afterward.
-
 ## Native backups and restore
 
 In PocketBase Settings > Backups, configure a daily schedule such as `0 3 * * *`
 and bounded retention such as seven scheduled backups. Use its native S3 destination
 for the `arthistory-backups` R2 bucket, account endpoint, region `auto` and
 backup-scoped credentials. Keep secrets/encryption keys outside Git and preserve
-matching environment secrets for restore. Do not reuse/delete migration source
-objects. No custom backup manifest or application backup endpoint is involved.
+matching environment secrets for restore.
 
-Before cutover, create a native backup and restore it into an isolated data copy
+Periodically create a native backup and restore it into an isolated data copy
 with the matching PocketBase version and versioned hooks/migrations. Allow at least
 twice the backup size as free space. Native restore replaces the data directory and
 restarts the app. Start the rehearsal target with outbound network access blocked:
@@ -203,12 +101,7 @@ restored settings may contain enabled jobs and the production R2 destination.
 Before reconnecting it, disable collection/backfill and native scheduled backups in
 the restored dashboard, and use an isolated backup destination for further tests.
 Verify records, nulls, settings, files, rebuilt search and chart queries before accepting it. Retain
-the previous image/configuration and original sources until recovery is verified.
-
-The native test suite backs up disposable data, mutates it, invokes native restore,
-restarts and checks records/settings/files. Actual R2 access, retained database and
-index size, backup size/duration, real query latency and visual chart verification
-still require measurement on the deployment target.
+the previous image/configuration until recovery is verified.
 
 ## Verification
 
@@ -219,9 +112,7 @@ npm test
 npm run build
 ```
 
-Set `POCKETBASE_TEST_BINARY` to the pinned executable to include native schema,
-transaction, collection/backfill, restart and full restore tests under `npm test`.
-Without it the native fixture explicitly skips; CI installs the pinned binary.
-Container CI builds API/PocketBase and checks migrations. No separate migration
-test command, Spotify Web API credential, fragment sync service or direct API access
-to PocketBase's SQLite files is needed.
+Tests cover the API services, artist search/cache, artist-page parser, snapshot
+storage/series, request handling and monitoring. Container CI builds the API and
+PocketBase images and checks that schema migrations apply. PocketBase schema
+migrations remain versioned deployment assets.

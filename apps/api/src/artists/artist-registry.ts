@@ -1,7 +1,6 @@
 import type { RecordModel } from "pocketbase";
 import { ClientResponseError } from "pocketbase";
 import type { PocketBaseClient } from "../storage/pocketbase";
-import { importId } from "../migration/prepared-records";
 import { ArtistPageClient, parseSpotifyArtistId } from "./artist-page";
 
 type RegistryOptions = {
@@ -36,7 +35,6 @@ class ArtistRegistry {
                     {
                         aliases: [],
                         displayName: page.displayName,
-                        id: importId(`artist:${spotifyId}`),
                         metadataSource: "spotify-public-page",
                         metadataUpdatedAt: new Date().toISOString(),
                         searchNames: [],
@@ -50,9 +48,7 @@ class ArtistRegistry {
             if (
                 error instanceof ClientResponseError &&
                 error.status === 400 &&
-                (error.response.data?.spotifyId?.code ===
-                    "validation_not_unique" ||
-                    error.response.data?.id?.code === "validation_not_unique")
+                error.response.data?.spotifyId?.code === "validation_not_unique"
             ) {
                 const raced = await this.#find(spotifyId);
                 if (raced != null) {
