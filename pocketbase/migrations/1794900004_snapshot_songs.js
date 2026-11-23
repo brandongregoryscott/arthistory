@@ -1,5 +1,6 @@
 migrate(
     (app) => {
+        const { MISSING_METRIC } = require(__hooks + "/snapshot-metrics.cjs");
         const artists = app.findCollectionByNameOrId("artists");
         const songs = new Collection({
             name: "songs",
@@ -55,7 +56,7 @@ migrate(
                     {
                         name: "listenCount",
                         type: "number",
-                        min: -1,
+                        min: MISSING_METRIC,
                         max: Number.MAX_SAFE_INTEGER,
                         onlyInt: true,
                     },
