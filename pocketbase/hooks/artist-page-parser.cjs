@@ -67,7 +67,7 @@ const parseSongs = (artist) => {
     if (!Array.isArray(items)) {
         return null;
     }
-    /** @type {import("@repo/common").SongStatistics[]} */
+    /** @type {import("@repo/common").SongSnapshot[]} */
     const songs = [];
     const seen = new Set();
     for (const item of items) {

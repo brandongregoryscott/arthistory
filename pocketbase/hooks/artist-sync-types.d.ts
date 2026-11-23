@@ -1,4 +1,4 @@
-import type { SongStatistics } from "@repo/common";
+import type { SongSnapshot } from "@repo/common";
 
 type DataRecord = {
     getBool(field: string): boolean;
@@ -39,7 +39,7 @@ type PageResult = {
         popularity: null | number;
     };
     retryAfterMs: null | number;
-    songs?: null | SongStatistics[];
+    songs?: null | SongSnapshot[];
     status: number;
 };
 

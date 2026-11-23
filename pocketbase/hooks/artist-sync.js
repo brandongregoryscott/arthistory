@@ -239,7 +239,7 @@ const saveSnapshot = (app, artist, page, now) => {
     return now;
 };
 
-/** @param {BackfillApp} app @param {string} artistId @param {import("@repo/common").SongStatistics[]} songs @param {string} week @param {number} now */
+/** @param {BackfillApp} app @param {string} artistId @param {import("@repo/common").SongSnapshot[]} songs @param {string} week @param {number} now */
 const saveSongSnapshots = (app, artistId, songs, week, now) => {
     // Replace this capture's observations atomically with the artist snapshot.
     // Keep song identities and all earlier weeks even when tracks leave the page.

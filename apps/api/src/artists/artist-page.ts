@@ -1,4 +1,4 @@
-import type { SongStatistics } from "@repo/common";
+import type { SongSnapshot } from "@repo/common";
 import {
     MAX_ARTIST_PAGE_BYTES,
     parseArtistPage as parsePage,
@@ -12,7 +12,7 @@ type ArtistPage = {
         monthlyListeners: null | number;
         popularity: null;
     };
-    songs: null | SongStatistics[];
+    songs: null | SongSnapshot[];
     spotifyId: string;
 };
 

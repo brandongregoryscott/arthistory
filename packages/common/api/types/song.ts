@@ -5,8 +5,8 @@ type Song = {
 };
 
 /** Cumulative listens observed on the artist page; null means unavailable. */
-type SongStatistics = {
+type SongSnapshot = {
     listenCount: null | number;
 } & Song;
 
-export type { Song, SongStatistics };
+export type { Song, SongSnapshot };
