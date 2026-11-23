@@ -1,3 +1,5 @@
+import type { SongSnapshot } from "@repo/common";
+
 type DataRecord = {
     getBool(field: string): boolean;
     getInt(field: string): number;
@@ -9,6 +11,7 @@ type DataRecord = {
 
 type BackfillApp = {
     countRecords(collection: string, filter?: unknown): number;
+    delete(record: DataRecord): void;
     findCollectionByNameOrId(collection: string): unknown;
     findFirstRecordByData(
         collection: string,
@@ -36,6 +39,7 @@ type PageResult = {
         popularity: null | number;
     };
     retryAfterMs: null | number;
+    songs?: null | SongSnapshot[];
     status: number;
 };
 

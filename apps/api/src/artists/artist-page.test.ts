@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { readArtistName } from "../../../../pocketbase/hooks/artist-page-http.js";
+import { parseArtistPage as parseSharedPage } from "../../../../pocketbase/hooks/artist-page-parser.cjs";
 import {
     ArtistPageClient,
     ArtistPageHttpError,
@@ -38,7 +40,7 @@ describe("public artist page parsing", () => {
     it("extracts the name and exact nullable metrics from the sanitized page fixture", () => {
         const result = parseArtistPage(FIXTURE, ID);
 
-        expect(result).toEqual({
+        expect(result).toMatchObject({
             displayName: "Alex G",
             metrics: {
                 followers: 4550328,
@@ -94,6 +96,89 @@ describe("public artist page parsing", () => {
             expect(() => parseArtistPage(html, ID)).toThrow(/^Artist page /);
         }
     );
+
+    it("reads embedded songs with both Node and PocketBase base64 decoders", () => {
+        const page = parseArtistPage(FIXTURE, ID);
+        expect(page.songs).toEqual([
+            {
+                listenCount: 436678602,
+                name: "Sarah",
+                spotifyId: "4HuiEuJ7ZW8jewUuZBg6sk",
+            },
+            {
+                listenCount: 0,
+                name: "東京 & Sigur Rós",
+                spotifyId: "35UO6dWrEPLmeSVXtAysS4",
+            },
+        ]);
+        expect(parseSharedPage(FIXTURE, ID)).toEqual(page);
+    });
+
+    it("passes songs through the scheduled HTTP reader using one artist-page request", () => {
+        const execute = vi.fn(
+            () => `HTTP/2 200\r\nContent-Type: text/html\r\n\r\n${FIXTURE}`
+        );
+        const result = readArtistName({
+            execute,
+            id: ID,
+            now: () => Date.now(),
+            timeoutSeconds: 20,
+        });
+        expect(result.songs).toEqual(parseArtistPage(FIXTURE, ID).songs);
+        expect(execute).toHaveBeenCalledOnce();
+        expect(execute.mock.calls[0]).toEqual([
+            expect.arrayContaining([
+                "--no-location",
+                `https://open.spotify.com/artist/${ID}`,
+            ]),
+        ]);
+    });
+
+    it("distinguishes missing and empty embedded song lists", () => {
+        expect(parseArtistPage(htmlFor(artist()), ID).songs).toBeNull();
+        expect(
+            parseArtistPage(
+                htmlFor({
+                    ...artist(),
+                    discography: { topTracks: { items: [] } },
+                }),
+                ID
+            ).songs
+        ).toEqual([]);
+    });
+
+    it("skips invalid identities and names, deduplicates by ID and preserves unavailable counts", () => {
+        const track = {
+            name: "Same name",
+            playcount: "-1",
+            uri: `spotify:track:${OTHER_ID}`,
+        };
+        const tracks = [
+            track,
+            { ...track, playcount: "100" },
+            {
+                ...track,
+                playcount: "9007199254740992",
+                uri: `spotify:track:${ID}`,
+            },
+            { ...track, uri: "https://example.com/track" },
+            { ...track, name: " " },
+            null,
+        ];
+        const page = parseArtistPage(
+            htmlFor({
+                ...artist(),
+                discography: {
+                    topTracks: { items: tracks.map((track) => ({ track })) },
+                },
+            }),
+            ID
+        );
+        expect(page.songs).toEqual([
+            { listenCount: null, name: "Same name", spotifyId: OTHER_ID },
+            { listenCount: null, name: "Same name", spotifyId: ID },
+        ]);
+    });
 
     it.each([
         ID,

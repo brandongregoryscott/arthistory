@@ -9,3 +9,8 @@ onRecordValidate((e) => {
     require(__hooks + "/validation.js").validateArtist(e.record);
     e.next();
 }, "artists");
+
+onRecordValidate((e) => {
+    require(__hooks + "/validation.js").validateSongSnapshot(e.record);
+    e.next();
+}, "song_snapshots");

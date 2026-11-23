@@ -14,6 +14,20 @@ const validateSnapshot = (record) => {
             throw new Error("Invalid snapshot metric: " + key);
         }
     }
+    validateCaptureDates(record);
+};
+
+/** @param {ValidationRecord} record */
+const validateSongSnapshot = (record) => {
+    const value = record.getFloat("listenCount");
+    if (!Number.isSafeInteger(value) || value < MISSING_METRIC) {
+        throw new Error("Invalid song listen count.");
+    }
+    validateCaptureDates(record);
+};
+
+/** @param {ValidationRecord} record */
+const validateCaptureDates = (record) => {
     const week = new Date(record.getString("weekStart"));
     const capture = new Date(record.getString("capturedAt"));
     if (
@@ -52,4 +66,4 @@ const validateArtist = (record) => {
     }
 };
 
-module.exports = { validateSnapshot, validateArtist };
+module.exports = { validateSnapshot, validateSongSnapshot, validateArtist };

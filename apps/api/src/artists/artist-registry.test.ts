@@ -43,6 +43,7 @@ describe("ArtistRegistry", () => {
                     monthlyListeners: null,
                     popularity: null,
                 },
+                songs: null,
                 spotifyId: ID,
             })),
         };
@@ -117,6 +118,7 @@ describe("ArtistRegistry", () => {
                     monthlyListeners: null,
                     popularity: null,
                 },
+                songs: null,
                 spotifyId: ID,
             })),
         };
