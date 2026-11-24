@@ -33,7 +33,7 @@
     "packageManager": "npm@11.20.0",
     "private": true,
     "scripts": {
-        "add-artist": "tsx apps/api/src/artists/add-artist.ts",
+        "add-artist": "tsx apps/api/src/scripts/add-artist.ts",
         "build": "turbo build",
         "build:force": "turbo build --force",
         "ci:check": "gagen --lint",
@@ -45,7 +45,7 @@
         "dev": "turbo dev",
         "format": "prettier --check \"**/*.{json,js,ts,tsx,md}\"",
         "format:fix": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
-        "inspect-artist": "tsx apps/api/src/artists/inspect-artist.ts",
+        "inspect-artist": "tsx apps/api/src/scripts/inspect-artist.ts",
         "lint": "eslint . --max-warnings 0",
         "lint:fix": "eslint . --max-warnings 0 --fix",
         "prepare": "husky || exit 0",

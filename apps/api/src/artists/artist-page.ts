@@ -3,7 +3,7 @@ import {
     MAX_ARTIST_PAGE_BYTES,
     parseArtistPage as parsePage,
 } from "../../../../pocketbase/hooks/artist-page-parser.cjs";
-import { isSpotifyArtistId } from "../utilities/id-validation";
+import { isSpotifyArtistId } from "../utilities/validation";
 
 type ArtistPage = {
     displayName: string;

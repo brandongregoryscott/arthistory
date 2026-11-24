@@ -9,11 +9,11 @@ import {
 } from "@repo/common";
 import cors from "cors";
 import express from "express";
+import { ArtistsController } from "./artists/artist-controller";
 import { TRUST_PROXY_HOPS } from "./config";
-import { ArtistsController } from "./controllers/artists-controller";
-import { MetaController } from "./controllers/meta-controller";
 import { errorHandler } from "./error-handler";
 import { requestLogging } from "./logging";
+import { MetaController } from "./meta/meta-controller";
 import { createMetrics } from "./metrics";
 import { readRateLimiter } from "./utilities/rate-limiter";
 

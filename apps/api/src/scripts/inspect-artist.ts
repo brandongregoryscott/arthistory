@@ -1,6 +1,6 @@
 import { isError } from "lodash";
 import { parseArgs } from "node:util";
-import { ArtistPageClient, ArtistPageHttpError } from "./artist-page";
+import { ArtistPageClient, ArtistPageHttpError } from "../artists";
 
 const main = async () => {
     const { values } = parseArgs({ options: { artist: { type: "string" } } });

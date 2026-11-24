@@ -6,7 +6,7 @@ import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cj
 import {
     isPocketBaseRecordId,
     isSpotifyArtistId,
-} from "../utilities/id-validation";
+} from "../utilities/validation";
 
 type ArtistIdentityRecord = {
     id: string;

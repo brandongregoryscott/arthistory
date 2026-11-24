@@ -10,9 +10,9 @@ import {
 } from "@repo/common";
 import express from "express";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MetaController } from "./controllers/meta-controller";
 import { errorHandler } from "./error-handler";
 import { createLogger, requestLogging } from "./logging";
+import { MetaController } from "./meta/meta-controller";
 import {
     badRequest,
     conflict,

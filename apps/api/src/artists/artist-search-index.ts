@@ -6,7 +6,7 @@ import { isArray, isBoolean, isString, uniq } from "lodash";
 import {
     isPocketBaseRecordId,
     isSpotifyArtistId,
-} from "../utilities/id-validation";
+} from "../utilities/validation";
 
 type ArtistRecord = {
     aliases: null | string[];
