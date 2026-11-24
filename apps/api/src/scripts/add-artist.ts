@@ -1,5 +1,5 @@
 import { parseArgs } from "node:util";
-import { ArtistRegistry } from "../artists";
+import { ArtistRegistry } from "../artists/artist-registry";
 import { loadPocketBaseConfig } from "../config";
 import { PocketBaseClient } from "../storage/pocketbase";
 
