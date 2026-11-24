@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { alignMonthlyFollowers, DEFAULT_ARTIST_IDS } from "@repo/common";
 import { Footer, Header, SearchSelect } from "@repo/ui";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -36,6 +36,7 @@ import {
     useRequestArtist,
     useSearchArtistsByName,
 } from "@/hooks";
+import { useTheme } from "@/hooks/use-theme";
 import { hideEmptyFollowerMonths } from "@/utils/follower-chart";
 import { humanizeNumber } from "@/utils/number-utils";
 
@@ -52,7 +53,7 @@ const EMPTY_ARTISTS: Record<string, Artist> = {};
 
 const HomePage: React.FC = () => {
     const breakpoint = useBreakpoint();
-    const [darkMode, setDarkMode] = useState<boolean>(getDefaultDarkMode);
+    const [darkMode, setDarkMode] = useTheme();
     const [hideGaps, setHideGaps] = useState(false);
     const [searchValue, setSearchValue] = useState<string>("");
     const [selectedArtistIds, setSelectedArtistIds] =
@@ -375,6 +376,19 @@ const HomePage: React.FC = () => {
                     selectedValueMap={artists}
                     value={searchValue}
                 />
+                <Flex aria-label="Artist detail pages" gap="3" wrap="wrap">
+                    {selectedArtistIds.map(
+                        (id) =>
+                            artists[id] != null && (
+                                <Link
+                                    key={id}
+                                    params={{ artistId: id }}
+                                    to="/artists/$artistId">
+                                    View {artists[id].name} →
+                                </Link>
+                            )
+                    )}
+                </Flex>
                 {isEmpty(selectedArtistIds) ? (
                     <EmptyState.Root flex="1">
                         <EmptyState.Content>
@@ -495,10 +509,6 @@ const hash = (value: string) => {
 
     return h;
 };
-
-const getDefaultDarkMode = (): boolean =>
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
 
 const Route = createFileRoute("/")({ component: HomePage });
 

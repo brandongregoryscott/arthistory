@@ -9,4 +9,9 @@ type SongSnapshot = {
     listenCount: null | number;
 } & Song;
 
-export type { Song, SongSnapshot };
+type SongHistoryObservation = {
+    capturedAt: string;
+    timestamp: string;
+} & SongSnapshot;
+
+export type { Song, SongHistoryObservation, SongSnapshot };

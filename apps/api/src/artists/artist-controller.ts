@@ -29,6 +29,16 @@ class ArtistsController {
         return ok(response, snapshots);
     }
 
+    static async getArtistSongHistory(request: Request, response: Response) {
+        const { id } = request.params;
+
+        if (!isSpotifyArtistId(id)) {
+            throw new ValidationError("Provide a Spotify artist ID.");
+        }
+
+        return ok(response, await ArtistService.listSongHistory(id));
+    }
+
     static async listArtists(request: Request, response: Response) {
         const ids = parseArtistIds(request.query.ids);
 

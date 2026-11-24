@@ -6,6 +6,7 @@ import type {
 } from "@repo/common";
 import { loadPocketBaseConfig } from "../config";
 import { artistSnapshotStore } from "../snapshots";
+import { SongHistoryStore } from "../snapshots/song-history-store";
 import { PocketBaseClient } from "../storage/pocketbase";
 import { ArtistCache } from "./artist-cache";
 
@@ -22,6 +23,10 @@ const artistCache = new ArtistCache({
     client: new PocketBaseClient(loadPocketBaseConfig()),
 });
 
+const songHistoryStore = new SongHistoryStore(
+    new PocketBaseClient(loadPocketBaseConfig())
+);
+
 class ArtistService {
     static async listArtists(
         options: ListArtistsOptions
@@ -33,6 +38,10 @@ class ArtistService {
         options: ListArtistSnapshotsOptions
     ): Promise<ArtistSnapshot[]> {
         return artistSnapshotStore.list(options);
+    }
+
+    static async listSongHistory(id: string) {
+        return songHistoryStore.list(id);
     }
 
     static async searchArtists(name: string): Promise<ArtistSearchPage> {

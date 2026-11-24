@@ -85,6 +85,9 @@ describe("app", () => {
         vi.spyOn(ArtistsController, "searchArtistsByName").mockImplementation(
             respond("searchArtistsByName")
         );
+        vi.spyOn(ArtistsController, "getArtistSongHistory").mockImplementation(
+            respond("getArtistSongHistory")
+        );
         vi.spyOn(ArtistsController, "getArtistSnapshots").mockImplementation(
             respond("getArtistSnapshots")
         );
@@ -158,6 +161,7 @@ describe("app", () => {
             ["GET", "/meta/latest", "latest"],
             ["GET", "/artists/search?name=test", "searchArtistsByName"],
             ["GET", "/artists/test/snapshots", "getArtistSnapshots"],
+            ["GET", "/artists/test/songs/history", "getArtistSongHistory"],
             ["GET", "/artists?ids=test", "listArtists"],
             ["GET", "/artists/snapshots?ids=test", "listArtistSnapshots"],
             ["POST", "/artists/test/request", "requestArtist"],

@@ -3,6 +3,7 @@ import {
     SEARCH_ARTISTS_BY_NAME_ROUTE,
     REQUEST_ARTIST_ROUTE,
     LIST_ARTIST_SNAPSHOTS_ROUTE,
+    GET_ARTIST_SONG_HISTORY_ROUTE,
     GET_ARTIST_SNAPSHOTS_ROUTE,
     LIST_ARTISTS_ROUTE,
     GET_LATEST_META_ROUTE,
@@ -39,6 +40,8 @@ app.get(GET_LATEST_META_ROUTE, MetaController.latest);
 app.post(REQUEST_ARTIST_ROUTE, ArtistsController.requestArtist);
 
 app.get(SEARCH_ARTISTS_BY_NAME_ROUTE, ArtistsController.searchArtistsByName);
+
+app.get(GET_ARTIST_SONG_HISTORY_ROUTE, ArtistsController.getArtistSongHistory);
 
 app.get(GET_ARTIST_SNAPSHOTS_ROUTE, ArtistsController.getArtistSnapshots);
 

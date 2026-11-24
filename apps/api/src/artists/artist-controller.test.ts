@@ -50,6 +50,18 @@ describe("local artist metadata controllers", () => {
         cache.search.mockImplementation((query: string) => index.search(query));
     });
 
+    it.each([undefined, "bad-id", [SPOTIFY_ID], "x".repeat(23)])(
+        "rejects invalid song history IDs %j",
+        async (id) => {
+            await expect(
+                ArtistsController.getArtistSongHistory(
+                    { params: { id } } as unknown as Request,
+                    createResponse().value
+                )
+            ).rejects.toMatchObject({ name: "ERROR_VALIDATION" });
+        }
+    );
+
     it("keeps the search envelope and reports history independently of enrollment without Spotify", async () => {
         const response = createResponse();
 

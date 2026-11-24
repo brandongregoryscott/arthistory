@@ -1,9 +1,13 @@
 import type { ApiErrorResponse, ApiSuccessResponse } from "../responses.js";
 import type {
+    SongHistoryObservation,
     Artist,
     ArtistSnapshot,
     ArtistWithTrackingStatus,
 } from "../types/index.js";
+
+type GetArtistSongHistoryResult =
+    ApiErrorResponse | ApiSuccessResponse<SongHistoryObservation[]>;
 
 type GetLatestMetaResult =
     ApiErrorResponse | ApiSuccessResponse<Pick<ArtistSnapshot, "timestamp">>;
@@ -45,6 +49,7 @@ type SearchArtistByNameResult =
 export type {
     GetArtistSnapshotsOptions,
     GetArtistSnapshotsResult,
+    GetArtistSongHistoryResult,
     GetLatestMetaResult,
     ListArtistSnapshotsOptions,
     ListArtistSnapshotsResult,
