@@ -30,8 +30,8 @@
     "name": "api",
     "private": true,
     "scripts": {
-        "build": "esbuild src/server.ts --bundle --platform=node --target=node26 --outfile=dist/server.js && npm run build:cli",
-        "build:cli": "esbuild src/scripts/index.ts --bundle --platform=node --target=node26 --outbase=src --outdir=dist/cli",
+        "build": "esbuild src/server.ts --bundle --platform=node --target=node26 --outfile=dist/server.js && npm run build:scripts",
+        "build:scripts": "esbuild src/scripts/index.ts --bundle --platform=node --target=node26 --outbase=src --outdir=dist/scripts",
         "clean": "rm -rf dist",
         "dev": "concurrently --names esbuild,nodemon \"npm run build -- --watch\" \"nodemon -q dist/server.js\"",
         "start": "node dist/server.js",
