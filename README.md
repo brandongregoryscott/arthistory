@@ -122,6 +122,21 @@ npm test
 npm run build
 ```
 
+`npm test` runs the API, web, and PocketBase Vitest projects together. Use
+`npm run test:watch` to watch all three, or `npm test -- --project pocketbase`
+to run only the colocated hook tests.
+
+PocketBase hooks are authored in TypeScript under `pocketbase/hooks`. Run
+`npm run build:pocketbase` to compile them into the ignored `pocketbase/dist/hooks`
+directory. The PocketBase Docker image runs this build and installs only the
+compiled JavaScript. `npm run build` includes this step too.
+
+Keep runtime helper loads inside hook callbacks: PocketBase executes each handler
+in an isolated context. The build deliberately transpiles files separately without
+bundling. Migrations retain their historical constants independently of hook code.
+PocketBase's generated runtime declarations are vendored under `pocketbase/vendor`;
+application types live alongside their TypeScript implementation.
+
 Tests cover the API services, artist search/cache, artist-page parser, snapshot
 storage/series, request handling and monitoring. Container CI builds the API and
 PocketBase images and checks that schema migrations apply. PocketBase schema

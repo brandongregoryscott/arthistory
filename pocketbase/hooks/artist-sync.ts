@@ -1,25 +1,73 @@
-// @ts-check
-const { MISSING_METRIC } = require("./snapshot-metrics.cjs");
-/** @typedef {import("./artist-sync-types.js").BackfillApp} BackfillApp */
-/** @typedef {import("./artist-sync-types.js").BackfillDependencies} BackfillDependencies */
-/** @typedef {import("./artist-sync-types.js").Claim} Claim */
+import type { SongSnapshot } from "@repo/common";
+import type { PageResult } from "./artist-page-http.js";
+import { MISSING_METRIC } from "./constants.js";
+
+type DataRecord = {
+    getBool(field: string): boolean;
+    getInt(field: string): number;
+    getString(field: string): string;
+    id: string;
+    original(): DataRecord;
+    set(field: string, value: unknown): void;
+};
+
+type SyncApp = {
+    countRecords(collection: string, filter?: unknown): number;
+    delete(record: DataRecord): void;
+    findCollectionByNameOrId(collection: string): unknown;
+    findFirstRecordByData(
+        collection: string,
+        field: string,
+        value: string
+    ): DataRecord;
+    findRecordById(collection: string, id: string): DataRecord;
+    findRecordsByFilter(
+        collection: string,
+        filter: string,
+        sort: string,
+        limit: number,
+        offset: number,
+        params?: Record<string, unknown>
+    ): DataRecord[];
+    runInTransaction(operation: (app: SyncApp) => void): void;
+    save(record: DataRecord): void;
+};
+
+type SyncDependencies = {
+    now(): number;
+    readPage(id: string, timeoutSeconds: number): PageResult;
+    token(): string;
+};
+
+type Claim = {
+    artistId: string;
+    displayName: string;
+    intervalMs: number;
+    metadataUpdatedAt: string;
+    spotifyId: string;
+    timeoutSeconds: number;
+    token: string;
+};
+
+type RunOptions = {
+    app: SyncApp;
+    dependencies: SyncDependencies;
+    mode: "names" | "snapshots";
+};
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ERROR_COOLDOWN_MS = 5 * 60 * 1000;
 const THROTTLE_COOLDOWN_MS = 60 * 60 * 1000;
 const LEASE_GRACE_MS = 30000;
 
-/** @param {BackfillApp} app @param {BackfillDependencies} dependencies */
-const tick = (app, dependencies) => run({ app, dependencies, mode: "names" });
+const tick = (app: SyncApp, dependencies: SyncDependencies) =>
+    run({ app, dependencies, mode: "names" });
 
-/** @param {BackfillApp} app @param {BackfillDependencies} dependencies */
-const collect = (app, dependencies) =>
+const collect = (app: SyncApp, dependencies: SyncDependencies) =>
     run({ app, dependencies, mode: "snapshots" });
 
-/** @param {{ app: BackfillApp, dependencies: BackfillDependencies, mode: "names" | "snapshots" }} options */
-const run = ({ app, dependencies, mode }) => {
-    /** @type {{ value?: Claim }} */
-    const claimed = {};
+const run = ({ app, dependencies, mode }: RunOptions) => {
+    const claimed: { value?: Claim } = {};
     app.runInTransaction((tx) => {
         const settings = tx.findFirstRecordByData(
             "sync_settings",
@@ -79,8 +127,8 @@ const run = ({ app, dependencies, mode }) => {
         claimed.value = {
             artistId: artist.id,
             displayName: artist.getString("displayName"),
-            metadataUpdatedAt: artist.getString("metadataUpdatedAt"),
             intervalMs,
+            metadataUpdatedAt: artist.getString("metadataUpdatedAt"),
             spotifyId: artist.getString("spotifyId"),
             timeoutSeconds,
             token,
@@ -91,8 +139,7 @@ const run = ({ app, dependencies, mode }) => {
         return { status: "idle" };
     }
 
-    /** @type {import("./artist-sync-types.js").PageResult} */
-    let page;
+    let page: PageResult;
     try {
         page = dependencies.readPage(claim.spotifyId, claim.timeoutSeconds);
     } catch (_) {
@@ -161,8 +208,9 @@ const run = ({ app, dependencies, mode }) => {
                         date(
                             Math.max(
                                 capture,
-                                Date.parse(artist.getString("lastSuccessAt")) ||
-                                    0
+                                timestampOrZero(
+                                    artist.getString("lastSuccessAt")
+                                )
                             )
                         )
                     );
@@ -192,7 +240,7 @@ const run = ({ app, dependencies, mode }) => {
                             claim.intervalMs,
                             settings.getInt("requestIntervalSeconds") * 1000
                         ),
-                    Date.parse(state.getString("nextRequestAt")) || 0
+                    timestampOrZero(state.getString("nextRequestAt"))
                 )
             )
         );
@@ -201,11 +249,15 @@ const run = ({ app, dependencies, mode }) => {
         tx.save(state);
     });
 
-    return { status, artistId: claim.artistId, httpStatus: page.status };
+    return { artistId: claim.artistId, httpStatus: page.status, status };
 };
 
-/** @param {BackfillApp} app @param {import("./artist-sync-types.js").DataRecord} artist @param {import("./artist-sync-types.js").PageResult} page @param {number} now */
-const saveSnapshot = (app, artist, page, now) => {
+const saveSnapshot = (
+    app: SyncApp,
+    artist: DataRecord,
+    page: PageResult,
+    now: number
+) => {
     const week = date(monday(now));
     const [existing] = app.findRecordsByFilter(
         "snapshots",
@@ -221,15 +273,18 @@ const saveSnapshot = (app, artist, page, now) => {
         return previousCapture;
     }
     const row =
-        existing ?? new Record(app.findCollectionByNameOrId("snapshots"));
+        existing ??
+        new Record(
+            app.findCollectionByNameOrId("snapshots") as core.Collection
+        );
     row.set("artist", artist.id);
     row.set("weekStart", week);
     row.set("capturedAt", date(now));
-    for (const key of /** @type {const} */ ([
+    for (const key of [
         "followers",
         "monthlyListeners",
         "popularity",
-    ])) {
+    ] as const) {
         row.set(key, page.metrics?.[key] ?? MISSING_METRIC);
     }
     row.set("source", "spotify-public-page");
@@ -239,8 +294,13 @@ const saveSnapshot = (app, artist, page, now) => {
     return now;
 };
 
-/** @param {BackfillApp} app @param {string} artistId @param {import("@repo/common").SongSnapshot[]} songs @param {string} week @param {number} now */
-const saveSongSnapshots = (app, artistId, songs, week, now) => {
+const saveSongSnapshots = (
+    app: SyncApp,
+    artistId: string,
+    songs: SongSnapshot[],
+    week: string,
+    now: number
+) => {
     // Replace this capture's observations atomically with the artist snapshot.
     // Keep song identities and all earlier weeks even when tracks leave the page.
     const previous = app.findRecordsByFilter(
@@ -264,12 +324,17 @@ const saveSongSnapshots = (app, artistId, songs, week, now) => {
             { id: observation.spotifyId }
         );
         const song =
-            existing ?? new Record(app.findCollectionByNameOrId("songs"));
+            existing ??
+            new Record(
+                app.findCollectionByNameOrId("songs") as core.Collection
+            );
         song.set("spotifyId", observation.spotifyId);
         song.set("name", observation.name);
         app.save(song);
 
-        const row = new Record(app.findCollectionByNameOrId("song_snapshots"));
+        const row = new Record(
+            app.findCollectionByNameOrId("song_snapshots") as core.Collection
+        );
         row.set("artist", artistId);
         row.set("song", song.id);
         row.set("name", observation.name);
@@ -281,16 +346,14 @@ const saveSongSnapshots = (app, artistId, songs, week, now) => {
     }
 };
 
-/** @param {number} timestamp */
-const monday = (timestamp) => {
+const monday = (timestamp: number) => {
     const value = new Date(timestamp);
     value.setUTCHours(0, 0, 0, 0);
     value.setUTCDate(value.getUTCDate() - ((value.getUTCDay() + 6) % 7));
     return value.getTime();
 };
 
-/** @param {BackfillApp} app @param {BackfillDependencies} dependencies */
-const scheduled = (app, dependencies) => {
+const scheduled = (app: SyncApp, dependencies: SyncDependencies) => {
     const first =
         Math.floor(dependencies.now() / 60000) % 2 === 0 ? collect : tick;
     const second = first === collect ? tick : collect;
@@ -298,8 +361,7 @@ const scheduled = (app, dependencies) => {
     return result.status === "idle" ? second(app, dependencies) : result;
 };
 
-/** @param {import("./artist-sync-types.js").DataRecord} record @param {number} now */
-const stampOwnerName = (record, now) => {
+const stampOwnerName = (record: DataRecord, now: number) => {
     if (
         record.getString("displayName") !==
         record.original().getString("displayName")
@@ -309,8 +371,7 @@ const stampOwnerName = (record, now) => {
     }
 };
 
-/** @param {import("./artist-sync-types.js").DataRecord} state @param {number} now @param {import("./artist-sync-types.js").PageResult} page */
-const applyCooldown = (state, now, page) => {
+const applyCooldown = (state: DataRecord, now: number, page: PageResult) => {
     const minimum =
         page.status === 429 || page.status === 403
             ? THROTTLE_COOLDOWN_MS
@@ -318,13 +379,12 @@ const applyCooldown = (state, now, page) => {
     const cooldown = Math.max(
         now + minimum,
         now + (page.retryAfterMs ?? 0),
-        Date.parse(state.getString("cooldownUntil")) || 0
+        timestampOrZero(state.getString("cooldownUntil"))
     );
     state.set("cooldownUntil", date(cooldown));
 };
 
-/** @param {BackfillApp} app */
-const coverage = (app) => {
+const coverage = (app: SyncApp) => {
     const artists = app.countRecords("artists");
     const unresolved = app.countRecords(
         "artists",
@@ -334,7 +394,13 @@ const coverage = (app) => {
     return { artists, named: artists - unresolved, unresolved };
 };
 
-/** @param {number} timestamp */
-const date = (timestamp) => new Date(timestamp).toISOString().replace("T", " ");
+const timestampOrZero = (value: string) => {
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? 0 : timestamp;
+};
 
-module.exports = { collect, coverage, scheduled, stampOwnerName, tick };
+const date = (timestamp: number) =>
+    new Date(timestamp).toISOString().replace("T", " ");
+
+export { collect, coverage, scheduled, stampOwnerName, tick };
+export type { Claim, DataRecord, PageResult, SyncApp, SyncDependencies };

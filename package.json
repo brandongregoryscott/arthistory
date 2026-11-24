@@ -5,6 +5,7 @@
         "@repo/typescript-config": "*",
         "@stylistic/eslint-plugin": "5.10.0",
         "@types/node": "26.6.5",
+        "esbuild": "0.28.2",
         "eslint": "9.39.5",
         "eslint-plugin-collation": "1.7.0",
         "eslint-plugin-import": "2.32.0",
@@ -20,7 +21,8 @@
         "tsx": "4.20.5",
         "turbo": "2.11.10",
         "typescript": "6.0.3",
-        "typescript-eslint": "8.72.0"
+        "typescript-eslint": "8.72.0",
+        "vitest": "5.1.1"
     },
     "engines": {
         "node": ">=26.12.1 <27"
@@ -34,14 +36,15 @@
     "private": true,
     "scripts": {
         "add-artist": "tsx apps/api/src/scripts/add-artist.ts",
-        "build": "turbo build",
-        "build:force": "turbo build --force",
+        "build": "turbo build && npm run build:pocketbase",
+        "build:force": "turbo build --force && npm run build:pocketbase",
+        "build:pocketbase": "tsx pocketbase/build.ts",
         "ci:check": "gagen --lint",
         "ci:generate": "gagen",
         "ci:lint": "eslint --config .github/eslint.config.mjs .github/workflows/*.mts",
         "ci:typecheck": "tsc -p .github/tsconfig.json",
         "ci:update-pins": "gagen --update-pins",
-        "clean": "rm -rf node_modules build apps/**/node_modules packages/**/node_modules apps/**/dist apps/**/build packages/**/dist packages/**/build",
+        "clean": "rm -rf node_modules build apps/**/node_modules packages/**/node_modules apps/**/dist apps/**/build packages/**/dist packages/**/build pocketbase/dist",
         "dev": "turbo dev",
         "format": "prettier --check \"**/*.{json,js,ts,tsx,md}\"",
         "format:fix": "prettier --write \"**/*.{json,js,ts,tsx,md}\"",
@@ -49,7 +52,8 @@
         "lint": "eslint . --max-warnings 0",
         "lint:fix": "eslint . --max-warnings 0 --fix",
         "prepare": "husky || exit 0",
-        "test": "npm run test --workspaces --if-present",
+        "test": "vitest run",
+        "test:watch": "vitest",
         "typecheck": "npm run typecheck --workspaces --if-present && tsc -p pocketbase && tsc -p scripts"
     },
     "version": "0.0.0-development",

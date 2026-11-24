@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { readArtistName } from "../../../../pocketbase/hooks/artist-page-http.js";
-import { parseArtistPage as parseSharedPage } from "../../../../pocketbase/hooks/artist-page-parser.cjs";
+import { parseArtistPage as parseSharedPage } from "../../../../pocketbase/hooks/artist-page-parser.js";
 import {
     ArtistPageClient,
     ArtistPageHttpError,

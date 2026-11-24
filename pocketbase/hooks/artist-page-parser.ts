@@ -1,9 +1,13 @@
-// @ts-check
+import type { SongSnapshot } from "@repo/common";
+
 const MAX_ARTIST_PAGE_BYTES = 2 * 1024 * 1024;
 const MAX_DISPLAY_NAME_LENGTH = 500;
 
-/** @param {string} html @param {string} id @param {(encoded: string) => string} [decodeBase64] */
-const parseArtistPage = (html, id, decodeBase64 = decodePageState) => {
+const parseArtistPage = (
+    html: string,
+    id: string,
+    decodeBase64 = decodePageState
+) => {
     if (!/^[A-Za-z0-9]{22}$/.test(id)) {
         throw new Error("Expected a Spotify artist ID.");
     }
@@ -20,8 +24,7 @@ const parseArtistPage = (html, id, decodeBase64 = decodePageState) => {
         throw new Error("Artist page is missing initialState.");
     }
 
-    /** @type {unknown} */
-    let state;
+    let state: unknown;
     try {
         state = JSON.parse(decodeBase64(script[2].trim()));
     } catch {
@@ -53,7 +56,7 @@ const parseArtistPage = (html, id, decodeBase64 = decodePageState) => {
         metrics: {
             followers: nullableCount(stats.followers),
             monthlyListeners: nullableCount(stats.monthlyListeners),
-            popularity: null,
+            popularity: null as null,
         },
         songs: parseSongs(artist),
         spotifyId: id,
@@ -61,15 +64,13 @@ const parseArtistPage = (html, id, decodeBase64 = decodePageState) => {
 };
 
 // Only inspect the top tracks embedded in this artist's page; never resolve links.
-/** @param {Record<string, unknown>} artist */
-const parseSongs = (artist) => {
+const parseSongs = (artist: Record<string, unknown>) => {
     const { items } = asRecord(asRecord(artist.discography).topTracks);
     if (!Array.isArray(items)) {
         return null;
     }
-    /** @type {import("@repo/common").SongSnapshot[]} */
-    const songs = [];
-    const seen = new Set();
+    const songs: SongSnapshot[] = [];
+    const seen = new Set<string>();
     for (const item of items) {
         const track = asRecord(asRecord(item).track);
         const id =
@@ -90,29 +91,26 @@ const parseSongs = (artist) => {
                 ? Number(track.playcount)
                 : track.playcount;
         songs.push({
-            spotifyId: id,
-            name: track.name.trim(),
             listenCount: nullableCount(count),
+            name: track.name.trim(),
+            spotifyId: id,
         });
         seen.add(id);
     }
     return songs;
 };
 
-/** @param {unknown} value @returns {Record<string, unknown>} */
-const asRecord = (value) =>
+const asRecord = (value: unknown): Record<string, unknown> =>
     value != null && typeof value === "object" && !Array.isArray(value)
-        ? /** @type {Record<string, unknown>} */ (value)
+        ? (value as Record<string, unknown>)
         : {};
 
-/** @param {unknown} value @returns {null | number} */
-const nullableCount = (value) =>
+const nullableCount = (value: unknown): null | number =>
     typeof value === "number" && Number.isSafeInteger(value) && value >= 0
         ? value
         : null;
 
-/** @param {string} encoded */
-const decodePageState = (encoded) => {
+const decodePageState = (encoded: string) => {
     const alphabet =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     if (
@@ -142,4 +140,4 @@ const decodePageState = (encoded) => {
     return decodeURIComponent(escaped.join(""));
 };
 
-module.exports = { MAX_ARTIST_PAGE_BYTES, parseArtistPage };
+export { MAX_ARTIST_PAGE_BYTES, parseArtistPage };

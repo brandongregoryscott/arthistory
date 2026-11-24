@@ -1,9 +1,11 @@
-// @ts-check
-const { MISSING_METRIC } = require("./snapshot-metrics.cjs");
-// PocketBase executes plain JS; the existing typecheck command checks this helper.
-/** @typedef {{ getString(field: string): string, getFloat(field: string): number }} ValidationRecord */
-/** @param {ValidationRecord} record */
-const validateSnapshot = (record) => {
+import { MISSING_METRIC } from "./constants.js";
+
+type ValidationRecord = {
+    getFloat(field: string): number;
+    getString(field: string): string;
+};
+
+const validateSnapshot = (record: ValidationRecord) => {
     for (const key of ["followers", "popularity", "monthlyListeners"]) {
         const value = record.getFloat(key);
         if (
@@ -17,8 +19,7 @@ const validateSnapshot = (record) => {
     validateCaptureDates(record);
 };
 
-/** @param {ValidationRecord} record */
-const validateSongSnapshot = (record) => {
+const validateSongSnapshot = (record: ValidationRecord) => {
     const value = record.getFloat("listenCount");
     if (!Number.isSafeInteger(value) || value < MISSING_METRIC) {
         throw new Error("Invalid song listen count.");
@@ -26,8 +27,7 @@ const validateSongSnapshot = (record) => {
     validateCaptureDates(record);
 };
 
-/** @param {ValidationRecord} record */
-const validateCaptureDates = (record) => {
+const validateCaptureDates = (record: ValidationRecord) => {
     const week = new Date(record.getString("weekStart"));
     const capture = new Date(record.getString("capturedAt"));
     if (
@@ -45,11 +45,10 @@ const validateCaptureDates = (record) => {
     }
 };
 
-/** @param {ValidationRecord} record */
-const validateArtist = (record) => {
+const validateArtist = (record: ValidationRecord) => {
     for (const field of ["aliases", "searchNames"]) {
-        /** @type {unknown} */
-        const values = JSON.parse(record.getString(field) || "null");
+        const encoded = record.getString(field);
+        const values: unknown = JSON.parse(encoded === "" ? "null" : encoded);
         if (
             values !== null &&
             (!Array.isArray(values) ||
@@ -66,4 +65,4 @@ const validateArtist = (record) => {
     }
 };
 
-module.exports = { validateSnapshot, validateSongSnapshot, validateArtist };
+export { validateArtist, validateSnapshot, validateSongSnapshot };

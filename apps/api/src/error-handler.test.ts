@@ -20,8 +20,8 @@ import {
     tooManyRequests,
 } from "./utilities/responses";
 
-vi.mock("./services/meta-service", () => ({
-    MetaService: { latest: vi.fn(async () => undefined) },
+vi.mock("./snapshots", () => ({
+    artistSnapshotStore: { latest: vi.fn(async () => undefined) },
 }));
 
 const servers: Server[] = [];
@@ -83,7 +83,7 @@ describe("HTTP error responses", () => {
         expect(body).toEqual({
             data: null,
             error: {
-                message: "Latest data could not be found",
+                message: "Latest data could not be read",
                 name: ErrorName.ERROR_NOT_FOUND,
             },
         });

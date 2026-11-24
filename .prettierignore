@@ -6,3 +6,6 @@ apps/web/routeTree.gen.ts
 # Legacy web build outputs
 apps/web/.next/
 apps/web/out/
+
+# Upstream PocketBase runtime declarations
+pocketbase/vendor/

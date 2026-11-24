@@ -1,14 +1,34 @@
-// @ts-check
-const {
+import type { SongSnapshot } from "@repo/common";
+import {
     MAX_ARTIST_PAGE_BYTES,
     parseArtistPage,
-} = require("./artist-page-parser.cjs");
+} from "./artist-page-parser.js";
 
-/**
- * @param {{ id: string, timeoutSeconds: number, execute: (args: string[]) => string, now: () => number }} options
- * @returns {import("./artist-sync-types.js").PageResult}
- */
-const readArtistName = ({ id, timeoutSeconds, execute, now }) => {
+type PageResult = {
+    displayName: null | string;
+    metrics?: {
+        followers: null | number;
+        monthlyListeners: null | number;
+        popularity: null | number;
+    };
+    retryAfterMs: null | number;
+    songs?: null | SongSnapshot[];
+    status: number;
+};
+
+type ReadPageOptions = {
+    execute: (args: string[]) => string;
+    id: string;
+    now: () => number;
+    timeoutSeconds: number;
+};
+
+const readArtistName = ({
+    execute,
+    id,
+    now,
+    timeoutSeconds,
+}: ReadPageOptions): PageResult => {
     if (
         !/^[A-Za-z0-9]{22}$/.test(id) ||
         !Number.isSafeInteger(timeoutSeconds) ||
@@ -78,10 +98,11 @@ const readArtistName = ({ id, timeoutSeconds, execute, now }) => {
     return {
         displayName: page.displayName,
         metrics: page.metrics,
-        songs: page.songs,
         retryAfterMs: null,
+        songs: page.songs,
         status,
     };
 };
 
-module.exports = { readArtistName };
+export { readArtistName };
+export type { PageResult };
