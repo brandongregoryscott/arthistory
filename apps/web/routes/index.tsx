@@ -75,33 +75,45 @@ const HomePage: React.FC = () => {
     } = useListArtistSnapshots({
         ids: selectedArtistIds,
     });
+
     useEffect(() => {
         if (!isLoading) {
             return;
         }
+
         const initialTimestamp = Date.now();
         const timer = setInterval(() => {
             const seconds = differenceInSeconds(initialTimestamp, Date.now());
+
             if (seconds > 40) {
                 setLoadingText("Any second now...");
+
                 return;
             }
+
             if (seconds > 30) {
                 setLoadingText("Almost there...");
+
                 return;
             }
+
             if (seconds > 15) {
                 setLoadingText(
                     "The server is likely cold booting, please hold..."
                 );
+
                 return;
             }
+
             if (seconds > 5) {
                 setLoadingText("Still loading, hold tight...");
+
                 return;
             }
+
             setLoadingText("Loading...");
         }, 1000);
+
         return () => clearInterval(timer);
     }, [isLoading]);
 
@@ -122,6 +134,7 @@ const HomePage: React.FC = () => {
 
         const datasets = selectedArtistIds.map((artistId) => {
             const label = artists[artistId]?.name;
+
             if (label === undefined) {
                 return undefined;
             }
@@ -247,8 +260,33 @@ const HomePage: React.FC = () => {
         []
     );
 
+    const handleSearchChange = (value: string) => setSearchValue(value);
+
+    const handleThemeChange = (value: React.SetStateAction<boolean>) =>
+        setDarkMode(value);
+
+    const handleCheckedChange = ({ checked }: Switch.CheckedChangeDetails) =>
+        setHideGaps(checked);
+
     const getSearchResultProps = useCallback(
         (result: ArtistWithTrackingStatus): SearchResultProps => {
+            const handleRequestClick = (
+                event: React.MouseEvent<HTMLButtonElement>
+            ) => {
+                event.stopPropagation();
+
+                if (requestedArtistIds.includes(result.id)) {
+                    return;
+                }
+
+                requestArtist({ id: result.id });
+
+                setRequestedArtistIds((requestedArtistIds) => [
+                    ...requestedArtistIds,
+                    result.id,
+                ]);
+            };
+
             return {
                 children: result.name,
                 description: result.isTracked ? (
@@ -258,18 +296,7 @@ const HomePage: React.FC = () => {
                         This artist is not yet being tracked.
                         <Button
                             disabled={requestedArtistIds.includes(result.id)}
-                            onClick={(event) => {
-                                event.stopPropagation();
-                                if (requestedArtistIds.includes(result.id)) {
-                                    return;
-                                }
-
-                                requestArtist({ id: result.id });
-                                setRequestedArtistIds((requestedArtistIds) => [
-                                    ...requestedArtistIds,
-                                    result.id,
-                                ]);
-                            }}
+                            onClick={handleRequestClick}
                             size="xs"
                             variant="plain">
                             {requestedArtistIds.includes(result.id)
@@ -313,6 +340,7 @@ const HomePage: React.FC = () => {
                 </Center>
             );
         }
+
         if (snapshotsError != null || artistsError != null) {
             return (
                 <EmptyState.Root flex="1">
@@ -332,12 +360,13 @@ const HomePage: React.FC = () => {
                 </EmptyState.Root>
             );
         }
+
         return (
             <>
                 <SearchSelect
                     getRemovableBadgeProps={getRemovableBadgeProps}
                     getSearchResultProps={getSearchResultProps}
-                    onChange={setSearchValue}
+                    onChange={handleSearchChange}
                     results={searchResults}
                     selectedIds={selectedArtistIds}
                     selectedValueMap={artists}
@@ -364,9 +393,7 @@ const HomePage: React.FC = () => {
                             alignSelf="flex-start"
                             checked={hideGaps}
                             colorPalette="teal"
-                            onCheckedChange={({ checked }) =>
-                                setHideGaps(checked)
-                            }>
+                            onCheckedChange={handleCheckedChange}>
                             <Switch.HiddenInput />
                             <Switch.Control>
                                 <Switch.Thumb />
@@ -414,7 +441,7 @@ const HomePage: React.FC = () => {
                     breakpoint={breakpoint}
                     darkMode={darkMode}
                     lastUpdated={latestMeta?.timestamp}
-                    onThemeChange={setDarkMode}
+                    onThemeChange={handleThemeChange}
                 />
             </Flex>
         </Theme>
@@ -436,6 +463,7 @@ const getHashedBarChartColor = (id: string, darkMode: boolean) => {
         "#667eea",
     ];
     const color = colors[Math.abs(hash(id) % colors.length)];
+
     return {
         backgroundColor: `${color}${darkMode ? "99" : "55"}`,
         borderColor: color,
@@ -447,6 +475,7 @@ const differenceInSeconds = (
     currentTimestamp: number
 ): number => {
     const difference = currentTimestamp - initialTimestamp;
+
     return difference / 1000;
 };
 
@@ -454,11 +483,13 @@ const hash = (value: string) => {
     let h = 0,
         l = value.length,
         i = 0;
+
     if (l > 0) {
         while (i < l) {
             h = ((h << 5) - h + value.charCodeAt(i++)) | 0;
         }
     }
+
     return h;
 };
 

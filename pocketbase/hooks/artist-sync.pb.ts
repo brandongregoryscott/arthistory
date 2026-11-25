@@ -3,6 +3,7 @@ import type * as ArtistSync from "./artist-sync.js";
 
 cronAdd("artist-sync", "* * * * *", () => {
     const job = require(__hooks + "/artist-sync.js") as typeof ArtistSync;
+
     try {
         const result = job.scheduled($app as unknown as ArtistSync.SyncApp, {
             now: () => Date.now(),
@@ -20,6 +21,7 @@ cronAdd("artist-sync", "* * * * *", () => {
                 }),
             token: () => $security.randomString(32),
         });
+
         if (result.status !== "idle") {
             $app.logger().info(
                 "Artist sync",
@@ -45,14 +47,17 @@ onRecordUpdateRequest((e) => {
         e.record as core.Record,
         Date.now()
     );
+
     return e.next();
 }, "artists");
 
 onBootstrap((e) => {
     e.next();
+
     if (!$os.args.includes("serve")) {
         return;
     }
+
     const settings = $app.findFirstRecordByData(
         "sync_settings",
         "key",
@@ -66,6 +71,7 @@ onBootstrap((e) => {
         0,
         { now: new Date().toISOString().replace("T", " ") }
     );
+
     $app.logger().info(
         "Artist jobs ready",
         "collectionEnabled",

@@ -6,34 +6,42 @@ import { runInNewContext } from "node:vm";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 type Handler = (...args: unknown[]) => unknown;
+
 type CommonJSModule = { exports: Record<string, unknown> };
 
-const root = fileURLToPath(new URL("../", import.meta.url));
-const hooks = resolve(root, "pocketbase/dist/hooks");
+const ROOT = fileURLToPath(new URL("../", import.meta.url));
 
-beforeAll(() => {
-    execFileSync(process.execPath, ["--import", "tsx", "pocketbase/build.ts"], {
-        cwd: root,
-    });
-});
+const HOOKS = resolve(ROOT, "pocketbase/dist/hooks");
 
 // Load the actual build output as CommonJS without Node's module resolver or
 // globals. Recreate each registered callback in a fresh context, as PocketBase
 // does, so a compiler-generated reference to outer scope fails here.
 const loadCommonJS = (filename: string): Record<string, unknown> => {
     const module: CommonJSModule = { exports: {} };
+
     runInNewContext(readFileSync(filename, "utf8"), {
         exports: module.exports,
         module,
         require: (path: string) =>
             loadCommonJS(resolve(dirname(filename), path)),
     });
+
     return module.exports;
 };
 
 describe("compiled PocketBase hooks", () => {
+    beforeAll(() => {
+        execFileSync(
+            process.execPath,
+            ["--import", "tsx", "pocketbase/build.ts"],
+            {
+                cwd: ROOT,
+            }
+        );
+    });
+
     it("emits CommonJS helpers and excludes tests from deployment", () => {
-        expect(readdirSync(hooks).sort()).toEqual([
+        expect(readdirSync(HOOKS).sort()).toEqual([
             "artist-page-http.js",
             "artist-page-parser.js",
             "artist-sync.js",
@@ -42,20 +50,22 @@ describe("compiled PocketBase hooks", () => {
             "validation.js",
             "validation.pb.js",
         ]);
-        expect(loadCommonJS(resolve(hooks, "constants.js"))).toEqual({
+        expect(loadCommonJS(resolve(HOOKS, "constants.js"))).toEqual({
             MISSING_METRIC: -1,
         });
     });
 
     it("executes a compiled validation callback in isolation", () => {
         const handlers = new Map<string, Handler>();
+
         runInNewContext(
-            readFileSync(resolve(hooks, "validation.pb.js"), "utf8"),
+            readFileSync(resolve(HOOKS, "validation.pb.js"), "utf8"),
             {
                 onRecordValidate: (handler: Handler, collection: string) =>
                     handlers.set(collection, handler),
             }
         );
+
         const next = vi.fn();
         const record = {
             getFloat: () => 1,
@@ -66,10 +76,11 @@ describe("compiled PocketBase hooks", () => {
         };
         const source = `(${String(handlers.get("song_snapshots"))})(event)`;
         const context = {
-            __hooks: hooks,
+            __hooks: HOOKS,
             event: { next, record },
             require: loadCommonJS,
         };
+
         runInNewContext(source, context);
         expect(next).toHaveBeenCalledOnce();
         record.getFloat = () => -2;
@@ -78,8 +89,9 @@ describe("compiled PocketBase hooks", () => {
 
     it("executes the compiled cron callback in isolation", () => {
         let scheduled: Handler | undefined;
+
         runInNewContext(
-            readFileSync(resolve(hooks, "artist-sync.pb.js"), "utf8"),
+            readFileSync(resolve(HOOKS, "artist-sync.pb.js"), "utf8"),
             {
                 cronAdd: (
                     _name: string,
@@ -92,10 +104,12 @@ describe("compiled PocketBase hooks", () => {
                 onRecordUpdateRequest: vi.fn(),
             }
         );
+
         const runInTransaction = vi.fn();
         const error = vi.fn();
+
         runInNewContext(`(${String(scheduled)})()`, {
-            __hooks: hooks,
+            __hooks: HOOKS,
             $app: { logger: () => ({ error }), runInTransaction },
             require: loadCommonJS,
         });

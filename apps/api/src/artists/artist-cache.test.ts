@@ -10,20 +10,80 @@ type RecordData = {
     syncEnabled: boolean;
 };
 
-afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.useRealTimers();
-});
-
 const config = {
     email: "owner@example.com",
     password: "test-password",
     url: "http://pocketbase.invalid",
 };
 
-const token = `test.${Buffer.from(JSON.stringify({ exp: 4000000000 })).toString("base64url")}.test`;
+const TOKEN = `test.${Buffer.from(JSON.stringify({ exp: 4000000000 })).toString("base64url")}.test`;
+
+const record = (number: number): RecordData => ({
+    aliases: [],
+    displayName: number === 1 ? "Duster" : `Artist ${number}`,
+    id: String(number).padStart(15, "0"),
+    spotifyId: String(number).padStart(22, "0"),
+    syncEnabled: false,
+});
+
+const source = (count: number) => {
+    const state = {
+        collections: [] as string[],
+        fail: false,
+        fetch: vi.fn(),
+        filters: [] as string[],
+        history: new Set([record(1).id]),
+        records: Array.from({ length: count }, (_, index) => record(index + 1)),
+    };
+
+    state.fetch = vi.fn(async (url: string) => {
+        if (url.includes("auth-with-password")) {
+            return Response.json({ record: { id: "owner" }, token: TOKEN });
+        }
+
+        if (state.fail) {
+            throw new Error("unavailable");
+        }
+
+        const query = new URL(url).searchParams;
+        const collection = /collections\/([^/]+)\//.exec(url)?.[1] ?? "";
+
+        state.collections.push(collection);
+
+        const filter = query.get("filter") ?? "";
+
+        state.filters.push(filter);
+
+        const cursor = /id > "([^"]*)"/.exec(filter)?.[1] ?? "";
+        const items = state.records
+            .filter(
+                (row) =>
+                    row.id > cursor &&
+                    (!filter.includes("snapshots_via_artist.artist ?!= ''") ||
+                        state.history.has(row.id))
+            )
+            .slice(0, 500);
+
+        return Response.json({
+            items,
+            page: 1,
+            perPage: 500,
+            totalItems: -1,
+            totalPages: -1,
+        });
+    });
+
+    vi.stubGlobal("fetch", state.fetch);
+
+    return state;
+};
 
 describe("ArtistCache", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.useRealTimers();
+    });
+
     it("builds with bounded keyset pages and queries the in-memory index without requests", async () => {
         const remote = source(501);
         const cache = new ArtistCache({
@@ -31,6 +91,7 @@ describe("ArtistCache", () => {
         });
 
         await cache.refresh();
+
         const calls = remote.fetch.mock.calls.length;
 
         expect(cache.search("Dustr")[0]?.name).toBe("Duster");
@@ -55,7 +116,9 @@ describe("ArtistCache", () => {
 
     it("paginates history artists independently without losing their tracking status", async () => {
         const remote = source(501);
+
         remote.history = new Set(remote.records.map((row) => row.id));
+
         const cache = new ArtistCache({
             client: new PocketBaseClient(config),
         });
@@ -78,6 +141,7 @@ describe("ArtistCache", () => {
         const cache = new ArtistCache({
             client: new PocketBaseClient(config),
         });
+
         await cache.refresh();
 
         remote.records[0] = {
@@ -136,6 +200,7 @@ describe("ArtistCache", () => {
         const cache = new ArtistCache({
             client: new PocketBaseClient(config),
         });
+
         await cache.refresh();
 
         remote.records = [record(2), record(1)];
@@ -146,12 +211,14 @@ describe("ArtistCache", () => {
 
     it("reports periodic failures and recovers on the next successful refresh", async () => {
         vi.useFakeTimers();
+
         const remote = source(1);
         const onError = vi.fn();
         const cache = new ArtistCache({
             client: new PocketBaseClient(config),
             refreshMs: 100,
         });
+
         await cache.start(onError);
 
         remote.fail = true;
@@ -170,12 +237,14 @@ describe("ArtistCache", () => {
 
     it("refreshes without notifications on its timer and stops cleanly", async () => {
         vi.useFakeTimers();
+
         const remote = source(1);
         const onError = vi.fn();
         const cache = new ArtistCache({
             client: new PocketBaseClient(config),
             refreshMs: 100,
         });
+
         await cache.start(onError);
 
         remote.records[0] = { ...record(1), displayName: "Changed" };
@@ -185,65 +254,11 @@ describe("ArtistCache", () => {
         expect(onError).not.toHaveBeenCalled();
 
         cache.stop();
+
         const requests = remote.fetch.mock.calls.length;
+
         await vi.advanceTimersByTimeAsync(1000);
 
         expect(remote.fetch).toHaveBeenCalledTimes(requests);
     });
 });
-
-const record = (number: number): RecordData => ({
-    aliases: [],
-    displayName: number === 1 ? "Duster" : `Artist ${number}`,
-    id: String(number).padStart(15, "0"),
-    spotifyId: String(number).padStart(22, "0"),
-    syncEnabled: false,
-});
-
-const source = (count: number) => {
-    const state = {
-        collections: [] as string[],
-        fail: false,
-        fetch: vi.fn(),
-        filters: [] as string[],
-        history: new Set([record(1).id]),
-        records: Array.from({ length: count }, (_, index) => record(index + 1)),
-    };
-
-    state.fetch = vi.fn(async (url: string) => {
-        if (url.includes("auth-with-password")) {
-            return Response.json({ record: { id: "owner" }, token });
-        }
-
-        if (state.fail) {
-            throw new Error("unavailable");
-        }
-
-        const query = new URL(url).searchParams;
-        const collection = /collections\/([^/]+)\//.exec(url)?.[1] ?? "";
-        state.collections.push(collection);
-        const filter = query.get("filter") ?? "";
-        state.filters.push(filter);
-        const cursor = /id > "([^"]*)"/.exec(filter)?.[1] ?? "";
-        const items = state.records
-            .filter(
-                (row) =>
-                    row.id > cursor &&
-                    (!filter.includes("snapshots_via_artist.artist ?!= ''") ||
-                        state.history.has(row.id))
-            )
-            .slice(0, 500);
-
-        return Response.json({
-            items,
-            page: 1,
-            perPage: 500,
-            totalItems: -1,
-            totalPages: -1,
-        });
-    });
-
-    vi.stubGlobal("fetch", state.fetch);
-
-    return state;
-};

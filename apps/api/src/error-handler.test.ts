@@ -24,8 +24,10 @@ vi.mock("./snapshots", () => ({
     artistSnapshotStore: { latest: vi.fn(async () => undefined) },
 }));
 
-const servers: Server[] = [];
-const privateValue = "private-provider-token";
+const SERVERS: Server[] = [];
+
+const PRIVATE_VALUE = "private-provider-token";
+
 const publicInternalError = {
     data: null,
     error: {
@@ -42,38 +44,46 @@ const createApp = () => {
         { APP_ENV: "production", LOG_LEVEL: "info" }
     );
     const app = express();
+
     app.use(requestLogging(logger));
+
     return { app, lines };
 };
 
 const serve = async (app: Express) => {
     const server = app.listen(0, "127.0.0.1");
-    servers.push(server);
+
+    SERVERS.push(server);
     await new Promise<void>((resolve, reject) => {
         server.once("listening", resolve);
         server.once("error", reject);
     });
+
     return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 };
 
-afterEach(async () => {
-    vi.unstubAllEnvs();
-    await Promise.all(
-        servers.splice(0).map(
-            (server) =>
-                new Promise<void>((resolve) => {
-                    server.close(() => resolve());
-                    server.closeAllConnections();
-                })
-        )
-    );
-});
-
 describe("HTTP error responses", () => {
+    afterEach(async () => {
+        vi.unstubAllEnvs();
+
+        await Promise.all(
+            SERVERS.splice(0).map(
+                (server) =>
+                    new Promise<void>((resolve) => {
+                        server.close(() => resolve());
+
+                        server.closeAllConnections();
+                    })
+            )
+        );
+    });
+
     it("returns a public not-found error when latest metadata is missing", async () => {
         const { app } = createApp();
+
         app.get("/meta/latest", MetaController.latest);
         app.use(errorHandler);
+
         const origin = await serve(app);
 
         const response = await fetch(`${origin}/meta/latest`);
@@ -91,17 +101,21 @@ describe("HTTP error responses", () => {
 
     it("hides provider diagnostics while retaining correlated sanitized logs", async () => {
         vi.stubEnv("NODE_ENV", "production");
+
         const { app, lines } = createApp();
-        const error = Object.assign(new Error(privateValue), {
+        const error = Object.assign(new Error(PRIVATE_VALUE), {
             cause: new Error("private-provider-cause"),
             code: "SQLITE_ERROR",
-            providerContext: { token: privateValue },
-            response: { headers: { authorization: privateValue } },
+            providerContext: { token: PRIVATE_VALUE },
+            response: { headers: { authorization: PRIVATE_VALUE } },
         });
+
         app.get("/provider", async () => {
             throw error;
         });
+
         app.use(errorHandler);
+
         const origin = await serve(app);
 
         const response = await fetch(`${origin}/provider`);
@@ -126,7 +140,7 @@ describe("HTTP error responses", () => {
             requestId: response.headers.get("X-Request-Id"),
             route: "/provider",
         });
-        expect(lines.join("")).not.toContain(privateValue);
+        expect(lines.join("")).not.toContain(PRIVATE_VALUE);
         expect(lines.join("")).not.toContain("private-provider-cause");
     });
 
@@ -134,29 +148,33 @@ describe("HTTP error responses", () => {
         const testCases = [
             {
                 error: {
-                    message: privateValue,
+                    message: PRIVATE_VALUE,
                     name: "ProviderError",
-                    token: privateValue,
+                    token: PRIVATE_VALUE,
                 },
                 name: "plain object",
             },
-            { error: privateValue, name: "string rejection" },
+            { error: PRIVATE_VALUE, name: "string rejection" },
             {
-                error: new UnhandledError(privateValue),
+                error: new UnhandledError(PRIVATE_VALUE),
                 name: "custom unhandled error",
             },
         ];
         const { app } = createApp();
+
         for (const [index, testCase] of testCases.entries()) {
             app.get(`/errors/${index}`, async () => {
                 throw testCase.error;
             });
         }
+
         app.use(errorHandler);
+
         const origin = await serve(app);
 
         for (const environment of ["development", "production"]) {
             vi.stubEnv("NODE_ENV", environment);
+
             for (const [index, testCase] of testCases.entries()) {
                 const response = await fetch(`${origin}/errors/${index}`);
                 const body: unknown = await response.json();
@@ -179,16 +197,20 @@ describe("HTTP error responses", () => {
             },
         ];
         const { app } = createApp();
+
         for (const [index, testCase] of testCases.entries()) {
             Object.assign(testCase.error, {
-                cause: new Error(privateValue),
-                token: privateValue,
+                cause: new Error(PRIVATE_VALUE),
+                token: PRIVATE_VALUE,
             });
+
             app.get(`/expected/${index}`, async () => {
                 throw testCase.error;
             });
         }
+
         app.use(errorHandler);
+
         const origin = await serve(app);
 
         for (const [index, testCase] of testCases.entries()) {
@@ -213,21 +235,23 @@ describe("HTTP error responses", () => {
             { send: conflict, status: 409 },
             { send: tooManyRequests, status: 429 },
         ];
-        const toJSON = vi.fn(() => ({ token: privateValue }));
+        const toJSON = vi.fn(() => ({ token: PRIVATE_VALUE }));
         const error = {
-            cause: new Error(privateValue),
+            cause: new Error(PRIVATE_VALUE),
             message: "Public request message.",
             name: "PUBLIC_ERROR",
-            stack: privateValue,
+            stack: PRIVATE_VALUE,
             toJSON,
-            token: privateValue,
+            token: PRIVATE_VALUE,
         } satisfies ApiError & Record<string, unknown>;
         const { app } = createApp();
+
         for (const testCase of testCases) {
             app.get(`/status/${testCase.status}`, (_request, response) => {
                 testCase.send(response, error);
             });
         }
+
         const origin = await serve(app);
 
         for (const testCase of testCases) {
@@ -240,6 +264,7 @@ describe("HTTP error responses", () => {
                 error: { message: error.message, name: error.name },
             });
         }
+
         expect(toJSON).not.toHaveBeenCalled();
     });
 });

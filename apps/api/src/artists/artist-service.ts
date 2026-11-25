@@ -28,13 +28,16 @@ class ArtistService {
     ): Promise<Record<string, Artist>> {
         return artistCache.list(options.ids);
     }
+
     static async listArtistSnapshots(
         options: ListArtistSnapshotsOptions
     ): Promise<ArtistSnapshot[]> {
         return artistSnapshotStore.list(options);
     }
+
     static async searchArtists(name: string): Promise<ArtistSearchPage> {
         const artists = artistCache.search(name);
+
         return { artists, total: artists.length };
     }
 }

@@ -12,7 +12,7 @@ import {
 
 type RecordData = Record<string, unknown>;
 
-const servers: Server[] = [];
+const SERVERS: Server[] = [];
 
 const capture = (level = "info") => {
     const lines: string[] = [];
@@ -25,6 +25,7 @@ const capture = (level = "info") => {
         },
         { APP_ENV: "test", APP_VERSION: "abc123", LOG_LEVEL: level }
     );
+
     return {
         lines,
         log,
@@ -35,31 +36,36 @@ const capture = (level = "info") => {
 
 const serve = async (app: Express) => {
     const server = app.listen(0, "127.0.0.1");
-    servers.push(server);
+
+    SERVERS.push(server);
     await new Promise<void>((resolve, reject) => {
         server.once("listening", resolve);
         server.once("error", reject);
     });
+
     return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 };
 
-afterEach(async () => {
-    await Promise.all(
-        servers.splice(0).map(
-            (server) =>
-                new Promise<void>((resolve) => {
-                    server.close(() => resolve());
-                    server.closeAllConnections();
-                })
-        )
-    );
-});
-
 describe("standard API logging", () => {
+    afterEach(async () => {
+        await Promise.all(
+            SERVERS.splice(0).map(
+                (server) =>
+                    new Promise<void>((resolve) => {
+                        server.close(() => resolve());
+
+                        server.closeAllConnections();
+                    })
+            )
+        );
+    });
+
     it("correlates JSON logs with server-generated IDs and safe route templates", async () => {
         const output = capture();
         const app = express();
+
         app.use(requestLogging(output.log));
+
         app.get("/items/:id", (_request, response) => {
             output.log.info(
                 { event: "operation.started" },
@@ -67,6 +73,7 @@ describe("standard API logging", () => {
             );
             response.json({ ok: true });
         });
+
         const origin = await serve(app);
 
         const first = await fetch(
@@ -79,9 +86,13 @@ describe("standard API logging", () => {
                 },
             }
         );
+
         await first.text();
+
         const second = await fetch(`${origin}/items/another-private-id`);
+
         await second.text();
+
         const records = output.records();
         const completed = records.filter(
             (record) => record.event === "request.completed"
@@ -106,6 +117,7 @@ describe("standard API logging", () => {
         expect(completed[0]?.statusCode).toBe(200);
         expect(completed[0]?.level).toBe("info");
         expect(completed[0]?.durationMs).toBeTypeOf("number");
+
         for (const value of [
             "private-id",
             "another-private-id",
@@ -121,8 +133,10 @@ describe("standard API logging", () => {
     it("logs rejected parsing before route matching with a request ID", async () => {
         const output = capture();
         const app = express();
+
         app.use(requestLogging(output.log));
         app.use(express.json());
+
         const reject: ErrorRequestHandler = (
             _error,
             _request,
@@ -131,7 +145,9 @@ describe("standard API logging", () => {
         ) => {
             response.status(400).end();
         };
+
         app.use(reject);
+
         const origin = await serve(app);
 
         const response = await fetch(
@@ -142,7 +158,9 @@ describe("standard API logging", () => {
                 method: "POST",
             }
         );
+
         await response.text();
+
         const records = output.records();
 
         expect(response.status).toBe(400);
@@ -168,10 +186,13 @@ describe("standard API logging", () => {
                 status: 503,
             }
         );
+
         app.use(requestLogging(output.log));
+
         app.get("/fail/:id", () => {
             throw cause;
         });
+
         const fail: ErrorRequestHandler = (
             error,
             _request,
@@ -181,11 +202,15 @@ describe("standard API logging", () => {
             logRequestError(response, error);
             response.status(503).end();
         };
+
         app.use(fail);
+
         const origin = await serve(app);
 
         const response = await fetch(origin + "/fail/private-id");
+
         await response.text();
+
         const records = output.records();
         const failure = records.find(
             (record) => record.event === "request.failed"
@@ -215,17 +240,22 @@ describe("standard API logging", () => {
     it("keeps healthy probes quiet while reporting unhealthy readiness", async () => {
         const output = capture();
         const app = express();
+
         app.use(requestLogging(output.log));
+
         app.get("/health", (_request, response) => {
             response.json({ ok: true });
         });
+
         app.get("/ready", (_request, response) => {
             response.status(503).end();
         });
+
         const origin = await serve(app);
 
         await fetch(origin + "/health").then((response) => response.text());
         await fetch(origin + "/ready").then((response) => response.text());
+
         const records = output.records();
 
         expect(records).toHaveLength(1);
@@ -237,7 +267,9 @@ describe("standard API logging", () => {
     it("emits one stream open/error/close lifecycle instead of request completion", async () => {
         const output = capture();
         const app = express();
+
         app.use(requestLogging(output.log));
+
         app.get("/events/:id", (_request, response) => {
             response.set("Content-Type", "text/event-stream");
             logStreamOpen(response);
@@ -246,10 +278,13 @@ describe("standard API logging", () => {
             response.emit("error", new Error("private-stream-error"));
             response.end();
         });
+
         const origin = await serve(app);
 
         const response = await fetch(origin + "/events/private-id");
+
         await response.text();
+
         const records = output.records();
 
         expect(records.map((record) => record.event)).toEqual([
@@ -286,6 +321,7 @@ describe("standard API logging", () => {
             },
             "operation failed"
         );
+
         const text = output.lines.join("");
 
         expect(output.records()).toHaveLength(1);

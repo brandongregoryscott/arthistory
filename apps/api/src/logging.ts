@@ -16,6 +16,7 @@ declare global {
 }
 
 type RequestContext = { request: Request; requestId: string };
+
 type RequestState = {
     done: boolean;
     failed: boolean;
@@ -45,6 +46,7 @@ const method = (request: Request) =>
 
 const routeTemplate = (request?: Request): string => {
     const path = (request?.route as { path?: unknown } | undefined)?.path;
+
     return isString(path) ? path : "__unmatched__";
 };
 
@@ -61,11 +63,13 @@ type SafeError = {
 const sanitizeSourceLocation = (location: string): string => {
     try {
         const url = new URL(location);
+
         if (url.protocol !== "file:") {
             return `${url.origin}/[source]`;
         }
 
         const origin = url.origin === "null" ? "file://" : url.origin;
+
         return `${origin}${url.pathname}`;
     } catch {
         return "[source]";
@@ -80,6 +84,7 @@ const sanitizeStackFrame = (frame: string): string =>
 const sanitizeStack = (error: Error): string | undefined => {
     const prefix =
         error.message === "" ? error.name : `${error.name}: ${error.message}`;
+
     if (!isString(error.stack) || !error.stack.startsWith(prefix)) {
         return undefined;
     }
@@ -117,6 +122,7 @@ const safeError = (value: unknown, depth = 0): SafeError => {
         stack: sanitizeStack(value),
         type: value.constructor.name,
     };
+
     if (
         "status" in value &&
         isNumber(value.status) &&
@@ -125,6 +131,7 @@ const safeError = (value: unknown, depth = 0): SafeError => {
     ) {
         result.status = value.status;
     }
+
     if (
         "code" in value &&
         isString(value.code) &&
@@ -132,14 +139,17 @@ const safeError = (value: unknown, depth = 0): SafeError => {
     ) {
         result.code = value.code;
     }
+
     if (depth < 3 && "cause" in value && isError(value.cause)) {
         result.cause = safeError(value.cause, depth + 1);
     }
+
     return result;
 };
 
 const requestContextFields = (instance: Logger) => {
     const active = context.getStore();
+
     if (isNil(active)) {
         return {};
     }
@@ -148,12 +158,15 @@ const requestContextFields = (instance: Logger) => {
     const result: { method?: string; requestId?: string; route: string } = {
         route: routeTemplate(active.request),
     };
+
     if (isNil(bound.method)) {
         result.method = method(active.request);
     }
+
     if (isNil(bound.requestId)) {
         result.requestId = active.requestId;
     }
+
     return result;
 };
 
@@ -233,15 +246,18 @@ const completionLevel = (
     if (state.failed || response.statusCode >= 500) {
         return "error";
     }
+
     if (
         !state.stream &&
         (!response.writableFinished || response.statusCode >= 400)
     ) {
         return "warn";
     }
+
     if (state.request.path === "/health" || state.request.path === "/ready") {
         return "debug";
     }
+
     return "info";
 };
 
@@ -250,6 +266,7 @@ const completionFields = (state: RequestState, response: ServerResponse) => {
         ...fields(state, response),
         aborted: !response.writableFinished,
     };
+
     if (state.stream) {
         return {
             ...details,
@@ -259,9 +276,11 @@ const completionFields = (state: RequestState, response: ServerResponse) => {
     }
 
     let event = "request.completed";
+
     if (details.aborted) {
         event = "request.aborted";
     }
+
     return { ...details, durationMs: elapsed(state), event };
 };
 
@@ -269,29 +288,36 @@ const logCompletion = (state: RequestState, response: ServerResponse): void => {
     if (state.done) {
         return;
     }
+
     state.done = true;
     requests.delete(response);
 
     const level = completionLevel(state, response);
     const details = completionFields(state, response);
+
     state.logger[level](details, details.event);
 };
 
 const logRequestError = (response: Response, error: unknown): void => {
     const state = requests.get(response);
+
     if (!isNil(state)) {
         state.failed = true;
     }
+
     const log = state?.logger ?? response.req?.logger ?? logger;
     const event = state?.stream === true ? "stream.error" : "request.failed";
+
     log.error({ err: error, event, route: routeTemplate(response.req) }, event);
 };
 
 const logStreamOpen = (response: ServerResponse): void => {
     const state = requests.get(response);
+
     if (isNil(state) || state.stream || state.done) {
         return;
     }
+
     state.stream = true;
     state.logger.info(
         {
@@ -308,8 +334,10 @@ const requestLogging =
     (request, response, next) => {
         const requestId = randomUUID();
         const log = root.child({ method: method(request), requestId });
+
         request.logger = log;
         response.setHeader("X-Request-Id", requestId);
+
         const state: RequestState = {
             done: false,
             failed: false,
@@ -319,15 +347,20 @@ const requestLogging =
             start: process.hrtime.bigint(),
             stream: false,
         };
+
         requests.set(response, state);
+
         const complete = () => logCompletion(state, response);
+
         response.once("finish", complete);
         response.once("close", complete);
+
         response.once("error", (error) => {
             if (!state.done) {
                 logRequestError(response, error);
             }
         });
+
         context.run({ request, requestId }, () => next());
     };
 

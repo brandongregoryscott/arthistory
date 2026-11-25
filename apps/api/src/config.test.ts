@@ -2,52 +2,55 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("dotenv", () => ({ default: { config: vi.fn() } }));
 
-beforeEach(() => vi.resetModules());
-afterEach(() => vi.unstubAllEnvs());
+describe("config", () => {
+    beforeEach(() => vi.resetModules());
 
-describe("trusted proxy configuration", () => {
-    it("trusts no forwarding hops by default", async () => {
-        vi.stubEnv("TRUST_PROXY_HOPS", undefined);
+    afterEach(() => vi.unstubAllEnvs());
 
-        const { TRUST_PROXY_HOPS } = await import("./config.js");
+    describe("trusted proxy configuration", () => {
+        it("trusts no forwarding hops by default", async () => {
+            vi.stubEnv("TRUST_PROXY_HOPS", undefined);
 
-        expect(TRUST_PROXY_HOPS).toBe(0);
+            const { TRUST_PROXY_HOPS } = await import("./config.js");
+
+            expect(TRUST_PROXY_HOPS).toBe(0);
+        });
+
+        it("accepts the single HTTP tunnel hop", async () => {
+            vi.stubEnv("TRUST_PROXY_HOPS", "1");
+
+            const { TRUST_PROXY_HOPS } = await import("./config.js");
+
+            expect(TRUST_PROXY_HOPS).toBe(1);
+        });
+
+        it.each(["-1", "1.5", "invalid", "Infinity", "9007199254740992"])(
+            "rejects invalid proxy hop count %s",
+            async (hops) => {
+                vi.stubEnv("TRUST_PROXY_HOPS", hops);
+
+                const configuration = import("./config.js");
+
+                await expect(configuration).rejects.toThrow(
+                    "Invalid TRUST_PROXY_HOPS."
+                );
+            }
+        );
     });
 
-    it("accepts the single HTTP tunnel hop", async () => {
-        vi.stubEnv("TRUST_PROXY_HOPS", "1");
+    describe("PocketBase configuration", () => {
+        it("rejects incomplete configuration only when loaded", async () => {
+            vi.stubEnv("POCKETBASE_URL", "https://pb.example.com");
+            vi.stubEnv("POCKETBASE_SUPERUSER_EMAIL", "owner@example.com");
+            vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "");
 
-        const { TRUST_PROXY_HOPS } = await import("./config.js");
+            const { loadPocketBaseConfig } = await import("./config.js");
 
-        expect(TRUST_PROXY_HOPS).toBe(1);
-    });
+            expect(loadPocketBaseConfig).toThrow();
 
-    it.each(["-1", "1.5", "invalid", "Infinity", "9007199254740992"])(
-        "rejects invalid proxy hop count %s",
-        async (hops) => {
-            vi.stubEnv("TRUST_PROXY_HOPS", hops);
+            vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "test-password");
 
-            const configuration = import("./config.js");
-
-            await expect(configuration).rejects.toThrow(
-                "Invalid TRUST_PROXY_HOPS."
-            );
-        }
-    );
-});
-
-describe("PocketBase configuration", () => {
-    it("rejects incomplete configuration only when loaded", async () => {
-        vi.stubEnv("POCKETBASE_URL", "https://pb.example.com");
-        vi.stubEnv("POCKETBASE_SUPERUSER_EMAIL", "owner@example.com");
-        vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "");
-
-        const { loadPocketBaseConfig } = await import("./config.js");
-
-        expect(loadPocketBaseConfig).toThrow();
-
-        vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "test-password");
-
-        expect(loadPocketBaseConfig().url).toBe("https://pb.example.com");
+            expect(loadPocketBaseConfig().url).toBe("https://pb.example.com");
+        });
     });
 });

@@ -7,7 +7,9 @@ const config = {
     password: "test-password",
     url: "http://pocketbase.invalid",
 };
-const token = `test.${Buffer.from(JSON.stringify({ exp: 4000000000 })).toString("base64url")}.test`;
+
+const TOKEN = `test.${Buffer.from(JSON.stringify({ exp: 4000000000 })).toString("base64url")}.test`;
+
 const artistId = (number: number) => String(number).padStart(22, "0");
 
 const record = (number: number, artist = 1) => ({
@@ -37,11 +39,15 @@ const remote = (records: ReturnType<typeof record>[]) => {
     ];
     const fetch = vi.fn(async (input: string) => {
         if (input.includes("auth-with-password")) {
-            return Response.json({ record: { id: "owner" }, token });
+            return Response.json({ record: { id: "owner" }, token: TOKEN });
         }
+
         const url = new URL(input);
+
         calls.push(url);
+
         const filter = url.searchParams.get("filter") ?? "";
+
         if (url.pathname.includes("/artists/")) {
             return Response.json({
                 items: artists.filter((artist) =>
@@ -53,6 +59,7 @@ const remote = (records: ReturnType<typeof record>[]) => {
                 totalPages: -1,
             });
         }
+
         const cursor = /weekStart > "([^"]*)"/.exec(filter)?.[1] ?? "";
         const artist = /artist = "([^"]*)"/.exec(filter)?.[1];
         const items =
@@ -78,14 +85,15 @@ const remote = (records: ReturnType<typeof record>[]) => {
             totalPages: -1,
         });
     });
+
     vi.stubGlobal("fetch", fetch);
 
     return { artists, calls, fetch };
 };
 
-afterEach(() => vi.unstubAllGlobals());
-
 describe("ArtistSnapshotStore", () => {
+    afterEach(() => vi.unstubAllGlobals());
+
     it("resolves artist identities before querying history through the artist/week index", async () => {
         const source = remote([record(1)]);
         const store = new ArtistSnapshotStore({
@@ -97,9 +105,11 @@ describe("ArtistSnapshotStore", () => {
         expect(source.calls[0]?.pathname).toBe(
             "/api/collections/artists/records"
         );
+
         const history = source.calls.find((url) =>
             url.pathname.includes("/snapshots/")
         );
+
         expect(history?.searchParams.get("filter")).toBe(
             'artist = "000000000000001"'
         );
@@ -111,17 +121,21 @@ describe("ArtistSnapshotStore", () => {
         const rows = Array.from({ length: 501 }, (_, index) => {
             const value = record(index + 1);
             const date = new Date(Date.UTC(2010, 0, 4 + index * 7));
+
             value.weekStart = date.toISOString();
             value.capturedAt = new Date(
                 date.getTime() + 86400000
             ).toISOString();
+
             return value;
         });
+
         rows.push({
             ...record(502, 2),
             capturedAt: "2026-01-20T12:00:00.000Z",
             weekStart: "2026-01-19T00:00:00.000Z",
         });
+
         const source = remote(rows);
         const store = new ArtistSnapshotStore({
             client: new PocketBaseClient(config),
@@ -164,6 +178,7 @@ describe("ArtistSnapshotStore", () => {
                 popularity: 42,
             },
         ]);
+
         const store = new ArtistSnapshotStore({
             client: new PocketBaseClient(config),
         });
@@ -179,13 +194,17 @@ describe("ArtistSnapshotStore", () => {
 
     it("preserves the latest complete capture within a month, including unavailable metrics", async () => {
         const first = record(1);
+
         first.followers = 100;
+
         const latest = {
             ...record(2),
             capturedAt: "2026-01-14 00:00:00.000Z",
             weekStart: "2026-01-12 00:00:00.000Z",
         };
+
         remote([first, latest]);
+
         const store = new ArtistSnapshotStore({
             client: new PocketBaseClient(config),
         });
@@ -212,7 +231,9 @@ describe("ArtistSnapshotStore", () => {
         });
 
         const latest = await store.latest();
+
         rows.length = 0;
+
         const empty = await store.latest();
 
         expect(latest).toEqual({ timestamp: "2026-01-07T12:34:56.000Z" });
@@ -252,7 +273,9 @@ describe("ArtistSnapshotStore", () => {
 
         expect(await store.list({ ids: [] })).toEqual([]);
         expect(source.fetch).not.toHaveBeenCalled();
+
         const originalFetch = source.fetch.getMockImplementation();
+
         source.fetch.mockImplementation(async (url: string) => {
             if (url.includes("/snapshots/")) {
                 return Response.json({
@@ -264,6 +287,7 @@ describe("ArtistSnapshotStore", () => {
                 ? Response.error()
                 : originalFetch(url);
         });
+
         await expect(store.list({ ids: [artistId(1)] })).rejects.toThrow(
             "artist relation"
         );
@@ -293,6 +317,7 @@ describe("ArtistSnapshotStore", () => {
         );
         const source = remote(rows);
         const originalFetch = source.fetch.getMockImplementation();
+
         source.fetch.mockImplementation(async (url: string) => {
             if (
                 new URL(url).searchParams
@@ -306,6 +331,7 @@ describe("ArtistSnapshotStore", () => {
                 ? Response.error()
                 : originalFetch(url);
         });
+
         const store = new ArtistSnapshotStore({
             client: new PocketBaseClient(config),
         });
@@ -317,6 +343,7 @@ describe("ArtistSnapshotStore", () => {
 
     it("rejects non-advancing pagination", async () => {
         remote([record(2), record(1)]);
+
         const store = new ArtistSnapshotStore({
             client: new PocketBaseClient(config),
         });
@@ -331,6 +358,7 @@ describe("ArtistSnapshotStore", () => {
             { ...record(1), id: "zzzzzzzzzzzzzzz" },
             { ...record(2), id: "aaaaaaaaaaaaaaa" },
         ]);
+
         const store = new ArtistSnapshotStore({
             client: new PocketBaseClient(config),
         });

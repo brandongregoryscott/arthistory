@@ -8,6 +8,7 @@ type ValidationRecord = {
 const validateSnapshot = (record: ValidationRecord) => {
     for (const key of ["followers", "popularity", "monthlyListeners"]) {
         const value = record.getFloat(key);
+
         if (
             !Number.isSafeInteger(value) ||
             value < MISSING_METRIC ||
@@ -16,20 +17,24 @@ const validateSnapshot = (record: ValidationRecord) => {
             throw new Error("Invalid snapshot metric: " + key);
         }
     }
+
     validateCaptureDates(record);
 };
 
 const validateSongSnapshot = (record: ValidationRecord) => {
     const value = record.getFloat("listenCount");
+
     if (!Number.isSafeInteger(value) || value < MISSING_METRIC) {
         throw new Error("Invalid song listen count.");
     }
+
     validateCaptureDates(record);
 };
 
 const validateCaptureDates = (record: ValidationRecord) => {
     const week = new Date(record.getString("weekStart"));
     const capture = new Date(record.getString("capturedAt"));
+
     if (
         !Number.isFinite(week.getTime()) ||
         !Number.isFinite(capture.getTime()) ||
@@ -49,6 +54,7 @@ const validateArtist = (record: ValidationRecord) => {
     for (const field of ["aliases", "searchNames"]) {
         const encoded = record.getString(field);
         const values: unknown = JSON.parse(encoded === "" ? "null" : encoded);
+
         if (
             values !== null &&
             (!Array.isArray(values) ||

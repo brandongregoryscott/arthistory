@@ -1,5 +1,7 @@
 const THOUSAND = 1000;
+
 const MILLION = 1_000_000;
+
 const BILLION = 1_000_000_000;
 
 const humanizeNumber = (value: number): string => {

@@ -54,15 +54,20 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
         itemToValue: (item) => item.id,
     });
 
+    const handleInputValueChange = ({
+        inputValue,
+    }: Combobox.InputValueChangeDetails) => onChange(inputValue);
+
+    const handleSelect = ({ itemValue }: Combobox.SelectionDetails) =>
+        items.find((item) => item.id === itemValue)?.onClick();
+
     return (
         <>
             <Combobox.Root
                 collection={collection}
                 inputValue={value}
-                onInputValueChange={({ inputValue }) => onChange(inputValue)}
-                onSelect={({ itemValue }) =>
-                    items.find((item) => item.id === itemValue)?.onClick()
-                }
+                onInputValueChange={handleInputValueChange}
+                onSelect={handleSelect}
                 openOnClick={true}
                 selectionBehavior="preserve"
                 value={[]}>
@@ -116,6 +121,7 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
             <Flex aria-label="Selected artists" flexWrap="wrap" gap="2">
                 {selectedIds.map((id) => {
                     const selected = selectedValueMap[id];
+
                     return isUndefined(selected) ? null : (
                         <RemovableBadge
                             key={id}

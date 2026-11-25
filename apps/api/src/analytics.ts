@@ -18,6 +18,7 @@ type ArtistSelectedProperties = {
 
 const artistSelected = (properties: ArtistSelectedProperties): void => {
     const { id } = properties;
+
     if (DEFAULT_ARTIST_IDS.includes(id)) {
         return;
     }

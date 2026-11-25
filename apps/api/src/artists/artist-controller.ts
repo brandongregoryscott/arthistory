@@ -14,9 +14,11 @@ class ArtistsController {
         response: Response
     ): Promise<Response> {
         const { id } = request.params;
+
         if (!isSpotifyArtistId(id)) {
             throw new ValidationError("Provide a Spotify artist ID.");
         }
+
         const resolution = parseResolution(request.query.resolution);
 
         const snapshots = await ArtistService.listArtistSnapshots({
@@ -26,8 +28,10 @@ class ArtistsController {
 
         return ok(response, snapshots);
     }
+
     static async listArtists(request: Request, response: Response) {
         const ids = parseArtistIds(request.query.ids);
+
         if (isEmpty(ids)) {
             return ok(response, {});
         }
@@ -38,12 +42,14 @@ class ArtistsController {
 
         return ok(response, artists);
     }
+
     static async listArtistSnapshots(
         request: Request,
         response: Response
     ): Promise<Response> {
         const ids = parseArtistIds(request.query.ids);
         const resolution = parseResolution(request.query.resolution);
+
         if (isEmpty(ids)) {
             return ok(response, []);
         }
@@ -55,20 +61,24 @@ class ArtistsController {
 
         return ok(response, snapshots);
     }
+
     static async requestArtist(
         request: Request,
         response: Response
     ): Promise<Response> {
         const id = request.params.id as string;
+
         artistRequested({ id });
 
         return ok(response, { requested: true });
     }
+
     static async searchArtistsByName(
         request: Request,
         response: Response
     ): Promise<Response> {
         normalizeSearchQuery(request.query.name);
+
         const name = request.query.name as string;
         const { artists, total } = await ArtistService.searchArtists(name);
 

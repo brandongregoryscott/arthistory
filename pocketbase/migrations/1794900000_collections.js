@@ -22,9 +22,12 @@ migrate(
                 ],
                 indexes,
             });
+
             app.save(collection);
+
             return collection;
         };
+
         const artists = create(
             "artists",
             [
@@ -52,6 +55,7 @@ migrate(
                 "CREATE INDEX artists_due ON artists (syncEnabled, nextAttemptAt)",
             ]
         );
+
         create(
             "snapshots",
             [
@@ -78,6 +82,7 @@ migrate(
                 "CREATE INDEX snapshots_week ON snapshots (weekStart)",
             ]
         );
+
         const settings = create(
             "sync_settings",
             [
@@ -116,6 +121,7 @@ migrate(
             ["CREATE UNIQUE INDEX sync_settings_key ON sync_settings (key)"]
         );
         const policy = new Record(settings);
+
         policy.load({
             key: "global",
             enabled: false,
@@ -142,11 +148,13 @@ migrate(
             ["CREATE UNIQUE INDEX sync_state_key ON sync_state (key)"]
         );
         const globalState = new Record(state);
+
         globalState.set("key", "global");
         app.save(globalState);
 
         // For later bounded import batches and snapshot/success atomic writes.
         const config = app.settings();
+
         config.batch.enabled = true;
         config.batch.maxRequests = 100;
         config.batch.timeout = 10;
@@ -162,7 +170,9 @@ migrate(
         ]) {
             app.delete(app.findCollectionByNameOrId(name));
         }
+
         const config = app.settings();
+
         config.batch.enabled = false;
         app.save(config);
     }

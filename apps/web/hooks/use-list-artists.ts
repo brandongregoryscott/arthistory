@@ -6,6 +6,7 @@ import { get } from "@/utils/fetch";
 
 const useListArtists = (options: ListArtistsOptions) => {
     const { ids } = options;
+
     return useQuery({
         enabled: !isEmpty(ids),
         placeholderData: keepPreviousData,
@@ -13,6 +14,7 @@ const useListArtists = (options: ListArtistsOptions) => {
             const { data, error } = (await get(
                 `${LIST_ARTISTS_ROUTE}?ids=${ids.join(",")}`
             )) as ListArtistsResult;
+
             if (error !== null) {
                 throw error;
             }

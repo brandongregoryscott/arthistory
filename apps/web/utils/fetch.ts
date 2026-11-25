@@ -8,39 +8,44 @@ const HEADERS = {
     [CONTENT_TYPE]: "application/json",
 };
 
-const _fetch = async <T>(route: string, options?: RequestInit): Promise<T> => {
+const requestJson = async <T>(
+    route: string,
+    options?: RequestInit
+): Promise<T> => {
     const response = await fetch(`${API_URL}${route}`, options);
 
     if (!response.ok) {
         const { error } = (await response.json()) as ApiErrorResponse;
+
         throw error;
     }
 
     const result = (await response.json()) as ApiSuccessResponse<T>;
+
     return result as T;
 };
 
-const get = async <T>(route: string): Promise<T> => _fetch(route);
+const get = async <T>(route: string): Promise<T> => requestJson(route);
 
 const post = async <TBody, TResponse>(route: string, body: TBody) =>
-    _fetch<TResponse>(route, {
+    requestJson<TResponse>(route, {
         body: JSON.stringify(body),
         headers: HEADERS,
         method: "POST",
     });
 
-const _delete = async <TBody, TResponse>(route: string, body: TBody) =>
-    _fetch<TResponse>(route, {
+const deleteRequest = async <TBody, TResponse>(route: string, body: TBody) =>
+    requestJson<TResponse>(route, {
         body: JSON.stringify(body),
         headers: HEADERS,
         method: "DELETE",
     });
 
 const put = async <TBody, TResponse>(route: string, body: TBody) =>
-    _fetch<TResponse>(route, {
+    requestJson<TResponse>(route, {
         body: JSON.stringify(body),
         headers: HEADERS,
         method: "PUT",
     });
 
-export { _delete as delete, get, post, put };
+export { deleteRequest as delete, get, post, put };

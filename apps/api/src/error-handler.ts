@@ -18,10 +18,13 @@ const errorHandler = async (
     if (!isNotFoundError(error) && !isValidationError(error)) {
         logRequestError(response, error);
     }
+
     if (response.headersSent) {
         response.destroy();
+
         return;
     }
+
     if (isNotFoundError(error)) {
         return notFound(response, error);
     }

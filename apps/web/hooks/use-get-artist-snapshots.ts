@@ -9,6 +9,7 @@ import { get } from "@/utils/fetch";
 
 const useGetArtistSnapshots = (options: GetArtistSnapshotsOptions) => {
     const { id } = options;
+
     return useQuery({
         enabled: !isEmpty(id),
         placeholderData: keepPreviousData,
@@ -16,6 +17,7 @@ const useGetArtistSnapshots = (options: GetArtistSnapshotsOptions) => {
             const { data, error } = (await get(
                 GET_ARTIST_SNAPSHOTS_ROUTE.replace(":id", id)
             )) as GetArtistSnapshotsResult;
+
             if (error !== null) {
                 throw error;
             }

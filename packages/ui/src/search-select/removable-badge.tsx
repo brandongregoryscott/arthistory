@@ -7,7 +7,8 @@ type RemovableBadgeProps = {
 } & PropsWithChildren;
 
 const RemovableBadge: React.FC<RemovableBadgeProps> = (props) => {
-    const { children, onRemove } = props;
+    const { children } = props;
+
     return (
         <Tag.Root colorPalette="teal" size="lg">
             <Tag.Label>{children}</Tag.Label>
@@ -18,7 +19,7 @@ const RemovableBadge: React.FC<RemovableBadgeProps> = (props) => {
                             ? `Remove ${children}`
                             : "Remove artist"
                     }
-                    onClick={onRemove}
+                    onClick={props.onRemove}
                 />
             </Tag.EndElement>
         </Tag.Root>

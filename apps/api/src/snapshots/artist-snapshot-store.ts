@@ -34,12 +34,16 @@ type ArtistSnapshotStoreOptions = {
 };
 
 const MAX_ARTISTS_PER_REQUEST = 50;
+
 const PAGE_SIZE = 500;
+
 const MAX_SNAPSHOTS = 50000;
+
 const READ_TIMEOUT_MS = 10000;
 
 class ArtistSnapshotStore {
     readonly #client: PocketBaseClient;
+
     readonly #maxSnapshots: number;
 
     constructor({
@@ -70,6 +74,7 @@ class ArtistSnapshotStore {
 
     async list({ ids, resolution = "monthly" }: ListSnapshotsOptions) {
         const requestedIds = uniq(ids);
+
         if (
             requestedIds.length > MAX_ARTISTS_PER_REQUEST ||
             requestedIds.some((id) => !isSpotifyArtistId(id))
@@ -78,6 +83,7 @@ class ArtistSnapshotStore {
                 `Provide at most ${MAX_ARTISTS_PER_REQUEST} valid Spotify artist IDs.`
             );
         }
+
         if (isEmpty(requestedIds)) {
             return [];
         }
@@ -109,7 +115,9 @@ class ArtistSnapshotStore {
                     "Snapshot lookup returned an invalid artist identity."
                 );
             }
+
             seen.add(artist.spotifyId);
+
             let cursor = "";
 
             while (true) {
@@ -117,6 +125,7 @@ class ArtistSnapshotStore {
                     const filters = [
                         pb.filter("artist = {:id}", { id: artist.id }),
                     ];
+
                     if (cursor !== "") {
                         filters.push(
                             pb.filter("weekStart > {:cursor}", { cursor })
@@ -140,6 +149,7 @@ class ArtistSnapshotStore {
                             "Snapshot has no matching artist relation."
                         );
                     }
+
                     if (
                         !Number.isFinite(Date.parse(record.weekStart)) ||
                         (cursor !== "" &&

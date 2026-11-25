@@ -1,11 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PocketBaseClient } from "./pocketbase";
 
-afterEach(() => {
-    vi.unstubAllGlobals();
-    vi.unstubAllEnvs();
-});
-
 const config = {
     email: "owner@example.com",
     password: "test-password",
@@ -13,10 +8,13 @@ const config = {
 };
 
 // The SDK checks the JWT's expiry locally.
-const token = `test.${Buffer.from(JSON.stringify({ exp: 4000000000 })).toString("base64url")}.test`;
+const TOKEN = `test.${Buffer.from(JSON.stringify({ exp: 4000000000 })).toString("base64url")}.test`;
 
 const authResponse = async () =>
-    Response.json({ record: { email: config.email, id: "owner" }, token });
+    Response.json({
+        record: { email: config.email, id: "owner" },
+        token: TOKEN,
+    });
 
 const pageResponse = async () =>
     Response.json({
@@ -28,12 +26,19 @@ const pageResponse = async () =>
     });
 
 describe("PocketBaseClient", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.unstubAllEnvs();
+    });
+
     it("shares authentication and doesn't cancel concurrent paginated reads", async () => {
         const fetchMock = vi
             .fn()
             .mockImplementationOnce(authResponse)
             .mockImplementation(pageResponse);
+
         vi.stubGlobal("fetch", fetchMock);
+
         const storage = new PocketBaseClient(config);
 
         await Promise.all(
@@ -43,8 +48,9 @@ describe("PocketBaseClient", () => {
         );
 
         const requests = fetchMock.mock.calls;
+
         expect(fetchMock).toHaveBeenCalledTimes(3);
-        expect(requests[1]?.[1].headers.Authorization).toBe(token);
+        expect(requests[1]?.[1].headers.Authorization).toBe(TOKEN);
         expect(requests[2]?.[1].signal.aborted).toBe(false);
     });
 
@@ -56,7 +62,9 @@ describe("PocketBaseClient", () => {
             .mockImplementationOnce(authResponse)
             .mockImplementationOnce(pageResponse)
             .mockRejectedValueOnce(new Error("connection lost"));
+
         vi.stubGlobal("fetch", fetchMock);
+
         const storage = new PocketBaseClient(config);
 
         await storage.run((pb) => pb.collection("artists").getList(1, 1));
@@ -74,7 +82,9 @@ describe("PocketBaseClient", () => {
             .mockResolvedValueOnce(Response.json({}, { status: 400 }))
             .mockImplementationOnce(authResponse)
             .mockImplementationOnce(pageResponse);
+
         vi.stubGlobal("fetch", fetchMock);
+
         const storage = new PocketBaseClient(config);
 
         await expect(
@@ -91,6 +101,7 @@ describe("PocketBaseClient", () => {
             .fn()
             .mockImplementationOnce(authResponse)
             .mockImplementation(pageResponse);
+
         vi.stubGlobal("fetch", fetchMock);
 
         await new PocketBaseClient(config).ready();
