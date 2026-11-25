@@ -18,6 +18,7 @@ import { createMetrics } from "./metrics";
 import { readRateLimiter } from "./utilities/rate-limiter";
 
 const app = express();
+
 const metrics = createMetrics();
 
 app.set("trust proxy", TRUST_PROXY_HOPS);

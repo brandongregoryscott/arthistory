@@ -7,6 +7,7 @@ type RegistryOptions = {
     client: PocketBaseClient;
     pages?: Pick<ArtistPageClient, "read">;
 };
+
 type RegisteredArtist = {
     displayName: string;
     spotifyId: string;
@@ -15,9 +16,12 @@ type RegisteredArtist = {
 
 class ArtistRegistry {
     readonly #client: PocketBaseClient;
+
     readonly #pages: Pick<ArtistPageClient, "read">;
 
-    constructor({ client, pages = new ArtistPageClient() }: RegistryOptions) {
+    constructor(options: RegistryOptions) {
+        const { client, pages = new ArtistPageClient() } = options;
+
         this.#client = client;
         this.#pages = pages;
     }
@@ -25,10 +29,13 @@ class ArtistRegistry {
     async add(input: string): Promise<RegisteredArtist> {
         const spotifyId = parseSpotifyArtistId(input);
         const existing = await this.#find(spotifyId);
+
         if (existing != null) {
             return existing;
         }
+
         const page = await this.#pages.read(spotifyId);
+
         try {
             return await this.#client.run((pb) =>
                 pb.collection("artists").create<RegisteredArtist>(
@@ -51,10 +58,12 @@ class ArtistRegistry {
                 error.response.data?.spotifyId?.code === "validation_not_unique"
             ) {
                 const raced = await this.#find(spotifyId);
+
                 if (raced != null) {
                     return raced;
                 }
             }
+
             throw error;
         }
     }
@@ -67,6 +76,7 @@ class ArtistRegistry {
                 skipTotal: true,
             })
         );
+
         return result.items[0];
     }
 }

@@ -4,7 +4,9 @@ migrate(
     (app) => {
         // Freeze the historical sentinel independently of application code.
         const MISSING_METRIC = -1;
+
         const collection = app.findCollectionByNameOrId("snapshots");
+
         for (const name of ["followers", "monthlyListeners", "popularity"]) {
             collection.fields.add(
                 new NumberField({
@@ -15,6 +17,7 @@ migrate(
                 })
             );
         }
+
         app.save(collection);
         app.db()
             .newQuery(
@@ -32,7 +35,9 @@ migrate(
     (app) => {
         // Freeze the historical sentinel independently of application code.
         const MISSING_METRIC = -1;
+
         const collection = app.findCollectionByNameOrId("snapshots");
+
         collection.fields.add(
             new JSONField({ name: "metrics", required: true, maxSize: 1024 })
         );
@@ -48,9 +53,11 @@ migrate(
         `
             )
             .execute();
+
         for (const name of ["followers", "monthlyListeners", "popularity"]) {
             collection.fields.removeByName(name);
         }
+
         app.save(collection);
     }
 );

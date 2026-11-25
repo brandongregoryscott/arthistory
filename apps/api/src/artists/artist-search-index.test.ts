@@ -17,12 +17,14 @@ const artist = (
 describe("ArtistSearchIndex", () => {
     it("finds Duster from Dustr with exact/prefix/substring results before fuzzy matches", () => {
         const index = new ArtistSearchIndex();
+
         [
             artist(1, "Duster"),
             artist(2, "Dustr"),
             artist(3, "Dustr Collective"),
             artist(4, "The Dustr Band"),
         ].forEach((record) => index.add(record));
+
         index.finish();
 
         const results = index.search("Dustr");
@@ -37,9 +39,11 @@ describe("ArtistSearchIndex", () => {
 
     it("applies alias match order before Fuse limits results and resets it for each query", () => {
         const index = new ArtistSearchIndex();
+
         for (let number = 1; number <= 30; number++) {
             index.add(artist(number, "Duster"));
         }
+
         index.add(artist(31, "Zed", ["Dustr Collective Orchestra Ensemble"]));
         index.add(artist(32, "Alias", ["Dustr"]));
         index.finish();
@@ -49,23 +53,27 @@ describe("ArtistSearchIndex", () => {
         const typoResults = index.search("Daster");
 
         expect(results).toHaveLength(20);
-        expect(results.slice(0, 3).map(({ name }) => name)).toEqual([
+        expect(results.slice(0, 3).map((artist) => artist.name)).toEqual([
             "Alias",
             "Zed",
             "Duster",
         ]);
-        expect(nextResults.every(({ name }) => name === "Duster")).toBe(true);
+        expect(nextResults.every((artist) => artist.name === "Duster")).toBe(
+            true
+        );
         expect(typoResults[0]?.name).toBe("Duster");
     });
 
     it("normalizes aliases, accents, case and punctuation while retaining non-Latin and symbol names", () => {
         const index = new ArtistSearchIndex();
+
         [
             artist(1, "Sigur - Rós", ["Jónsi's Band"]),
             artist(2, "東京事変"),
             artist(3, "!!!"),
             artist(4, "|"),
         ].forEach((record) => index.add(record));
+
         index.finish();
 
         expect(index.search("SIGUR ROS")[0]?.name).toBe("Sigur - Rós");
@@ -78,9 +86,11 @@ describe("ArtistSearchIndex", () => {
 
     it("keeps duplicate names distinct, bounds results and reports history separately from sync", () => {
         const index = new ArtistSearchIndex();
+
         for (let number = 1; number <= 30; number++) {
             index.add(artist(number, "Duster"));
         }
+
         index.markHistory(artist(1, "").id);
         index.finish();
 
@@ -102,6 +112,7 @@ describe("ArtistSearchIndex", () => {
     it("keeps unresolved artists available by ID without inventing a name or metrics", () => {
         const index = new ArtistSearchIndex();
         const record = artist(1, "");
+
         index.add(record);
         index.finish();
 
@@ -116,6 +127,7 @@ describe("ArtistSearchIndex", () => {
 
     it("rejects record, name and byte budgets instead of publishing a partial index", () => {
         const records = new ArtistSearchIndex({ maxArtists: 1 });
+
         records.add(artist(1, "Duster"));
 
         expect(() => records.add(artist(2, "Other"))).toThrow("budget");

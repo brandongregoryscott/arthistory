@@ -34,18 +34,21 @@ type ArtistSnapshotStoreOptions = {
 };
 
 const MAX_ARTISTS_PER_REQUEST = 50;
+
 const PAGE_SIZE = 500;
+
 const MAX_SNAPSHOTS = 50000;
+
 const READ_TIMEOUT_MS = 10000;
 
 class ArtistSnapshotStore {
     readonly #client: PocketBaseClient;
+
     readonly #maxSnapshots: number;
 
-    constructor({
-        client,
-        maxSnapshots = MAX_SNAPSHOTS,
-    }: ArtistSnapshotStoreOptions) {
+    constructor(options: ArtistSnapshotStoreOptions) {
+        const { client, maxSnapshots = MAX_SNAPSHOTS } = options;
+
         if (!Number.isSafeInteger(maxSnapshots) || maxSnapshots < 1) {
             throw new Error("Snapshot read limit must be a positive integer.");
         }
@@ -68,8 +71,10 @@ class ArtistSnapshotStore {
             : { timestamp: new Date(record.capturedAt).toISOString() };
     }
 
-    async list({ ids, resolution = "monthly" }: ListSnapshotsOptions) {
+    async list(options: ListSnapshotsOptions) {
+        const { ids, resolution = "monthly" } = options;
         const requestedIds = uniq(ids);
+
         if (
             requestedIds.length > MAX_ARTISTS_PER_REQUEST ||
             requestedIds.some((id) => !isSpotifyArtistId(id))
@@ -78,6 +83,7 @@ class ArtistSnapshotStore {
                 `Provide at most ${MAX_ARTISTS_PER_REQUEST} valid Spotify artist IDs.`
             );
         }
+
         if (isEmpty(requestedIds)) {
             return [];
         }
@@ -109,7 +115,9 @@ class ArtistSnapshotStore {
                     "Snapshot lookup returned an invalid artist identity."
                 );
             }
+
             seen.add(artist.spotifyId);
+
             let cursor = "";
 
             while (true) {
@@ -117,6 +125,7 @@ class ArtistSnapshotStore {
                     const filters = [
                         pb.filter("artist = {:id}", { id: artist.id }),
                     ];
+
                     if (cursor !== "") {
                         filters.push(
                             pb.filter("weekStart > {:cursor}", { cursor })
@@ -140,6 +149,7 @@ class ArtistSnapshotStore {
                             "Snapshot has no matching artist relation."
                         );
                     }
+
                     if (
                         !Number.isFinite(Date.parse(record.weekStart)) ||
                         (cursor !== "" &&

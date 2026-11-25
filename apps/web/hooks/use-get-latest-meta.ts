@@ -9,6 +9,7 @@ const useGetLatestMeta = () => {
             const { data, error } = (await get(
                 GET_LATEST_META_ROUTE
             )) as GetLatestMetaResult;
+
             if (error !== null) {
                 throw error;
             }

@@ -9,6 +9,7 @@ import { get } from "@/utils/fetch";
 
 const useListArtistSnapshots = (options: ListArtistSnapshotsOptions) => {
     const { ids } = options;
+
     return useQuery({
         enabled: !isEmpty(ids),
         placeholderData: keepPreviousData,
@@ -16,6 +17,7 @@ const useListArtistSnapshots = (options: ListArtistSnapshotsOptions) => {
             const { data, error } = (await get(
                 `${LIST_ARTIST_SNAPSHOTS_ROUTE}?ids=${ids.join(",")}`
             )) as ListArtistSnapshotsResult;
+
             if (error !== null) {
                 throw error;
             }

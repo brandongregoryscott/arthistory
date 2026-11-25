@@ -3,7 +3,9 @@ import type { PocketBaseConfig } from "../config";
 
 class PocketBaseClient {
     readonly #client: PocketBase;
+
     readonly #config: PocketBaseConfig;
+
     #authentication: Promise<unknown> | undefined;
 
     constructor(config: PocketBaseConfig) {
@@ -11,6 +13,7 @@ class PocketBaseClient {
         this.#client = new PocketBase(config.url);
         // Shared server client: independent requests must not cancel each other.
         this.#client.autoCancellation(false);
+
         this.#client.beforeSend = (url, options) => {
             const timeoutSignal = AbortSignal.timeout(10000);
 
@@ -46,6 +49,7 @@ class PocketBaseClient {
 
     async run<T>(operation: (pb: PocketBase) => Promise<T>): Promise<T> {
         await this.#authenticate();
+
         try {
             return await operation(this.#client);
         } catch (error) {
@@ -56,8 +60,10 @@ class PocketBaseClient {
             ) {
                 throw error;
             }
+
             this.#client.authStore.clear();
             await this.#authenticate();
+
             return operation(this.#client);
         }
     }
@@ -66,6 +72,7 @@ class PocketBaseClient {
         if (this.#client.authStore.isValid) {
             return;
         }
+
         this.#authentication ??= this.#client
             .collection("_superusers")
             .authWithPassword(this.#config.email, this.#config.password)

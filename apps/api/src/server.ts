@@ -35,16 +35,20 @@ const main = async () => {
         process.once(signal, () => {
             logger.info({ event: "stopping", signal }, "API stopping");
             artistCache.stop();
+
             let remaining = 2;
+
             for (const listener of [server, metricsServer]) {
                 listener.close(() => {
                     remaining -= 1;
+
                     if (remaining === 0) {
                         logger.info({ event: "stopped" }, "API stopped");
                         process.exit(0);
                     }
                 });
             }
+
             setTimeout(() => process.exit(1), 10_000).unref();
         });
     }

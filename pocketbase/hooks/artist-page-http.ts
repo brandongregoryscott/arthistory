@@ -23,12 +23,9 @@ type ReadPageOptions = {
     timeoutSeconds: number;
 };
 
-const readArtistName = ({
-    execute,
-    id,
-    now,
-    timeoutSeconds,
-}: ReadPageOptions): PageResult => {
+const readArtistName = (options: ReadPageOptions): PageResult => {
+    const { execute, id, now, timeoutSeconds } = options;
+
     if (
         !/^[A-Za-z0-9]{22}$/.test(id) ||
         !Number.isSafeInteger(timeoutSeconds) ||
@@ -37,6 +34,7 @@ const readArtistName = ({
     ) {
         throw new Error("Invalid artist page request.");
     }
+
     const raw = execute([
         "-q",
         "--silent",
@@ -57,38 +55,48 @@ const readArtistName = ({
     let body = raw;
     let headers = "";
     let status = 0;
+
     do {
         const end = body.indexOf("\r\n\r\n");
+
         if (end < 0) {
             throw new Error("Invalid artist page HTTP response.");
         }
+
         headers = body.slice(0, end);
         status = parseInt(
             /^HTTP\/\S+\s+(\d{3})\b/.exec(headers)?.[1] ?? "",
             10
         );
+
         if (!Number.isSafeInteger(status)) {
             throw new Error("Invalid artist page HTTP status.");
         }
+
         body = body.slice(end + 4);
     } while (status >= 100 && status < 200);
+
     const retryAfter = /^retry-after:\s*([^\r\n]+)/im
         .exec(headers)?.[1]
         ?.trim();
     let delay = NaN;
+
     if (retryAfter != null) {
         delay = /^\d+$/.test(retryAfter)
             ? parseInt(retryAfter, 10) * 1000
             : Date.parse(retryAfter) - now();
     }
+
     const retryAfterMs =
         Number.isSafeInteger(delay) &&
         Number.isFinite(new Date(now() + delay).getTime())
             ? Math.max(0, delay)
             : null;
+
     if (status !== 200) {
         return { displayName: null, retryAfterMs, status };
     }
+
     if (!/^content-type:\s*text\/html\b/im.test(headers)) {
         throw new Error("Artist page response must be HTML.");
     }

@@ -10,15 +10,22 @@ type CacheOptions = {
 };
 
 const PAGE_SIZE = 500;
+
 const DEFAULT_REFRESH_MS = 60000;
 
 class ArtistCache {
     readonly #client: PocketBaseClient;
+
     readonly #limits: IndexLimits;
+
     readonly #refreshMs: number;
+
     #controller: AbortController | undefined;
+
     #index: ArtistSearchIndex | undefined;
+
     #refreshing: Promise<void> | undefined;
+
     #timer: ReturnType<typeof setInterval> | undefined;
 
     constructor(options: CacheOptions) {
@@ -70,6 +77,7 @@ class ArtistCache {
         if (this.#timer != null) {
             clearInterval(this.#timer);
         }
+
         this.#timer = undefined;
         this.#controller?.abort();
     }
@@ -129,7 +137,9 @@ class ArtistCache {
 
     async #rebuild() {
         const controller = new AbortController();
+
         this.#controller = controller;
+
         const next = new ArtistSearchIndex(this.#limits);
 
         for await (const row of this.#pages(false, controller.signal)) {

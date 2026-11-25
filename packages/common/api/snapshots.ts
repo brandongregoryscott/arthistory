@@ -25,6 +25,7 @@ const bucketSnapshots = (
 
     return [...selected.values()].sort((a, b) => {
         const timestamp = a.timestamp.localeCompare(b.timestamp);
+
         return timestamp !== 0 ? timestamp : a.id.localeCompare(b.id);
     });
 };
@@ -40,11 +41,13 @@ const alignMonthlyFollowers = (snapshots: ArtistSnapshot[], ids: string[]) => {
 
     if (first != null && last != null) {
         const date = new Date(first);
+
         while (date.toISOString() <= last) {
             // Bound chart allocations even if stored dates are corrupt.
             if (timestamps.length >= MAX_CHART_MONTHS) {
                 throw new Error("Snapshot chart exceeds 100 years.");
             }
+
             timestamps.push(date.toISOString());
             date.setUTCMonth(date.getUTCMonth() + 1);
         }
@@ -67,12 +70,14 @@ const alignMonthlyFollowers = (snapshots: ArtistSnapshot[], ids: string[]) => {
 
 const snapshotBucket = (timestamp: string, resolution: SnapshotResolution) => {
     const date = new Date(timestamp);
+
     date.setUTCHours(0, 0, 0, 0);
 
     if (resolution === "weekly") {
         date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
     } else if (resolution !== "daily") {
         date.setUTCDate(1);
+
         if (resolution === "quarterly") {
             date.setUTCMonth(Math.floor(date.getUTCMonth() / 3) * 3);
         } else if (resolution === "yearly") {

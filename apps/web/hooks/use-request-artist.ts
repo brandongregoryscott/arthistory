@@ -11,6 +11,7 @@ const useRequestArtist = () => {
                 REQUEST_ARTIST_ROUTE.replace(":id", id),
                 {}
             )) as RequestArtistResult;
+
             if (error !== null) {
                 throw error;
             }

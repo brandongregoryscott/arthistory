@@ -28,7 +28,9 @@ describe("snapshot series", () => {
         { expected: "2026-01-01T00:00:00.000Z", value: "yearly" },
     ] satisfies ResolutionCase[])(
         "buckets $value in UTC across the year boundary",
-        ({ expected, value }) => {
+        (testCase) => {
+            const { expected, value } = testCase;
+
             const result = snapshotBucket("2025-12-31T20:00:00-05:00", value);
 
             expect(result).toBe(expected);
@@ -42,7 +44,9 @@ describe("snapshot series", () => {
         { expected: "2026-01-01T00:00:00.000Z", value: "yearly" },
     ] satisfies ResolutionCase[])(
         "buckets a summer capture at the start of its $value period",
-        ({ expected, value }) => {
+        (testCase) => {
+            const { expected, value } = testCase;
+
             const result = snapshotBucket("2026-08-19T16:00:00.000Z", value);
 
             expect(result).toBe(expected);

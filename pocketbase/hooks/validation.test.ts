@@ -14,6 +14,7 @@ describe("song snapshot validation", () => {
             expect(() => validateSongSnapshot(record(count))).not.toThrow();
         }
     );
+
     it.each([-2, 0.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])(
         "rejects an invalid count %s",
         (count) => {
@@ -22,6 +23,7 @@ describe("song snapshot validation", () => {
             );
         }
     );
+
     it.each(["2026-11-17T00:00:00Z", "2026-11-09T00:00:00Z", "invalid"])(
         "rejects a week that does not match the capture: %s",
         (week) => {

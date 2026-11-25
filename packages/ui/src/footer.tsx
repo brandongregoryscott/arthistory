@@ -12,6 +12,9 @@ type FooterProps = {
 
 const Footer: React.FC<FooterProps> = (props) => {
     const { breakpoint, darkMode, lastUpdated, onThemeChange } = props;
+
+    const handleThemeClick = () => onThemeChange((value) => !value);
+
     return (
         <Flex
             align="center"
@@ -27,7 +30,7 @@ const Footer: React.FC<FooterProps> = (props) => {
                 aria-label={
                     darkMode ? "Switch to light theme" : "Switch to dark theme"
                 }
-                onClick={() => onThemeChange((value) => !value)}
+                onClick={handleThemeClick}
                 size="sm"
                 variant="ghost">
                 {darkMode ? <Sun /> : <Moon />}

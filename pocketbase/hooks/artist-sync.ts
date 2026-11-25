@@ -56,8 +56,11 @@ type RunOptions = {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
 const ERROR_COOLDOWN_MS = 5 * 60 * 1000;
+
 const THROTTLE_COOLDOWN_MS = 60 * 60 * 1000;
+
 const LEASE_GRACE_MS = 30000;
 
 const tick = (app: SyncApp, dependencies: SyncDependencies) =>
@@ -66,14 +69,18 @@ const tick = (app: SyncApp, dependencies: SyncDependencies) =>
 const collect = (app: SyncApp, dependencies: SyncDependencies) =>
     run({ app, dependencies, mode: "snapshots" });
 
-const run = ({ app, dependencies, mode }: RunOptions) => {
+const run = (options: RunOptions) => {
+    const { app, dependencies, mode } = options;
+
     const claimed: { value?: Claim } = {};
+
     app.runInTransaction((tx) => {
         const settings = tx.findFirstRecordByData(
             "sync_settings",
             "key",
             "global"
         );
+
         if (
             !settings.getBool(
                 mode === "names" ? "namesBackfillEnabled" : "enabled"
@@ -81,8 +88,10 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
         ) {
             return;
         }
+
         const state = tx.findFirstRecordByData("sync_state", "key", "global");
         const now = dependencies.now();
+
         if (
             ["leaseUntil", "nextRequestAt", "cooldownUntil"].some(
                 (field) => Date.parse(state.getString(field)) > now
@@ -90,6 +99,7 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
         ) {
             return;
         }
+
         const rows = tx.findRecordsByFilter(
             "artists",
             mode === "names"
@@ -101,12 +111,15 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
             { now: date(now) }
         );
         const [artist] = rows;
+
         if (artist == null) {
             return;
         }
+
         const timeoutSeconds = settings.getInt("requestTimeoutSeconds");
         const intervalMs = settings.getInt("requestIntervalSeconds") * 1000;
         const token = dependencies.token();
+
         state.set("attemptToken", token);
         state.set(
             "leaseUntil",
@@ -117,11 +130,13 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
             mode === "names" ? "metadataNextAttemptAt" : "nextAttemptAt",
             date(now + DAY_MS)
         );
+
         if (mode === "snapshots") {
             artist.set("lastAttemptAt", date(now));
             artist.set("attemptToken", token);
             artist.set("leaseUntil", state.getString("leaseUntil"));
         }
+
         tx.save(state);
         tx.save(artist);
         claimed.value = {
@@ -134,12 +149,15 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
             token,
         };
     });
+
     const claim = claimed.value;
+
     if (claim == null) {
         return { status: "idle" };
     }
 
     let page: PageResult;
+
     try {
         page = dependencies.readPage(claim.spotifyId, claim.timeoutSeconds);
     } catch (_) {
@@ -147,9 +165,11 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
     }
 
     let status = "stale";
+
     app.runInTransaction((tx) => {
         const state = tx.findFirstRecordByData("sync_state", "key", "global");
         const now = dependencies.now();
+
         if (
             state.getString("attemptToken") !== claim.token ||
             !(Date.parse(state.getString("leaseUntil")) > now)
@@ -158,8 +178,10 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
                 applyCooldown(state, now, page);
                 tx.save(state);
             }
+
             return;
         }
+
         const settings = tx.findFirstRecordByData(
             "sync_settings",
             "key",
@@ -169,9 +191,12 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
             id: claim.artistId,
         });
         const [artist] = rows;
+
         status = "skipped";
+
         const ownsArtist =
             artist != null && artist.getString("attemptToken") === claim.token;
+
         if (
             page.status === 200 &&
             page.displayName != null &&
@@ -186,6 +211,7 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
                 (mode === "names"
                     ? artist.getString("displayName") === ""
                     : artist.getBool("syncEnabled") && ownsArtist);
+
             if (eligible && artist != null) {
                 const canRefreshName =
                     artist.getString("displayName") === "" ||
@@ -195,14 +221,17 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
                         artist.getString("displayName") === claim.displayName &&
                         artist.getString("metadataUpdatedAt") ===
                             claim.metadataUpdatedAt);
+
                 if (canRefreshName) {
                     artist.set("displayName", page.displayName);
                     artist.set("metadataSource", "spotify-public-page");
                     artist.set("metadataUpdatedAt", date(now));
                     artist.set("metadataNextAttemptAt", "");
                 }
+
                 if (mode === "snapshots" && page.metrics != null) {
                     const capture = saveSnapshot(tx, artist, page, now);
+
                     artist.set(
                         "lastSuccessAt",
                         date(
@@ -219,6 +248,7 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
                         date(monday(capture) + 7 * DAY_MS)
                     );
                 }
+
                 tx.save(artist);
                 status = mode === "names" ? "resolved" : "collected";
             }
@@ -226,11 +256,13 @@ const run = ({ app, dependencies, mode }: RunOptions) => {
             applyCooldown(state, now, page);
             status = "failed";
         }
+
         if (mode === "snapshots" && artist != null && ownsArtist) {
             artist.set("attemptToken", "");
             artist.set("leaseUntil", "");
             tx.save(artist);
         }
+
         state.set(
             "nextRequestAt",
             date(
@@ -269,17 +301,21 @@ const saveSnapshot = (
     );
     const previousCapture =
         existing == null ? NaN : Date.parse(existing.getString("capturedAt"));
+
     if (previousCapture > now) {
         return previousCapture;
     }
+
     const row =
         existing ??
         new Record(
             app.findCollectionByNameOrId("snapshots") as core.Collection
         );
+
     row.set("artist", artist.id);
     row.set("weekStart", week);
     row.set("capturedAt", date(now));
+
     for (const key of [
         "followers",
         "monthlyListeners",
@@ -287,6 +323,7 @@ const saveSnapshot = (
     ] as const) {
         row.set(key, page.metrics?.[key] ?? MISSING_METRIC);
     }
+
     row.set("source", "spotify-public-page");
     app.save(row);
     saveSongSnapshots(app, artist.id, page.songs ?? [], week, now);
@@ -311,9 +348,11 @@ const saveSongSnapshots = (
         0,
         { artist: artistId, week }
     );
+
     for (const row of previous) {
         app.delete(row);
     }
+
     for (const observation of songs) {
         const [existing] = app.findRecordsByFilter(
             "songs",
@@ -328,6 +367,7 @@ const saveSongSnapshots = (
             new Record(
                 app.findCollectionByNameOrId("songs") as core.Collection
             );
+
         song.set("spotifyId", observation.spotifyId);
         song.set("name", observation.name);
         app.save(song);
@@ -335,6 +375,7 @@ const saveSongSnapshots = (
         const row = new Record(
             app.findCollectionByNameOrId("song_snapshots") as core.Collection
         );
+
         row.set("artist", artistId);
         row.set("song", song.id);
         row.set("name", observation.name);
@@ -348,8 +389,10 @@ const saveSongSnapshots = (
 
 const monday = (timestamp: number) => {
     const value = new Date(timestamp);
+
     value.setUTCHours(0, 0, 0, 0);
     value.setUTCDate(value.getUTCDate() - ((value.getUTCDay() + 6) % 7));
+
     return value.getTime();
 };
 
@@ -358,6 +401,7 @@ const scheduled = (app: SyncApp, dependencies: SyncDependencies) => {
         Math.floor(dependencies.now() / 60000) % 2 === 0 ? collect : tick;
     const second = first === collect ? tick : collect;
     const result = first(app, dependencies);
+
     return result.status === "idle" ? second(app, dependencies) : result;
 };
 
@@ -381,6 +425,7 @@ const applyCooldown = (state: DataRecord, now: number, page: PageResult) => {
         now + (page.retryAfterMs ?? 0),
         timestampOrZero(state.getString("cooldownUntil"))
     );
+
     state.set("cooldownUntil", date(cooldown));
 };
 
@@ -396,6 +441,7 @@ const coverage = (app: SyncApp) => {
 
 const timestampOrZero = (value: string) => {
     const timestamp = Date.parse(value);
+
     return Number.isNaN(timestamp) ? 0 : timestamp;
 };
 

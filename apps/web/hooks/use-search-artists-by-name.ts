@@ -9,6 +9,7 @@ import { get } from "@/utils/fetch";
 
 const useSearchArtistsByName = (options: SearchArtistsByNameOptions) => {
     const { name } = options;
+
     return useQuery({
         enabled: !isEmpty(name),
         placeholderData: keepPreviousData,

@@ -15,6 +15,7 @@ declare module "@tanstack/react-router" {
 }
 
 const root = document.getElementById("root");
+
 if (root === null) {
     throw new Error("Missing application root.");
 }

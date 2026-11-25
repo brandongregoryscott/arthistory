@@ -29,18 +29,28 @@ type IndexedArtist = {
 };
 
 const MAX_QUERY_LENGTH = 100;
+
 const MAX_RESULTS = 20;
+
 const MAX_INDEX_ARTISTS = 250000;
+
 const DEFAULT_MAX_NAMES = 1000000;
+
 const DEFAULT_MAX_TEXT_BYTES = 64 * 1024 * 1024;
 
 class ArtistSearchIndex {
     readonly #artists = new Map<string, IndexedArtist>();
+
     readonly #limits: Required<IndexLimits>;
+
     readonly #recordIds = new Map<string, IndexedArtist>();
+
     #fuse: Fuse<IndexedArtist> | undefined;
+
     #nameCount = 0;
+
     #query = "";
+
     #textBytes = 0;
 
     constructor(limits: IndexLimits = {}) {
@@ -124,6 +134,7 @@ class ArtistSearchIndex {
             hasHistory: false,
             names,
         };
+
         this.#artists.set(record.spotifyId, entry);
         this.#recordIds.set(record.id, entry);
         this.#fuse = undefined;
@@ -139,6 +150,7 @@ class ArtistSearchIndex {
                 ? name
                 : a.artist.spotifyId.localeCompare(b.artist.spotifyId);
         });
+
         this.#fuse = new Fuse(entries, {
             ignoreLocation: true,
             keys: ["names"],
@@ -149,6 +161,7 @@ class ArtistSearchIndex {
                 if (rankA !== rankB) {
                     return rankA - rankB;
                 }
+
                 if (rankA === 3 && a.score !== b.score) {
                     return a.score - b.score;
                 }
@@ -187,6 +200,7 @@ class ArtistSearchIndex {
         if (query === "") {
             return [];
         }
+
         if (this.#fuse == null) {
             throw new Error("Artist search index is not ready.");
         }
@@ -195,7 +209,7 @@ class ArtistSearchIndex {
 
         return this.#fuse
             .search(query, { limit: MAX_RESULTS })
-            .map(({ item }) => toArtist(item));
+            .map((result) => toArtist(result.item));
     }
 }
 
@@ -244,13 +258,15 @@ const toArtist = (entry: IndexedArtist): ArtistWithTrackingStatus => ({
     uri: `spotify:artist:${entry.artist.spotifyId}`,
 });
 
-const matchRank = ({ matches = [] }: FuseSortFunctionArg, query: string) => {
+const matchRank = (entry: FuseSortFunctionArg, query: string) => {
+    const { matches = [] } = entry;
     let rank = 3;
 
     for (const { value } of matches) {
         if (value === query) {
             return 0;
         }
+
         if (value.startsWith(query)) {
             rank = Math.min(rank, 1);
         } else if (value.includes(query)) {

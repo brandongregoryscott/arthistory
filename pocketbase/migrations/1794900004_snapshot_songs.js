@@ -2,6 +2,7 @@ migrate(
     (app) => {
         // Freeze the historical sentinel independently of application code.
         const MISSING_METRIC = -1;
+
         const artists = app.findCollectionByNameOrId("artists");
         const songs = new Collection({
             name: "songs",
@@ -24,6 +25,7 @@ migrate(
                 "CREATE UNIQUE INDEX songs_spotify_id ON songs (spotifyId)",
             ],
         });
+
         app.save(songs);
         app.save(
             new Collection({

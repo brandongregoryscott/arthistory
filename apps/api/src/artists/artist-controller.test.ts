@@ -13,36 +13,43 @@ vi.mock("../config", () => ({
         url: "http://pocketbase.invalid",
     }),
 }));
+
 vi.mock("../artists/artist-cache", () => ({
     ArtistCache: class {
         list = cache.list;
+
         search = cache.search;
     },
 }));
+
 vi.mock("../analytics", () => ({
     artistRequested: vi.fn(),
     searchQueryEntered: vi.fn(),
 }));
 
-const spotifyId = "1111111111111111111111";
-
-beforeEach(() => {
-    vi.clearAllMocks();
-    const index = new ArtistSearchIndex();
-    index.add({
-        aliases: ["Dust"],
-        displayName: "Duster",
-        id: "111111111111111",
-        spotifyId,
-        syncEnabled: false,
-    });
-    index.markHistory("111111111111111");
-    index.finish();
-    cache.list.mockImplementation((ids: string[]) => index.list(ids));
-    cache.search.mockImplementation((query: string) => index.search(query));
-});
+const SPOTIFY_ID = "1111111111111111111111";
 
 describe("local artist metadata controllers", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+
+        const index = new ArtistSearchIndex();
+
+        index.add({
+            aliases: ["Dust"],
+            displayName: "Duster",
+            id: "111111111111111",
+            spotifyId: SPOTIFY_ID,
+            syncEnabled: false,
+        });
+        index.markHistory("111111111111111");
+        index.finish();
+
+        cache.list.mockImplementation((ids: string[]) => index.list(ids));
+
+        cache.search.mockImplementation((query: string) => index.search(query));
+    });
+
     it("keeps the search envelope and reports history independently of enrollment without Spotify", async () => {
         const response = createResponse();
 
@@ -55,7 +62,7 @@ describe("local artist metadata controllers", () => {
             data: [
                 expect.objectContaining({
                     hasHistory: true,
-                    id: spotifyId,
+                    id: SPOTIFY_ID,
                     isTracked: true,
                     name: "Duster",
                     syncEnabled: false,
@@ -69,13 +76,13 @@ describe("local artist metadata controllers", () => {
         const response = createResponse();
 
         await ArtistsController.listArtists(
-            { query: { ids: spotifyId } } as unknown as Request,
+            { query: { ids: SPOTIFY_ID } } as unknown as Request,
             response.value
         );
 
         expect(response.json).toHaveBeenCalledWith({
             data: {
-                [spotifyId]: expect.objectContaining({
+                [SPOTIFY_ID]: expect.objectContaining({
                     followers: { href: null, total: null },
                     name: "Duster",
                     popularity: null,
@@ -89,7 +96,7 @@ describe("local artist metadata controllers", () => {
         const response = createResponse();
 
         await ArtistsController.requestArtist(
-            { params: { id: spotifyId } } as unknown as Request,
+            { params: { id: SPOTIFY_ID } } as unknown as Request,
             response.value
         );
 

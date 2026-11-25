@@ -9,6 +9,7 @@ class MetaController {
         response: Response
     ): Promise<Response> {
         const latest = await artistSnapshotStore.latest();
+
         if (latest == null) {
             return notFound(
                 response,

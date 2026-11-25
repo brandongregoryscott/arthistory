@@ -48,14 +48,17 @@ async function main() {
             "timestamp-unit": { default: "seconds", type: "string" },
         },
     });
+
     if (values.help === true) {
         report(
             "Usage: npx tsx scripts/extract-artist-snapshots.ts SOURCE ARTIST_ID [--output FILE] [--timestamp-unit seconds|milliseconds] [--pocketbase HTTPS_ORIGIN] [--email EMAIL]\nOmit --pocketbase to extract without network access. Import credentials are prompted locally; the password is hidden."
         );
+
         return;
     }
 
     const [source, spotifyId] = positionals;
+
     if (positionals.length !== 2 || source == null || spotifyId == null) {
         throw new Error("Provide SOURCE and ARTIST_ID; use --help for usage");
     }
@@ -65,11 +68,13 @@ async function main() {
     }
 
     const data = extract(source, spotifyId, values["timestamp-unit"]);
+
     if (data.snapshots.length === 0) {
         throw new Error("No snapshots found for this artist; nothing imported");
     }
 
     const json = JSON.stringify(data, null, 2) + "\n";
+
     if (values.output != null) {
         writeFileSync(values.output, json, { flag: "wx" });
     }
@@ -84,6 +89,7 @@ async function main() {
             await credentials(values.email),
             data
         );
+
         return;
     }
 
@@ -98,6 +104,7 @@ function extract(
     if (!/^[A-Za-z0-9]{22}$/.test(spotifyId)) {
         throw new Error("artist must be a 22-character Spotify artist ID");
     }
+
     if (!["seconds", "milliseconds"].includes(unit)) {
         throw new Error("--timestamp-unit must be seconds or milliseconds");
     }
@@ -108,12 +115,15 @@ function extract(
 
     try {
         db.exec("PRAGMA temp_store=FILE; PRAGMA cache_size=-32768");
+
         const rows = db.prepare(`
             SELECT rowid, timestamp, followers, popularity FROM artist_snapshots
             WHERE id = ? ORDER BY timestamp DESC, rowid DESC
         `);
+
         for (const row of rows.iterate(spotifyId) as Iterable<LegacyRow>) {
             const captured = row.timestamp * multiplier;
+
             if (
                 !Number.isSafeInteger(row.timestamp) ||
                 !Number.isSafeInteger(captured) ||
@@ -124,10 +134,12 @@ function extract(
                     `Invalid timestamp at source row ${row.rowid}; check --timestamp-unit`
                 );
             }
+
             for (const field of ["followers", "popularity"] as const) {
                 const value = row[field];
                 const maximum =
                     field === "popularity" ? 100 : Number.MAX_SAFE_INTEGER;
+
                 if (
                     value !== null &&
                     (!Number.isSafeInteger(value) ||
@@ -139,10 +151,14 @@ function extract(
                     );
                 }
             }
+
             const week = new Date(captured);
+
             week.setUTCHours(0, 0, 0, 0);
             week.setUTCDate(week.getUTCDate() - ((week.getUTCDay() + 6) % 7));
+
             const weekStart = week.toISOString();
+
             if (!snapshots.has(weekStart)) {
                 snapshots.set(weekStart, {
                     capturedAt: new Date(captured).toISOString(),
@@ -157,6 +173,7 @@ function extract(
     } finally {
         db.close();
     }
+
     return {
         snapshots: [...snapshots.values()].sort((a, b) =>
             a.weekStart.localeCompare(b.weekStart)
@@ -167,6 +184,7 @@ function extract(
 
 function validateOrigin(input: string) {
     const url = new URL(input);
+
     if (
         url.protocol !== "https:" ||
         url.username.length > 0 ||
@@ -179,6 +197,7 @@ function validateOrigin(input: string) {
             "--pocketbase must be the HTTPS origin, without /_/ or credentials"
         );
     }
+
     return url.origin;
 }
 
@@ -186,6 +205,7 @@ async function credentials(email?: string): Promise<Credentials> {
     if (process.stdin.isTTY !== true || process.stdout.isTTY !== true) {
         throw new Error("Enter import credentials in an interactive terminal");
     }
+
     let hidden = false;
 
     const output = new Writable({
@@ -193,6 +213,7 @@ async function credentials(email?: string): Promise<Credentials> {
             if (!hidden) {
                 process.stdout.write(chunk, encoding);
             }
+
             done();
         },
     });
@@ -205,7 +226,9 @@ async function credentials(email?: string): Promise<Credentials> {
     });
 
     const abort = new AbortController();
+
     rl.on("SIGINT", () => abort.abort());
+
     rl.on("close", () => abort.abort());
 
     try {
@@ -215,9 +238,12 @@ async function credentials(email?: string): Promise<Credentials> {
                       signal: abort.signal,
                   })
                 : email;
+
         process.stdout.write("Superuser password: ");
         hidden = true;
+
         const password = await rl.question("", { signal: abort.signal });
+
         return { identity, password };
     } finally {
         hidden = false;
@@ -249,11 +275,13 @@ async function importSnapshots(
             redirect: "error",
             signal: AbortSignal.timeout(30000),
         });
+
         if (!response.ok) {
             throw new Error(
                 `PocketBase ${method} ${path}: HTTP ${response.status}`
             );
         }
+
         return (await response.json()) as T;
     }
 
@@ -268,6 +296,7 @@ async function importSnapshots(
             "GET",
             `/api/collections/${collection}/records?${query}`
         );
+
         return items[0];
     }
 
@@ -276,6 +305,7 @@ async function importSnapshots(
         "/api/collections/_superusers/auth-with-password",
         auth
     ));
+
     const artist =
         (await find("artists", `spotifyId = "${data.spotifyId}"`)) ??
         (await request<RecordIdentity>(
@@ -289,9 +319,11 @@ async function importSnapshots(
         ));
 
     let created = 0;
+
     for (const snapshot of data.snapshots) {
         // Never overwrite an existing week, including newer live captures.
         const week = snapshot.weekStart.replace("T", " ");
+
         if (
             (await find(
                 "snapshots",
@@ -303,15 +335,19 @@ async function importSnapshots(
                 artist: artist.id,
             });
             created++;
+
             if (created % 20 === 0) {
                 report(`Imported ${created} snapshots...`);
             }
         }
     }
+
     const skipped = data.snapshots.length - created;
+
     report(
         `Imported ${created}; skipped ${skipped} existing weeks. Enrollment unchanged.`
     );
+
     return { created, skipped };
 }
 

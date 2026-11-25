@@ -5,6 +5,7 @@ const createResponse = () => {
     const json = vi.fn();
     const status = vi.fn();
     const value = { json, status };
+
     json.mockReturnValue(value);
     status.mockReturnValue(value);
 
