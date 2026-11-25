@@ -1,4 +1,5 @@
 import type { ApiErrorResponse, ApiSuccessResponse } from "../responses.js";
+import type { SnapshotResolution } from "../snapshot-resolution.js";
 import type {
     SongHistoryObservation,
     Artist,
@@ -14,6 +15,7 @@ type GetLatestMetaResult =
 
 type GetArtistSnapshotsOptions = {
     id: string;
+    resolution?: SnapshotResolution;
 };
 
 type GetArtistSnapshotsResult =

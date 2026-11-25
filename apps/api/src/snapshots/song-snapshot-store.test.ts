@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PocketBaseClient } from "../storage/pocketbase";
-import { SongHistoryStore } from "./song-history-store";
+import { SongSnapshotStore } from "./song-snapshot-store";
 
 const ID = "1".repeat(22);
 
@@ -64,27 +64,27 @@ const remote = (records: TestRow[], exists = true) => {
     return calls;
 };
 
-describe("SongHistoryStore", () => {
+describe("SongSnapshotStore", () => {
     afterEach(() => vi.unstubAllGlobals());
 
-    it.each(["bad", "", "x' || true", [ID], undefined])(
-        "validates IDs before accessing storage: %j",
-        async (value) => {
-            const fetch = vi.fn();
+    it("validates IDs before accessing storage", async () => {
+        const fetch = vi.fn();
 
-            vi.stubGlobal("fetch", fetch);
+        vi.stubGlobal("fetch", fetch);
+
+        for (const value of ["bad", "", "x' || true", [ID], undefined]) {
             await expect(
-                new SongHistoryStore(new PocketBaseClient(config)).list(
+                new SongSnapshotStore(new PocketBaseClient(config)).list(
                     value as string
                 )
             ).rejects.toMatchObject({ name: "ERROR_VALIDATION" });
             expect(fetch).not.toHaveBeenCalled();
         }
-    );
+    });
 
     it("reads private history via artist relation and maps missing counts to null", async () => {
         const calls = remote([row]);
-        const result = await new SongHistoryStore(
+        const result = await new SongSnapshotStore(
             new PocketBaseClient(config)
         ).list(ID);
 
@@ -112,7 +112,7 @@ describe("SongHistoryStore", () => {
             id: String(index + 1).padStart(15, "0"),
         }));
         const calls = remote(records);
-        const result = await new SongHistoryStore(
+        const result = await new SongSnapshotStore(
             new PocketBaseClient(config)
         ).list(ID);
 
@@ -127,14 +127,14 @@ describe("SongHistoryStore", () => {
         remote([{ ...row, listenCount: 0 }]);
         expect(
             (
-                await new SongHistoryStore(new PocketBaseClient(config)).list(
+                await new SongSnapshotStore(new PocketBaseClient(config)).list(
                     ID
                 )
             )[0]?.listenCount
         ).toBe(0);
         remote([]);
         expect(
-            await new SongHistoryStore(new PocketBaseClient(config)).list(ID)
+            await new SongSnapshotStore(new PocketBaseClient(config)).list(ID)
         ).toEqual([]);
     });
 
@@ -142,20 +142,22 @@ describe("SongHistoryStore", () => {
         const calls = remote([], false);
 
         expect(
-            await new SongHistoryStore(new PocketBaseClient(config)).list(ID)
+            await new SongSnapshotStore(new PocketBaseClient(config)).list(ID)
         ).toEqual([]);
         expect(calls).toHaveLength(1);
     });
 
-    it.each([
-        { ...row, artist: "other" },
-        { ...row, listenCount: -2 },
-        { ...row, capturedAt: "bad" },
-        { ...row, expand: {} },
-    ])("rejects invalid stored observations", async (invalid) => {
-        remote([invalid]);
-        await expect(
-            new SongHistoryStore(new PocketBaseClient(config)).list(ID)
-        ).rejects.toThrow("Invalid song observation");
+    it("rejects invalid stored observations", async () => {
+        for (const invalid of [
+            { ...row, artist: "other" },
+            { ...row, listenCount: -2 },
+            { ...row, capturedAt: "bad" },
+            { ...row, expand: {} },
+        ]) {
+            remote([invalid]);
+            await expect(
+                new SongSnapshotStore(new PocketBaseClient(config)).list(ID)
+            ).rejects.toThrow("Invalid song observation");
+        }
     });
 });

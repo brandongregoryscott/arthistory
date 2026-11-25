@@ -2,7 +2,7 @@ import { ChakraProvider, defaultSystem } from "@chakra-ui/react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { routeTree } from "./routeTree.gen";
+import { routeTree } from "./generated/route-tree";
 import "./global.css";
 
 const router = createRouter({ routeTree });

@@ -18,7 +18,7 @@ type RecordRow = {
     weekStart: string;
 };
 
-class SongHistoryStore {
+class SongSnapshotStore {
     constructor(private readonly client: PocketBaseClient) {}
 
     async list(id: string): Promise<SongHistoryObservation[]> {
@@ -114,4 +114,4 @@ class SongHistoryStore {
     }
 }
 
-export { SongHistoryStore };
+export { SongSnapshotStore };

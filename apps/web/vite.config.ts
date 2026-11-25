@@ -7,7 +7,7 @@ const config = defineConfig({
     plugins: [
         tanstackRouter({
             autoCodeSplitting: true,
-            generatedRouteTree: "./routeTree.gen.ts",
+            generatedRouteTree: "./generated/route-tree.ts",
             routesDirectory: "./routes",
             target: "react",
         }),

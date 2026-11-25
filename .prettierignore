@@ -1,7 +1,7 @@
 
 .github/workflows/*.generated.yml
 
-apps/web/routeTree.gen.ts
+apps/web/generated/route-tree.ts
 
 # Legacy web build outputs
 apps/web/.next/

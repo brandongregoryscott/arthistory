@@ -3,6 +3,8 @@ import type { Request, Response } from "express";
 import { isSnapshotResolution, ValidationError } from "@repo/common";
 import { isEmpty, isString, uniq } from "lodash";
 import { artistRequested, searchQueryEntered } from "../analytics";
+import { ArtistSnapshotService } from "../snapshots/artist-snapshot-service";
+import { SongSnapshotService } from "../snapshots/song-snapshot-service";
 import { ok } from "../utilities/responses";
 import { isSpotifyArtistId } from "../utilities/validation";
 import { normalizeSearchQuery } from "./artist-search-index";
@@ -21,7 +23,7 @@ class ArtistsController {
 
         const resolution = parseResolution(request.query.resolution);
 
-        const snapshots = await ArtistService.listArtistSnapshots({
+        const snapshots = await ArtistSnapshotService.list({
             ids: [id],
             resolution,
         });
@@ -36,7 +38,7 @@ class ArtistsController {
             throw new ValidationError("Provide a Spotify artist ID.");
         }
 
-        return ok(response, await ArtistService.listSongHistory(id));
+        return ok(response, await SongSnapshotService.list(id));
     }
 
     static async listArtists(request: Request, response: Response) {
@@ -64,7 +66,7 @@ class ArtistsController {
             return ok(response, []);
         }
 
-        const snapshots = await ArtistService.listArtistSnapshots({
+        const snapshots = await ArtistSnapshotService.list({
             ids,
             resolution,
         });

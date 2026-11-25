@@ -405,7 +405,7 @@ const CONFIG = defineConfig([
             "apps/web/.next/**",
             "apps/web/out/**",
             "**/node_modules/**",
-            "apps/web/routeTree.gen.ts",
+            "apps/web/generated/route-tree.ts",
         ],
     },
 ]);

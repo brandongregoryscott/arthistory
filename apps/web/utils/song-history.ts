@@ -1,6 +1,8 @@
 import type { SongHistoryObservation } from "@repo/common";
 
-const WEEK = 7 * 86400000;
+const MAX_HISTORY_WEEKS = 5200;
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 const historyWeeks = (timestamps: string[]) => {
     if (timestamps.length === 0) {
@@ -10,14 +12,14 @@ const historyWeeks = (timestamps: string[]) => {
     const times = timestamps.map(Date.parse);
     const first = Math.min(...times);
     const last = Math.max(...times);
-    const count = Math.floor((last - first) / WEEK) + 1;
+    const count = Math.floor((last - first) / WEEK_MS) + 1;
 
-    if (count > 5200) {
+    if (count > MAX_HISTORY_WEEKS) {
         throw new Error("History exceeds 100 years.");
     }
 
     return Array.from({ length: count }, (_, index) =>
-        new Date(first + index * WEEK).toISOString()
+        new Date(first + index * WEEK_MS).toISOString()
     );
 };
 

@@ -8,14 +8,14 @@ import { isEmpty } from "lodash";
 import { get } from "@/utils/fetch";
 
 const useGetArtistSnapshots = (options: GetArtistSnapshotsOptions) => {
-    const { id } = options;
+    const { id, resolution = "monthly" } = options;
 
     return useQuery({
         enabled: !isEmpty(id),
         placeholderData: keepPreviousData,
         queryFn: async () => {
             const { data, error } = (await get(
-                GET_ARTIST_SNAPSHOTS_ROUTE.replace(":id", id)
+                `${GET_ARTIST_SNAPSHOTS_ROUTE.replace(":id", id)}?resolution=${resolution}`
             )) as GetArtistSnapshotsResult;
 
             if (error !== null) {
@@ -24,7 +24,7 @@ const useGetArtistSnapshots = (options: GetArtistSnapshotsOptions) => {
 
             return data;
         },
-        queryKey: ["get-artist-snapshots", id],
+        queryKey: ["get-artist-snapshots", id, resolution],
     });
 };
 
