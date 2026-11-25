@@ -46,10 +46,9 @@ class ArtistSnapshotStore {
 
     readonly #maxSnapshots: number;
 
-    constructor({
-        client,
-        maxSnapshots = MAX_SNAPSHOTS,
-    }: ArtistSnapshotStoreOptions) {
+    constructor(options: ArtistSnapshotStoreOptions) {
+        const { client, maxSnapshots = MAX_SNAPSHOTS } = options;
+
         if (!Number.isSafeInteger(maxSnapshots) || maxSnapshots < 1) {
             throw new Error("Snapshot read limit must be a positive integer.");
         }
@@ -72,7 +71,8 @@ class ArtistSnapshotStore {
             : { timestamp: new Date(record.capturedAt).toISOString() };
     }
 
-    async list({ ids, resolution = "monthly" }: ListSnapshotsOptions) {
+    async list(options: ListSnapshotsOptions) {
+        const { ids, resolution = "monthly" } = options;
         const requestedIds = uniq(ids);
 
         if (

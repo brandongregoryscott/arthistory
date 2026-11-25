@@ -108,7 +108,11 @@ const setup = () => {
                 .concat(state, settings)
                 .map((row) => ({ row, values: structuredClone(row.values) }));
             const contents = Object.fromEntries(
-                Object.entries(tables).map(([key, rows]) => [key, [...rows]])
+                Object.entries(tables).map((entry) => {
+                    const [key, rows] = entry;
+
+                    return [key, [...rows]];
+                })
             );
 
             try {

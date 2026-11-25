@@ -54,12 +54,19 @@ const SearchSelect = <TSearchResult extends { id: string }, TValue>(
         itemToValue: (item) => item.id,
     });
 
-    const handleInputValueChange = ({
-        inputValue,
-    }: Combobox.InputValueChangeDetails) => onChange(inputValue);
+    const handleInputValueChange = (
+        details: Combobox.InputValueChangeDetails
+    ) => {
+        const { inputValue } = details;
 
-    const handleSelect = ({ itemValue }: Combobox.SelectionDetails) =>
-        items.find((item) => item.id === itemValue)?.onClick();
+        return onChange(inputValue);
+    };
+
+    const handleSelect = (details: Combobox.SelectionDetails) => {
+        const { itemValue } = details;
+
+        return items.find((item) => item.id === itemValue)?.onClick();
+    };
 
     return (
         <>

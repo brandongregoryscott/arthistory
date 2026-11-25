@@ -25,7 +25,9 @@ class ArtistPageHttpError extends Error {
 
     readonly status: number;
 
-    constructor({ retryAfterMs, status }: PageHttpErrorOptions) {
+    constructor(options: PageHttpErrorOptions) {
+        const { retryAfterMs, status } = options;
+
         super(`Artist page returned HTTP ${status}.`);
         this.retryAfterMs = retryAfterMs;
         this.status = status;

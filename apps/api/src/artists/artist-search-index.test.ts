@@ -53,12 +53,14 @@ describe("ArtistSearchIndex", () => {
         const typoResults = index.search("Daster");
 
         expect(results).toHaveLength(20);
-        expect(results.slice(0, 3).map(({ name }) => name)).toEqual([
+        expect(results.slice(0, 3).map((artist) => artist.name)).toEqual([
             "Alias",
             "Zed",
             "Duster",
         ]);
-        expect(nextResults.every(({ name }) => name === "Duster")).toBe(true);
+        expect(nextResults.every((artist) => artist.name === "Duster")).toBe(
+            true
+        );
         expect(typoResults[0]?.name).toBe("Duster");
     });
 

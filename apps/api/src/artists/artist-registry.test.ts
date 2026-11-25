@@ -86,11 +86,14 @@ describe("ArtistRegistry", () => {
         });
         expect(pages.read).toHaveBeenCalledOnce();
         expect(
-            fetch.mock.calls.filter(
-                ([, options]) =>
+            fetch.mock.calls.filter((call) => {
+                const [, options] = call;
+
+                return (
                     options.method === "POST" &&
                     !String(options.body).includes("identity")
-            )
+                );
+            })
         ).toHaveLength(1);
     });
 

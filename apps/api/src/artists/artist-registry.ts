@@ -19,7 +19,9 @@ class ArtistRegistry {
 
     readonly #pages: Pick<ArtistPageClient, "read">;
 
-    constructor({ client, pages = new ArtistPageClient() }: RegistryOptions) {
+    constructor(options: RegistryOptions) {
+        const { client, pages = new ArtistPageClient() } = options;
+
         this.#client = client;
         this.#pages = pages;
     }

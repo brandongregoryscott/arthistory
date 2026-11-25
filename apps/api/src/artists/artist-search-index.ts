@@ -209,7 +209,7 @@ class ArtistSearchIndex {
 
         return this.#fuse
             .search(query, { limit: MAX_RESULTS })
-            .map(({ item }) => toArtist(item));
+            .map((result) => toArtist(result.item));
     }
 }
 
@@ -258,7 +258,8 @@ const toArtist = (entry: IndexedArtist): ArtistWithTrackingStatus => ({
     uri: `spotify:artist:${entry.artist.spotifyId}`,
 });
 
-const matchRank = ({ matches = [] }: FuseSortFunctionArg, query: string) => {
+const matchRank = (entry: FuseSortFunctionArg, query: string) => {
+    const { matches = [] } = entry;
     let rank = 3;
 
     for (const { value } of matches) {

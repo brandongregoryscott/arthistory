@@ -265,8 +265,11 @@ const HomePage: React.FC = () => {
     const handleThemeChange = (value: React.SetStateAction<boolean>) =>
         setDarkMode(value);
 
-    const handleCheckedChange = ({ checked }: Switch.CheckedChangeDetails) =>
-        setHideGaps(checked);
+    const handleCheckedChange = (details: Switch.CheckedChangeDetails) => {
+        const { checked } = details;
+
+        return setHideGaps(checked);
+    };
 
     const getSearchResultProps = useCallback(
         (result: ArtistWithTrackingStatus): SearchResultProps => {

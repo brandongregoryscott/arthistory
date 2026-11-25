@@ -2,10 +2,9 @@ import type { alignMonthlyFollowers } from "@repo/common";
 
 type MonthlyFollowers = ReturnType<typeof alignMonthlyFollowers>;
 
-const hideEmptyFollowerMonths = ({
-    timestamps,
-    values,
-}: MonthlyFollowers): MonthlyFollowers => {
+const hideEmptyFollowerMonths = (data: MonthlyFollowers): MonthlyFollowers => {
+    const { timestamps, values } = data;
+
     const series = Object.values(values);
     const months = timestamps.flatMap((timestamp, index) =>
         series.some((followers) => followers[index] != null)
@@ -14,12 +13,16 @@ const hideEmptyFollowerMonths = ({
     );
 
     return {
-        timestamps: months.map(({ timestamp }) => timestamp),
+        timestamps: months.map((month) => month.timestamp),
         values: Object.fromEntries(
-            Object.entries(values).map(([id, followers]) => [
-                id,
-                months.map(({ index }) => followers[index] ?? null),
-            ])
+            Object.entries(values).map((entry) => {
+                const [id, followers] = entry;
+
+                return [
+                    id,
+                    months.map((month) => followers[month.index] ?? null),
+                ];
+            })
         ),
     };
 };

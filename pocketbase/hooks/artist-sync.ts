@@ -69,7 +69,9 @@ const tick = (app: SyncApp, dependencies: SyncDependencies) =>
 const collect = (app: SyncApp, dependencies: SyncDependencies) =>
     run({ app, dependencies, mode: "snapshots" });
 
-const run = ({ app, dependencies, mode }: RunOptions) => {
+const run = (options: RunOptions) => {
+    const { app, dependencies, mode } = options;
+
     const claimed: { value?: Claim } = {};
 
     app.runInTransaction((tx) => {

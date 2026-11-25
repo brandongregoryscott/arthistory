@@ -23,12 +23,9 @@ type ReadPageOptions = {
     timeoutSeconds: number;
 };
 
-const readArtistName = ({
-    execute,
-    id,
-    now,
-    timeoutSeconds,
-}: ReadPageOptions): PageResult => {
+const readArtistName = (options: ReadPageOptions): PageResult => {
+    const { execute, id, now, timeoutSeconds } = options;
+
     if (
         !/^[A-Za-z0-9]{22}$/.test(id) ||
         !Number.isSafeInteger(timeoutSeconds) ||
