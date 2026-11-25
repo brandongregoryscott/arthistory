@@ -7,7 +7,7 @@ import type {
     ArtistWithTrackingStatus,
 } from "../types/index.js";
 
-type GetArtistSongHistoryResult =
+type ListSongSnapshotsResult =
     ApiErrorResponse | ApiSuccessResponse<SongHistoryObservation[]>;
 
 type GetLatestMetaResult =
@@ -51,12 +51,12 @@ type SearchArtistByNameResult =
 export type {
     GetArtistSnapshotsOptions,
     GetArtistSnapshotsResult,
-    GetArtistSongHistoryResult,
     GetLatestMetaResult,
     ListArtistSnapshotsOptions,
     ListArtistSnapshotsResult,
     ListArtistsOptions,
     ListArtistsResult,
+    ListSongSnapshotsResult,
     RequestArtistOptions,
     RequestArtistResult,
     SearchArtistByNameResult,

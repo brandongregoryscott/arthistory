@@ -1,8 +1,8 @@
 import type { ArtistSnapshot } from "@repo/common";
 import { Box, Spinner, Text } from "@chakra-ui/react";
 import { Line } from "react-chartjs-2";
+import { formatDate } from "@/utils/format";
 import { COLORS, getHistoryChartOptions } from "./history-chart";
-import { date } from "./history-format";
 
 type AudienceHistoryProps = {
     darkMode: boolean;
@@ -60,7 +60,7 @@ const AudienceHistory = (props: AudienceHistoryProps) => {
                             spanGaps: false,
                         })
                     ),
-                    labels: weeks.map(date),
+                    labels: weeks.map(formatDate),
                 }}
                 options={getHistoryChartOptions(darkMode, "People")}
                 role="img"

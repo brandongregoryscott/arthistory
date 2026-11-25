@@ -54,7 +54,7 @@ describe("local artist metadata controllers", () => {
         "rejects invalid song history IDs %j",
         async (id) => {
             await expect(
-                ArtistsController.getArtistSongHistory(
+                ArtistsController.listSongSnapshots(
                     { params: { id } } as unknown as Request,
                     createResponse().value
                 )

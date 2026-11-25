@@ -12,11 +12,11 @@ import { Footer, Header } from "@repo/ui";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AudienceHistory } from "@/components/artist-detail/audience-history";
-import { date, number } from "@/components/artist-detail/history-format";
 import { SongPerformance } from "@/components/artist-detail/song-performance";
 import { useListArtists, useBreakpoint } from "@/hooks";
 import { useArtistHistory } from "@/hooks/use-artist-history";
 import { useTheme } from "@/hooks/use-theme";
+import { formatDate, formatNumber } from "@/utils/format";
 import { historyWeeks } from "@/utils/song-history";
 
 const ArtistPage = () => {
@@ -113,15 +113,17 @@ const ArtistDetail = (props: ArtistDetailParams) => {
                 <Flex gap="8" wrap="wrap">
                     <Box>
                         <Text color="fg.muted">Followers</Text>
-                        <Heading>{number(latest?.followers)}</Heading>
+                        <Heading>{formatNumber(latest?.followers)}</Heading>
                     </Box>
                     <Box>
                         <Text color="fg.muted">Monthly listeners</Text>
-                        <Heading>{number(latest?.monthlyListeners)}</Heading>
+                        <Heading>
+                            {formatNumber(latest?.monthlyListeners)}
+                        </Heading>
                     </Box>
                     <Box>
                         <Text color="fg.muted">Popularity / 100</Text>
-                        <Heading>{number(latest?.popularity)}</Heading>
+                        <Heading>{formatNumber(latest?.popularity)}</Heading>
                     </Box>
                 </Flex>
                 <Text color="fg.muted">
@@ -131,7 +133,7 @@ const ArtistDetail = (props: ArtistDetailParams) => {
                         : "No observations yet"}
                     .{" "}
                     {latest != null &&
-                        `Artist metrics captured ${date(latest.capturedAt ?? latest.timestamp)}.`}
+                        `Artist metrics captured ${formatDate(latest.capturedAt ?? latest.timestamp)}.`}
                 </Text>
                 <Flex aria-label="History range" gap="2" wrap="wrap">
                     {[
@@ -166,7 +168,7 @@ const ArtistDetail = (props: ArtistDetailParams) => {
                     <Text color="fg.muted" mt="1">
                         Range ends{" "}
                         {end > 0
-                            ? date(new Date(end).toISOString())
+                            ? formatDate(new Date(end).toISOString())
                             : "when observations are available"}
                         . Changes compare the first and last observations inside
                         the range; each row shows its comparison dates.

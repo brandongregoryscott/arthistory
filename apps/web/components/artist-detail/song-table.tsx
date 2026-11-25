@@ -1,6 +1,6 @@
 import { Box, Text } from "@chakra-ui/react";
 import type { summarizeSongs } from "@/utils/song-history";
-import { date, number } from "./history-format";
+import { formatDate, formatNumber } from "@/utils/format";
 
 type SongTableProps = {
     chosen: string[];
@@ -65,18 +65,18 @@ const SongTable = (props: SongTableProps) => {
                                     . {song.name}
                                 </button>
                             </td>
-                            <td>{number(song.latest.listenCount)}</td>
+                            <td>{formatNumber(song.latest.listenCount)}</td>
                             <td>
                                 {formatChange(song.change, song.decreased)}
                                 <Text color="fg.muted" fontSize="xs">
                                     {song.change != null &&
                                     song.first != null &&
                                     song.last != null
-                                        ? `${date(song.first.capturedAt)} – ${date(song.last.capturedAt)}`
+                                        ? `${formatDate(song.first.capturedAt)} – ${formatDate(song.last.capturedAt)}`
                                         : ""}
                                 </Text>
                             </td>
-                            <td>{date(song.latest.capturedAt)}</td>
+                            <td>{formatDate(song.latest.capturedAt)}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -94,7 +94,7 @@ const formatChange = (change: null | number, decreased: boolean) => {
         return "Insufficient comparable data";
     }
 
-    return "+" + number(change);
+    return "+" + formatNumber(change);
 };
 
 export { SongTable };

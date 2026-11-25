@@ -1,4 +1,4 @@
-const GET_ARTIST_SONG_HISTORY_ROUTE = "/artists/:id/songs/history";
+const LIST_SONG_SNAPSHOTS_ROUTE = "/artists/:id/songs/snapshots";
 
 const GET_LATEST_META_ROUTE = "/meta/latest";
 
@@ -14,10 +14,10 @@ const LIST_ARTIST_SNAPSHOTS_ROUTE = "/artists/snapshots";
 
 export {
     GET_ARTIST_SNAPSHOTS_ROUTE,
-    GET_ARTIST_SONG_HISTORY_ROUTE,
     GET_LATEST_META_ROUTE,
     LIST_ARTIST_SNAPSHOTS_ROUTE,
     LIST_ARTISTS_ROUTE,
+    LIST_SONG_SNAPSHOTS_ROUTE,
     REQUEST_ARTIST_ROUTE,
     SEARCH_ARTISTS_BY_NAME_ROUTE,
 };

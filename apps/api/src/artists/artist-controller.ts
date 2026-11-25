@@ -31,16 +31,6 @@ class ArtistsController {
         return ok(response, snapshots);
     }
 
-    static async getArtistSongHistory(request: Request, response: Response) {
-        const { id } = request.params;
-
-        if (!isSpotifyArtistId(id)) {
-            throw new ValidationError("Provide a Spotify artist ID.");
-        }
-
-        return ok(response, await SongSnapshotService.list(id));
-    }
-
     static async listArtists(request: Request, response: Response) {
         const ids = parseArtistIds(request.query.ids);
 
@@ -72,6 +62,16 @@ class ArtistsController {
         });
 
         return ok(response, snapshots);
+    }
+
+    static async listSongSnapshots(request: Request, response: Response) {
+        const { id } = request.params;
+
+        if (!isSpotifyArtistId(id)) {
+            throw new ValidationError("Provide a Spotify artist ID.");
+        }
+
+        return ok(response, await SongSnapshotService.list(id));
     }
 
     static async requestArtist(

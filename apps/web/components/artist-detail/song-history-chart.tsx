@@ -2,8 +2,8 @@ import { Box, Text } from "@chakra-ui/react";
 import { isEmpty } from "lodash";
 import { Line } from "react-chartjs-2";
 import type { summarizeSongs } from "@/utils/song-history";
+import { formatDate } from "@/utils/format";
 import { COLORS, getHistoryChartOptions } from "./history-chart";
-import { date } from "./history-format";
 
 type SongHistoryChartProps = {
     chosen: string[];
@@ -30,7 +30,7 @@ const SongHistoryChart = (props: SongHistoryChartProps) => {
                 spanGaps: false,
             };
         }),
-        labels: weeks.map(date),
+        labels: weeks.map(formatDate),
     };
 
     if (isEmpty(chosen)) {
