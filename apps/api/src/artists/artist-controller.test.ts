@@ -1,8 +1,8 @@
 import type { Request } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ArtistSearchIndex } from "../artists/artist-search-index";
-import { ArtistsController } from "./artists-controller";
-import { createResponse } from "./test-helpers";
+import { createResponse } from "../../test/test-utils";
+import { ArtistsController } from "./artist-controller";
+import { ArtistSearchIndex } from "./artist-search-index";
 
 const cache = vi.hoisted(() => ({ list: vi.fn(), search: vi.fn() }));
 

@@ -2,8 +2,8 @@
     "name": "arthistory-api-runtime",
     "private": true,
     "scripts": {
-        "add-artist": "node dist/cli/artists/add-artist.js",
-        "inspect-artist": "node dist/cli/artists/inspect-artist.js",
+        "add-artist": "node dist/scripts/add-artist.js",
+        "inspect-artist": "node dist/scripts/inspect-artist.js",
         "start": "node dist/server.js"
     }
 }

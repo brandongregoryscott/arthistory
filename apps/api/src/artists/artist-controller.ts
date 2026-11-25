@@ -3,16 +3,16 @@ import type { Request, Response } from "express";
 import { isSnapshotResolution, ValidationError } from "@repo/common";
 import { isEmpty, isString, uniq } from "lodash";
 import { artistRequested, searchQueryEntered } from "../analytics";
-import { normalizeSearchQuery } from "../artists/artist-search-index";
-import { ArtistService } from "../services/artist-service";
-import { isSpotifyArtistId } from "../utilities/id-validation";
 import { ok } from "../utilities/responses";
+import { isSpotifyArtistId } from "../utilities/validation";
+import { normalizeSearchQuery } from "./artist-search-index";
+import { ArtistService } from "./artist-service";
 
-const ArtistsController = {
-    getArtistSnapshots: async (
+class ArtistsController {
+    static async getArtistSnapshots(
         request: Request,
         response: Response
-    ): Promise<Response> => {
+    ): Promise<Response> {
         const { id } = request.params;
         if (!isSpotifyArtistId(id)) {
             throw new ValidationError("Provide a Spotify artist ID.");
@@ -25,8 +25,8 @@ const ArtistsController = {
         });
 
         return ok(response, snapshots);
-    },
-    listArtists: async (request: Request, response: Response) => {
+    }
+    static async listArtists(request: Request, response: Response) {
         const ids = parseArtistIds(request.query.ids);
         if (isEmpty(ids)) {
             return ok(response, {});
@@ -37,11 +37,11 @@ const ArtistsController = {
         });
 
         return ok(response, artists);
-    },
-    listArtistSnapshots: async (
+    }
+    static async listArtistSnapshots(
         request: Request,
         response: Response
-    ): Promise<Response> => {
+    ): Promise<Response> {
         const ids = parseArtistIds(request.query.ids);
         const resolution = parseResolution(request.query.resolution);
         if (isEmpty(ids)) {
@@ -54,20 +54,20 @@ const ArtistsController = {
         });
 
         return ok(response, snapshots);
-    },
-    requestArtist: async (
+    }
+    static async requestArtist(
         request: Request,
         response: Response
-    ): Promise<Response> => {
+    ): Promise<Response> {
         const id = request.params.id as string;
         artistRequested({ id });
 
         return ok(response, { requested: true });
-    },
-    searchArtistsByName: async (
+    }
+    static async searchArtistsByName(
         request: Request,
         response: Response
-    ): Promise<Response> => {
+    ): Promise<Response> {
         normalizeSearchQuery(request.query.name);
         const name = request.query.name as string;
         const { artists, total } = await ArtistService.searchArtists(name);
@@ -79,8 +79,8 @@ const ArtistsController = {
         });
 
         return ok(response, artists);
-    },
-};
+    }
+}
 
 const parseArtistIds = (value: unknown) => {
     if (!isString(value) || value.length > 50 * 23) {
@@ -102,6 +102,7 @@ const parseResolution = (value: unknown): SnapshotResolution => {
     if (value == null) {
         return "monthly";
     }
+
     if (!isSnapshotResolution(value)) {
         throw new ValidationError("Invalid snapshot resolution.");
     }

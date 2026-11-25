@@ -17,8 +17,8 @@ RUN npm ci
 COPY apps/api/ apps/api/
 COPY packages/common/ packages/common/
 COPY packages/typescript-config/ packages/typescript-config/
-COPY pocketbase/hooks/artist-page-parser.cjs pocketbase/hooks/artist-page-parser.cjs
-COPY pocketbase/hooks/snapshot-metrics.cjs pocketbase/hooks/snapshot-metrics.cjs
+COPY pocketbase/hooks/artist-page-parser.ts pocketbase/hooks/artist-page-parser.ts
+COPY pocketbase/hooks/constants.ts pocketbase/hooks/constants.ts
 COPY tsconfig.json ./
 
 # Build the API and operational CLI bundles

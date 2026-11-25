@@ -220,6 +220,7 @@ const ignores = defineConfig([
     {
         ignores: [
             ".github/**",
+            "pocketbase/vendor/**",
             "**/dist/**",
             "eslint.config.mjs",
             "**/build/**",
@@ -231,8 +232,4 @@ const ignores = defineConfig([
     },
 ]);
 
-export default [
-    ...ignores,
-    ...baseTypeScriptConfig,
-    ...reactConfig,
-];
+export default [...ignores, ...baseTypeScriptConfig, ...reactConfig];

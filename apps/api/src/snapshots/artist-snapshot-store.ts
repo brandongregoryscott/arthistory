@@ -2,11 +2,11 @@ import type { ArtistSnapshot, SnapshotResolution } from "@repo/common";
 import { bucketSnapshots, ValidationError } from "@repo/common";
 import { isEmpty, uniq } from "lodash";
 import type { PocketBaseClient } from "../storage/pocketbase";
-import { MISSING_METRIC } from "../../../../pocketbase/hooks/snapshot-metrics.cjs";
+import { MISSING_METRIC } from "../../../../pocketbase/hooks/constants.js";
 import {
     isPocketBaseRecordId,
     isSpotifyArtistId,
-} from "../utilities/id-validation";
+} from "../utilities/validation";
 
 type ArtistIdentityRecord = {
     id: string;

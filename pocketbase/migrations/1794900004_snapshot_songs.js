@@ -1,6 +1,7 @@
 migrate(
     (app) => {
-        const { MISSING_METRIC } = require(__hooks + "/snapshot-metrics.cjs");
+        // Freeze the historical sentinel independently of application code.
+        const MISSING_METRIC = -1;
         const artists = app.findCollectionByNameOrId("artists");
         const songs = new Collection({
             name: "songs",

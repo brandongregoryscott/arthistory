@@ -1,6 +1,6 @@
 {
     "extends": "@repo/typescript-config/base.json",
-    "include": ["src/**/*.ts"],
+    "include": ["src/**/*.ts", "test/**/*.ts"],
     "compilerOptions": {
         "allowJs": true,
         "rootDir": "../..",

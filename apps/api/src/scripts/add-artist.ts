@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
+import { ArtistRegistry } from "../artists/artist-registry";
 import { loadPocketBaseConfig } from "../config";
 import { PocketBaseClient } from "../storage/pocketbase";
-import { ArtistRegistry } from "./artist-registry";
 
 const main = async () => {
     const { values } = parseArgs({ options: { artist: { type: "string" } } });

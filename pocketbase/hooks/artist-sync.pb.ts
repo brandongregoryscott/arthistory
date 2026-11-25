@@ -1,17 +1,24 @@
+import type * as ArtistPageHttp from "./artist-page-http.js";
+import type * as ArtistSync from "./artist-sync.js";
+
 cronAdd("artist-sync", "* * * * *", () => {
-    const job = require(__hooks + "/artist-sync.js");
+    const job = require(__hooks + "/artist-sync.js") as typeof ArtistSync;
     try {
-        const result = job.scheduled($app, {
+        const result = job.scheduled($app as unknown as ArtistSync.SyncApp, {
             now: () => Date.now(),
-            token: () => $security.randomString(32),
             readPage: (id, timeoutSeconds) =>
-                require(__hooks + "/artist-page-http.js").readArtistName({
-                    id,
-                    timeoutSeconds,
-                    now: () => Date.now(),
+                (
+                    require(
+                        __hooks + "/artist-page-http.js"
+                    ) as typeof ArtistPageHttp
+                ).readArtistName({
                     execute: (args) =>
                         toString($os.cmd("curl", ...args).output()),
+                    id,
+                    now: () => Date.now(),
+                    timeoutSeconds,
                 }),
+            token: () => $security.randomString(32),
         });
         if (result.status !== "idle") {
             $app.logger().info(
@@ -23,7 +30,7 @@ cronAdd("artist-sync", "* * * * *", () => {
                 "httpStatus",
                 result.httpStatus,
                 "coverage",
-                job.coverage($app)
+                job.coverage($app as unknown as ArtistSync.SyncApp)
             );
         }
     } catch (_) {
@@ -34,7 +41,10 @@ cronAdd("artist-sync", "* * * * *", () => {
 });
 
 onRecordUpdateRequest((e) => {
-    require(__hooks + "/artist-sync.js").stampOwnerName(e.record, Date.now());
+    (require(__hooks + "/artist-sync.js") as typeof ArtistSync).stampOwnerName(
+        e.record as core.Record,
+        Date.now()
+    );
     return e.next();
 }, "artists");
 

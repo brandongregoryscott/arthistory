@@ -2,8 +2,8 @@ import type { SongSnapshot } from "@repo/common";
 import {
     MAX_ARTIST_PAGE_BYTES,
     parseArtistPage as parsePage,
-} from "../../../../pocketbase/hooks/artist-page-parser.cjs";
-import { isSpotifyArtistId } from "../utilities/id-validation";
+} from "../../../../pocketbase/hooks/artist-page-parser.js";
+import { isSpotifyArtistId } from "../utilities/validation";
 
 type ArtistPage = {
     displayName: string;

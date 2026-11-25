@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateSongSnapshot } from "../../../../pocketbase/hooks/validation.js";
+import { validateSongSnapshot } from "./validation.js";
 
 const record = (listenCount: number, weekStart = "2026-11-16T00:00:00Z") => ({
     getFloat: () => listenCount,

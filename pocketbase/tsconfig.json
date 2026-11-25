@@ -1,16 +1,10 @@
 {
     "extends": "@repo/typescript-config/base.json",
     "compilerOptions": {
-        "allowJs": true,
-        "checkJs": true,
-        "noEmit": true
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "noEmit": true,
+        "types": ["node"]
     },
-    "include": [
-        "hooks/snapshot-metrics.cjs",
-        "hooks/validation.js",
-        "hooks/artist-page-parser.cjs",
-        "hooks/artist-sync.js",
-        "hooks/artist-sync-types.d.ts",
-        "hooks/artist-page-http.js"
-    ]
+    "include": ["hooks/**/*.ts", "vendor/types.d.ts", "*.ts"]
 }

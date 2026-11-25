@@ -1,7 +1,7 @@
 import { app, metrics } from "./app";
+import { artistCache } from "./artists/artist-service";
 import { METRICS_HOST, METRICS_PORT, PORT } from "./config";
 import { logger } from "./logging";
-import { artistCache } from "./services/artist-service";
 
 const main = async () => {
     await artistCache.start((error) => {

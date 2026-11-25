@@ -58,8 +58,8 @@ beforeAll(async () => {
     vi.stubEnv("POCKETBASE_SUPERUSER_PASSWORD", "test-password");
     vi.spyOn(posthog, "init").mockImplementation(() => posthog);
     const { ArtistsController } =
-        await import("./controllers/artists-controller.js");
-    const { MetaController } = await import("./controllers/meta-controller.js");
+        await import("./artists/artist-controller.js");
+    const { MetaController } = await import("./meta/meta-controller.js");
     // Stub dependencies before Express captures the controllers, then exercise
     // the actual HTTP router without contacting PocketBase.
     vi.spyOn(MetaController, "latest").mockImplementation(respond("latest"));

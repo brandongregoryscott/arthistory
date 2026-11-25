@@ -2,7 +2,8 @@
 // Use SQL inside PocketBase to convert all rows without loading history into RAM.
 migrate(
     (app) => {
-        const { MISSING_METRIC } = require(__hooks + "/snapshot-metrics.cjs");
+        // Freeze the historical sentinel independently of application code.
+        const MISSING_METRIC = -1;
         const collection = app.findCollectionByNameOrId("snapshots");
         for (const name of ["followers", "monthlyListeners", "popularity"]) {
             collection.fields.add(
@@ -29,7 +30,8 @@ migrate(
         app.save(collection);
     },
     (app) => {
-        const { MISSING_METRIC } = require(__hooks + "/snapshot-metrics.cjs");
+        // Freeze the historical sentinel independently of application code.
+        const MISSING_METRIC = -1;
         const collection = app.findCollectionByNameOrId("snapshots");
         collection.fields.add(
             new JSONField({ name: "metrics", required: true, maxSize: 1024 })

@@ -1,10 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type {
-    BackfillApp,
-    DataRecord,
-    PageResult,
-} from "../../../../pocketbase/hooks/artist-sync-types";
-import { collect, tick } from "../../../../pocketbase/hooks/artist-sync.js";
+import type { SyncApp, DataRecord, PageResult } from "./artist-sync.js";
+import { collect, tick } from "./artist-sync.js";
 
 const ID = "6lcwlkAjBPSKnFBZjjZFJs";
 const SONG = {
@@ -63,7 +59,7 @@ const setup = () => {
     };
     artist.id = "artist-record";
     let sequence = 0;
-    const app: BackfillApp = {
+    const app: SyncApp = {
         countRecords: () => 1,
         delete: (row) => {
             const rows = table(String((row as TestRecord).collection));
